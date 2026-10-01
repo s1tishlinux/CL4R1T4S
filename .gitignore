@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Agent Studio specifics
+agent-studio/__pycache__/
+agent-studio/server/__pycache__/
+books/uploads/*
+!books/uploads/.gitkeep
+books/vectors/*.db
+books/vectors/*.db-shm
+books/vectors/*.db-wal
+books/vectors/edge_memory/
+on-device-memory/
+
+# Temporary files
+*.log
+*.tmp
+.cache/
+
+# System files
+Thumbs.db
+desktop.ini

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="whitemode" data-font="sans" data-text-color="default" data-font-size="md">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database & Vector Store Studio | OmniTech Academy</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Inline theme hydration: apply saved theme before first paint to prevent flash -->
+  <script>
+    (function() {
+      try {
+        var cfg = JSON.parse(localStorage.getItem('omni_appearance_config') || '{}');
+        var el = document.documentElement;
+        el.setAttribute('data-theme', cfg.theme || 'whitemode');
+        if (cfg.font) el.setAttribute('data-font', cfg.font);
+        if (cfg.textColor) el.setAttribute('data-text-color', cfg.textColor);
+        if (cfg.fontSize) el.setAttribute('data-font-size', cfg.fontSize);
+      } catch(e) {}
+    })();
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%2232%22%20height=%2232%22><text y=%2224%22 font-size=%2224%22>🗄️</text></svg>">
+</head>
+<body style="min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Header -->
+  <header class="academy-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-logo-icon">🗄️</div>
+        <div class="brand-info">
+          <h1>Vector DB & Schema Studio <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: var(--accent-success);">LIVE SQLITE WAL</span></h1>
+          <p>Recursive Splitters, 768-Dim Vectors, Physical Files & Schemas</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-header" onclick="loadDbTelemetry(); loadDbSchema(); loadTableData(); loadDbFiles();">
+          <span>🔄</span>
+          <span>Refresh</span>
+        </button>
+        <button class="btn-header" onclick="document.getElementById('themeCustomizerModal').classList.add('open')">
+          <span>🎨</span>
+          <span>Theme</span>
+        </button>
+        <a href="index.html" class="btn-header btn-header-primary">
+          <span>⚡</span>
+          <span>Back to Academy</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main style="max-width: 1300px; width: 100%; margin: 1.5rem auto; padding: 0 1.5rem; flex: 1;">
+    
+    <!-- Studio Header & Telemetry -->
+    <div class="db-studio-header">
+      <div class="db-studio-title-block">
+        <div class="db-studio-pill">⚡ SQLite WAL Engine • 768-Dim Vector Store • 100+ Books Scalability</div>
+        <h2>Enterprise Vector Database & Schema Dashboard</h2>
+        <p>
+          Inspect SQLite schema architecture, browse recursive semantic chunks, examine 768-dimensional float embeddings, explore physical PDF textbook assets, and execute safe queries.
+        </p>
+      </div>
+    </div>
+
+    <!-- Live Telemetry KPI Cards -->
+    <div class="db-telemetry-grid" id="dbTelemetryCards">
+      <div class="db-telemetry-card">
+        <div class="telemetry-label">DATABASE FILE</div>
+        <div class="telemetry-val" id="kpiDbFile">rag_catalog.db</div>
+        <div class="telemetry-sub" id="kpiDbSize">Loading size...</div>
+      </div>
+      <div class="db-telemetry-card">
+        <div class="telemetry-label">INGESTED TEXTBOOKS</div>
+        <div class="telemetry-val" id="kpiBooksCount">...</div>
+        <div class="telemetry-sub" id="kpiBooksPages">...</div>
+      </div>
+      <div class="db-telemetry-card">
+        <div class="telemetry-label">RECURSIVE CHUNKS</div>
+        <div class="telemetry-val" id="kpiChunksCount">...</div>
+        <div class="telemetry-sub" id="kpiAvgTokens">...</div>
+      </div>
+      <div class="db-telemetry-card">
+        <div class="telemetry-label">VECTOR EMBEDDINGS</div>
+        <div class="telemetry-val" id="kpiVectorDim">768-Dim</div>
+        <div class="telemetry-sub" id="kpiEmbedModel">nomic-embed-text</div>
+      </div>
+      <div class="db-telemetry-card">
+        <div class="telemetry-label">INDEXED TOKENS</div>
+        <div class="telemetry-val" id="kpiTokensCount">...</div>
+        <div class="telemetry-sub">Zero-Key Local Storage</div>
+      </div>
+      <div class="db-telemetry-card">
+        <div class="telemetry-label">AGENTIC AUDIT LOGS</div>
+        <div class="telemetry-val" id="kpiAgentRunsCount">Active</div>
+        <div class="telemetry-sub" id="kpiQueryLogs">Tracked in SQLite</div>
+      </div>
+    </div>
+
+    <!-- DB Studio Sub-Navigation Tabs -->
+    <div class="db-subnav-strip">
+      <button class="db-subnav-btn active" data-subtab="schema" onclick="switchDbSubTab('schema')">
+        <span>📑</span>
+        <span>Schema Inspector</span>
+      </button>
+      <button class="db-subnav-btn" data-subtab="data" onclick="switchDbSubTab('data')">
+        <span>📊</span>
+        <span>Table & Vector Data</span>
+      </button>
+      <button class="db-subnav-btn" data-subtab="files" onclick="switchDbSubTab('files')">
+        <span>📁</span>
+        <span>Physical Files Catalog</span>
+      </button>
+      <button class="db-subnav-btn" data-subtab="sql" onclick="switchDbSubTab('sql')">
+        <span>⚡</span>
+        <span>Interactive SQL Console</span>
+      </button>
+    </div>
+
+    <!-- Sub-Panel 1: Schema Inspector -->
+    <div id="dbsub-schema" class="db-subpanel active">
+      <div class="schema-layout">
+        <div class="schema-sidebar">
+          <h4>Application Tables</h4>
+          <div class="table-list-group" id="schemaTableList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+        <div class="schema-main">
+          <div class="schema-table-header">
+            <div>
+              <h3 id="currentSchemaTableName">rag_books</h3>
+              <p id="currentSchemaTableDesc" style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.25rem;">
+                Authoritative registry of technical textbooks.
+              </p>
+            </div>
+            <div class="schema-table-stats" id="currentSchemaTableStats">
+              <span class="badge" id="currentTableRowsCount">...</span>
+              <span class="badge" id="currentTableColsCount">...</span>
+            </div>
+          </div>
+
+          <!-- Columns Table -->
+          <div class="db-table-wrapper" style="margin-bottom: 1.5rem;">
+            <table class="db-data-table">
+              <thead>
+                <tr>
+                  <th>CID</th>
+                  <th>Column Name</th>
+                  <th>Data Type</th>
+                  <th>Primary Key</th>
+                  <th>Not Null</th>
+                  <th>Default</th>
+                  <th>Semantic Description</th>
+                </tr>
+              </thead>
+              <tbody id="schemaColumnsTbody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- DDL Box -->
+          <div class="ddl-box-wrapper">
+            <div class="ddl-box-header">
+              <span>CREATE TABLE DDL Definition</span>
+              <button class="btn-copy-code" onclick="copyDdlDefinition()">📋 Copy SQL</button>
+            </div>
+            <pre class="ddl-code-block" id="schemaDdlCode">-- Loading DDL...</pre>
+          </div>
+
+          <!-- Indexes Box -->
+          <div style="margin-top: 1.25rem;">
+            <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase;">Table Indexes</h4>
+            <div id="schemaIndexesList" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-Panel 2: Table & Vector Data Browser -->
+    <div id="dbsub-data" class="db-subpanel">
+      <div class="data-browser-toolbar">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">Table:</label>
+          <select class="db-select" id="dataBrowserTableSelect" onchange="loadTableData(true)">
+            <option value="rag_books">rag_books (Catalog)</option>
+            <option value="rag_chunks">rag_chunks (Vectors & Text)</option>
+            <option value="agentic_runs">agentic_runs (Multi-Agent Trace)</option>
+            <option value="rag_queries_log">rag_queries_log (Query Audit)</option>
+          </select>
+
+          <input type="text" class="db-search-input" id="dataBrowserSearchInput" placeholder="Filter rows across all columns..." oninput="debounceTableSearch()">
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <label style="font-size: 0.82rem; color: var(--text-secondary);">Limit:</label>
+          <select class="db-select" id="dataBrowserLimitSelect" onchange="loadTableData(true)">
+            <option value="15">15 rows</option>
+            <option value="25" selected>25 rows</option>
+            <option value="50">50 rows</option>
+            <option value="100">100 rows</option>
+          </select>
+
+          <div class="pagination-controls">
+            <button class="btn-page" id="btnPrevPage" onclick="prevTablePage()">‹ Prev</button>
+            <span class="page-info" id="dataBrowserPageInfo">Page 1</span>
+            <button class="btn-page" id="btnNextPage" onclick="nextTablePage()">Next ›</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="db-table-wrapper" style="max-height: 540px; overflow-y: auto;">
+        <table class="db-data-table" id="dataBrowserTable">
+          <thead id="dataBrowserThead"></thead>
+          <tbody id="dataBrowserTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sub-Panel 3: Physical Files Catalog -->
+    <div id="dbsub-files" class="db-subpanel">
+      <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.05rem;">Physical Files in <code>books/</code> Storage</h3>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">
+            Inspect raw PDFs, JSON blueprints, and markdown manuals with OCR state and vector indexing parity.
+          </p>
+        </div>
+        <button class="btn-header" onclick="loadDbFiles()">
+          <span>🔄</span>
+          <span>Rescan Folder</span>
+        </button>
+      </div>
+
+      <div class="db-table-wrapper">
+        <table class="db-data-table">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Format</th>
+              <th>File Size</th>
+              <th>Modified Date</th>
+              <th>Status</th>
+              <th>Pages</th>
+              <th>Chunks</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="dbFilesTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sub-Panel 4: Interactive SQL Console -->
+    <div id="dbsub-sql" class="db-subpanel">
+      <div class="sql-console-layout">
+        <div class="sql-toolbar">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">Quick Templates:</span>
+            <select class="db-select" id="sqlTemplatesSelect" onchange="applySqlTemplate(this.value)">
+              <option value="">-- Choose Pre-Built Query --</option>
+              <option value="SELECT book_id, title, total_pages, total_chunks, created_at FROM rag_books;">List All Ingested Books</option>
+              <option value="SELECT book_id, count(*) as chunks, sum(token_count) as total_tokens, avg(token_count) as avg_tokens FROM rag_chunks GROUP BY book_id;">Aggregate Tokens per Book</option>
+              <option value="SELECT chunk_id, page_number, chapter_title, token_count, substr(chunk_text, 1, 120) as snippet FROM rag_chunks ORDER BY page_number ASC LIMIT 15;">Inspect First 15 Chunks</option>
+              <option value="SELECT run_id, timestamp, query, intent, verdict, duration_ms FROM agentic_runs ORDER BY timestamp DESC LIMIT 15;">Recent Multi-Agent Runs</option>
+              <option value="SELECT name, type, sql FROM sqlite_master WHERE type IN ('table', 'index');">Inspect Master Schema Objects</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn-header btn-header-primary" onclick="executeSqlConsoleQuery()">
+              <span>▶</span>
+              <span>Execute Query</span>
+            </button>
+            <button class="btn-header" onclick="exportSqlResultJson()">
+              <span>📥</span>
+              <span>JSON</span>
+            </button>
+            <button class="btn-header" onclick="exportSqlResultCsv()">
+              <span>📊</span>
+              <span>CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <textarea class="sql-editor" id="sqlConsoleInput" spellcheck="false" placeholder="SELECT * FROM rag_books LIMIT 10;">SELECT book_id, title, total_pages, total_chunks, created_at FROM rag_books;</textarea>
+
+        <div class="sql-status-bar" id="sqlStatusBar">
+          <span>Ready. Enter read-only SELECT or EXPLAIN query.</span>
+        </div>
+
+        <div class="db-table-wrapper" style="max-height: 420px; overflow-y: auto;">
+          <table class="db-data-table" id="sqlResultsTable">
+            <thead id="sqlResultsThead"></thead>
+            <tbody id="sqlResultsTbody">
+              <tr><td style="text-align: center; color: var(--text-muted); padding: 2rem;">Click "Execute Query" to inspect results.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Vector Inspector Modal -->
+  <div class="academy-modal-backdrop" id="vectorInspectorModal" onclick="if(event.target===this) closeAllModals()">
+    <div class="academy-modal-container" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3 id="vectorInspectorTitle">🔬 768-Dim Vector Embedding Inspector</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()">×</button>
+      </div>
+      <div class="modal-scrollable-content" id="vectorInspectorContent"></div>
+    </div>
+  </div>
+
+  <!-- Theme Modal -->
+  <div class="academy-modal-backdrop" id="themeCustomizerModal" onclick="if(event.target===this) closeAllModals()">
+    <div class="academy-modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>🎨 Theme, Color & Typography Studio</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()">×</button>
+      </div>
+      <div class="modal-scrollable-content">
+        <div class="theme-presets-grid">
+          <div class="theme-preset-card" data-theme-choice="cyber-dark" onclick="setAcademyTheme('cyber-dark')">🌙 Cyber Dark</div>
+          <div class="theme-preset-card" data-theme-choice="slate-dark" onclick="setAcademyTheme('slate-dark')">🌑 Slate Dark</div>
+          <div class="theme-preset-card" data-theme-choice="sky-blue" onclick="setAcademyTheme('sky-blue')">🌊 Sky Blue</div>
+          <div class="theme-preset-card" data-theme-choice="dim-sky-blue" onclick="setAcademyTheme('dim-sky-blue')">🌤 Dim Sky Blue</div>
+          <div class="theme-preset-card" data-theme-choice="whitemode" onclick="setAcademyTheme('whitemode')">☀️ White Mode</div>
+          <div class="theme-preset-card" data-theme-choice="emerald-matrix" onclick="setAcademyTheme('emerald-matrix')">💚 Emerald Matrix</div>
+          <div class="theme-preset-card" data-theme-choice="royal-amethyst" onclick="setAcademyTheme('royal-amethyst')">💜 Royal Amethyst</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="academy.js"></script>
+  <script>
+    // Standalone page bootstrap — apply saved theme before paint then load data
+    document.addEventListener("DOMContentLoaded", () => {
+      initAppearance();
+      loadDbTelemetry();
+      loadDbSchema();
+      loadTableData();
+      loadDbFiles();
+    });
+  </script>
+</body>
+</html>

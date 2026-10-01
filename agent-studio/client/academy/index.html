@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="whitemode" data-font="sans" data-text-color="default" data-font-size="md">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniTech Academy | Masterclasses, Roadmaps & AI Engineering Hub</title>
+  <meta name="description" content="Master DevOps, MLOps, MLE, GenAI, Agentic AI, FDE, System Design, SQL, Linux, and Cloud Computing. Complete with AI Textbook RAG co-reader and interactive simulators.">
+  <link rel="stylesheet" href="style.css">
+  <!-- Inline theme hydration: apply saved theme before first paint to prevent flash -->
+  <script>
+    (function() {
+      try {
+        var cfg = JSON.parse(localStorage.getItem('omni_appearance_config') || '{}');
+        var el = document.documentElement;
+        el.setAttribute('data-theme', cfg.theme || 'whitemode');
+        if (cfg.font) el.setAttribute('data-font', cfg.font);
+        if (cfg.textColor) el.setAttribute('data-text-color', cfg.textColor);
+        if (cfg.fontSize) el.setAttribute('data-font-size', cfg.fontSize);
+      } catch(e) {}
+    })();
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%2232%22%20height=%2232%22><text y=%2224%22 font-size=%2224%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- ========================================================================
+       Top Navigation Bar
+       ======================================================================== -->
+  <header class="academy-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-logo-icon">⚡</div>
+        <div class="brand-info">
+          <h1>OmniTech Academy <span class="badge">PRO</span></h1>
+          <p>Production Engineering & Agentic AI Masterclass Hub</p>
+        </div>
+      </div>
+
+      <!-- Live Search Bar -->
+      <div class="header-search">
+        <span class="header-search-icon">🔍</span>
+        <input type="text" id="global-search" placeholder="Search DevOps, GenAI, LangGraph, Kafka, HLD, SQL, Python...">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="header-actions">
+        <button class="btn-header" id="btnHeaderDbStudio" onclick="switchTab('dbstudio'); document.querySelectorAll('.bento-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'dbstudio'));">
+          <span>🗄️</span>
+          <span>DB Studio</span>
+        </button>
+        <button class="btn-header" id="toggleThemeBtn">
+          <span>🎨</span>
+          <span>Theme & Colors</span>
+        </button>
+        <a href="/" class="btn-header btn-header-primary">
+          <span>🛠️</span>
+          <span>Agent Studio</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Hero Section
+       ======================================================================== -->
+  <section class="academy-hero">
+    <div class="hero-content">
+      <div class="hero-pill">
+        <span>✨ 2026 Production Curriculum</span>
+        <span>•</span>
+        <span>Zero-Key Local AI Ready</span>
+      </div>
+      <h2>Master Modern Engineering & Agentic Intelligence</h2>
+      <p>
+        Hands-on career roadmaps, intensive masterclasses, interactive code simulators, and an AI-powered textbook vector library for DevOps, MLOps, GenAI, FDE, System Design, and Core Systems.
+      </p>
+
+      <div class="hero-stats-row">
+        <div class="hero-stat-item">
+          <strong>10+</strong> Career Roadmaps
+        </div>
+        <div class="hero-stat-item">
+          <strong>8</strong> Live Masterclasses
+        </div>
+        <div class="hero-stat-item">
+          <strong>3</strong> In-Browser Simulators
+        </div>
+        <div class="hero-stat-item">
+          <strong>6</strong> Architecture Blueprints
+        </div>
+        <div class="hero-stat-item">
+          <strong>5</strong> RAG-Indexed Textbooks
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Bento Navigation Tabs (Inspired by Crio.do)
+       ======================================================================== -->
+  <nav class="bento-nav-container">
+    <div class="bento-nav-grid">
+      <!-- 1. Roadmaps -->
+      <button class="bento-tab-btn active" data-tab="roadmaps">
+        <span class="bento-tab-badge">Core</span>
+        <div class="bento-tab-icon">🗺️</div>
+        <div class="bento-tab-title">Roadmaps</div>
+        <div class="bento-tab-subtitle">10 career paths</div>
+      </button>
+
+      <!-- 2. Masterclasses -->
+      <button class="bento-tab-btn" data-tab="masterclass">
+        <span class="bento-tab-badge">Live</span>
+        <div class="bento-tab-icon">🎓</div>
+        <div class="bento-tab-title">Masterclass</div>
+        <div class="bento-tab-subtitle">8 deep dives</div>
+      </button>
+
+      <!-- 3. Simulators -->
+      <button class="bento-tab-btn" data-tab="simulators">
+        <span class="bento-tab-badge">Interactive</span>
+        <div class="bento-tab-icon">💻</div>
+        <div class="bento-tab-title">Simulators</div>
+        <div class="bento-tab-subtitle">SQL, Linux & Python</div>
+      </button>
+
+      <!-- 4. Resources / Cheatsheets -->
+      <button class="bento-tab-btn" data-tab="resources">
+        <div class="bento-tab-icon">📖</div>
+        <div class="bento-tab-title">Cheatsheets</div>
+        <div class="bento-tab-subtitle">6 architecture guides</div>
+      </button>
+
+      <!-- 5. AI Textbook Library (RAG Ready) -->
+      <button class="bento-tab-btn" data-tab="textbooks">
+        <span class="bento-tab-badge">AI RAG</span>
+        <div class="bento-tab-icon">📚</div>
+        <div class="bento-tab-title">Textbook RAG</div>
+        <div class="bento-tab-subtitle">Vector co-reader</div>
+      </button>
+
+      <!-- 6. Database & Vector Studio -->
+      <button class="bento-tab-btn" data-tab="dbstudio">
+        <span class="bento-tab-badge" style="background: rgba(16, 185, 129, 0.2); color: var(--accent-success); border-color: rgba(16, 185, 129, 0.4);">Live DB</span>
+        <div class="bento-tab-icon">🗄️</div>
+        <div class="bento-tab-title">DB Studio</div>
+        <div class="bento-tab-subtitle">Schemas & Vectors</div>
+      </button>
+
+      <!-- 7. 3-Tier Agentic AI System -->
+      <button class="bento-tab-btn" data-tab="agentic">
+        <span class="bento-tab-badge" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-warning); border-color: rgba(245, 158, 11, 0.4);">3-Tier AI</span>
+        <div class="bento-tab-icon">🤖</div>
+        <div class="bento-tab-title">Agentic Flow</div>
+        <div class="bento-tab-subtitle">LangGraph StateGraph</div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================================
+       Category Filter Strip
+       ======================================================================== -->
+  <div class="filter-strip-wrapper">
+    <div class="filter-strip">
+      <button class="filter-pill active" data-category="all">🌐 All Disciplines</button>
+      <button class="filter-pill" data-category="genai-agentic">🤖 GenAI & Agentic AI</button>
+      <button class="filter-pill" data-category="devops-cloud">⚙️ DevOps & Cloud</button>
+      <button class="filter-pill" data-category="mlops-mle">🧠 MLOps & MLE</button>
+      <button class="filter-pill" data-category="fde-data">🚀 Forward Deployed (FDE)</button>
+      <button class="filter-pill" data-category="system-design">🏛️ System Design (HLD/LLD)</button>
+      <button class="filter-pill" data-category="sql-db">💾 SQL & DB Internals</button>
+      <button class="filter-pill" data-category="core-systems">⚡ Python & Linux Core</button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       Main Content Panels
+       ======================================================================== -->
+  <main class="academy-main">
+
+    <!-- 1. Roadmaps Panel -->
+    <section id="panel-roadmaps" class="tab-panel active">
+      <div class="roadmaps-grid" id="roadmaps-grid">
+        <!-- Rendered dynamically by academy.js -->
+      </div>
+    </section>
+
+    <!-- 2. Masterclasses Panel -->
+    <section id="panel-masterclass" class="tab-panel">
+      <div class="masterclasses-grid" id="masterclasses-grid">
+        <!-- Rendered dynamically by academy.js -->
+      </div>
+    </section>
+
+    <!-- 3. Simulators Panel -->
+    <section id="panel-simulators" class="tab-panel">
+      <div class="simulators-grid">
+        <div class="sim-card active" data-sim="sql">
+          <div class="sim-header">
+            <span class="sim-icon">💾</span>
+            <span class="sim-badge">PostgreSQL Engine</span>
+          </div>
+          <h3>SQL Query & Index Sandbox</h3>
+          <p>Execute queries, benchmark execution plans, and optimize indexes on a live preloaded 10,000-record database.</p>
+        </div>
+
+        <div class="sim-card" data-sim="linux">
+          <div class="sim-header">
+            <span class="sim-icon">🐧</span>
+            <span class="sim-badge">Bash Terminal</span>
+          </div>
+          <h3>Linux Systems & Container Shell</h3>
+          <p>Interactive virtual shell to practice Docker inspection, Kubernetes pods, top, lsof, and socket troubleshooting.</p>
+        </div>
+
+        <div class="sim-card" data-sim="python">
+          <div class="sim-header">
+            <span class="sim-icon">🐍</span>
+            <span class="sim-badge">Python 3 REPL</span>
+          </div>
+          <h3>Python Algorithms & Agent Playground</h3>
+          <p>Run real-time attention calculation algorithms, test tokenizers, and experiment with agent prompt routines.</p>
+        </div>
+      </div>
+
+      <!-- Active Interactive Playground Window -->
+      <div class="sim-playground-window">
+        <div class="playground-header">
+          <div class="window-dots">
+            <span class="window-dot dot-red"></span>
+            <span class="window-dot dot-yellow"></span>
+            <span class="window-dot dot-green"></span>
+          </div>
+          <div class="playground-title" id="simPlaygroundTitle">postgres@production-db:5432</div>
+          <div class="playground-actions">
+            <button class="btn-run-sim" id="btnRunSimulator">
+              <span>▶</span>
+              <span>Run Execution</span>
+            </button>
+          </div>
+        </div>
+        <div class="playground-body">
+          <textarea class="code-editor-area" id="simCodeEditor" spellcheck="false"></textarea>
+          <div class="sim-output-container" id="simOutputConsole">
+            <!-- Output populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Resources / Cheatsheets Panel -->
+    <section id="panel-resources" class="tab-panel">
+      <div class="resources-grid" id="resources-grid">
+        <!-- Rendered dynamically by academy.js -->
+      </div>
+    </section>
+
+    <!-- 5. AI Textbook Library Panel (RAG Hub) -->
+    <section id="panel-textbooks" class="tab-panel">
+      <div style="margin-bottom: 1.5rem; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem;">📚 AI Textbook Knowledge Base (Zero-Key Local RAG)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">
+            Ingest authoritative technical textbooks into a local vector database. Read with an AI co-pilot that answers questions, generates Socratic quizzes, and cites exact page numbers.
+          </p>
+        </div>
+        <button class="btn-header btn-header-primary" onclick="triggerScanAndIndex()">
+          <span>⚡</span>
+          <span>Index All Visual Books</span>
+        </button>
+      </div>
+
+      <div class="textbooks-grid" id="textbooks-grid">
+        <!-- Rendered dynamically by academy.js -->
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         6. Database & Vector Studio Panel
+         ======================================================================== -->
+    <section id="panel-dbstudio" class="tab-panel">
+      <!-- Studio Header & Telemetry -->
+      <div class="db-studio-header">
+        <div class="db-studio-title-block">
+          <div class="db-studio-pill">⚡ SQLite WAL Engine • 768-Dim Vector Store</div>
+          <h2>Database & Vector Store Studio</h2>
+          <p>
+            Real-time schema telemetry, table inspection, physical file catalog, recursive semantic chunks, and safe read-only SQL query workbench.
+          </p>
+        </div>
+        <div class="db-header-actions">
+          <button class="btn-header" onclick="loadDbTelemetry(); loadDbSchema(); loadTableData(); loadDbFiles();">
+            <span>🔄</span>
+            <span>Refresh Telemetry</span>
+          </button>
+          <a href="db-dashboard.html" target="_blank" class="btn-header btn-header-primary">
+            <span>↗️</span>
+            <span>Full-Screen Studio</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Live Telemetry KPI Cards -->
+      <div class="db-telemetry-grid" id="dbTelemetryCards">
+        <div class="db-telemetry-card">
+          <div class="telemetry-label">DATABASE FILE</div>
+          <div class="telemetry-val" id="kpiDbFile">rag_catalog.db</div>
+          <div class="telemetry-sub" id="kpiDbSize">1.77 MB • WAL Mode</div>
+        </div>
+        <div class="db-telemetry-card">
+          <div class="telemetry-label">INGESTED TEXTBOOKS</div>
+          <div class="telemetry-val" id="kpiBooksCount">4 Books</div>
+          <div class="telemetry-sub" id="kpiBooksPages">70 Total Pages</div>
+        </div>
+        <div class="db-telemetry-card">
+          <div class="telemetry-label">RECURSIVE CHUNKS</div>
+          <div class="telemetry-val" id="kpiChunksCount">102 Chunks</div>
+          <div class="telemetry-sub" id="kpiAvgTokens">~175 tokens / chunk</div>
+        </div>
+        <div class="db-telemetry-card">
+          <div class="telemetry-label">VECTOR EMBEDDINGS</div>
+          <div class="telemetry-val" id="kpiVectorDim">768-Dim</div>
+          <div class="telemetry-sub" id="kpiEmbedModel">nomic-embed-text</div>
+        </div>
+        <div class="db-telemetry-card">
+          <div class="telemetry-label">INDEXED TOKENS</div>
+          <div class="telemetry-val" id="kpiTokensCount">17,902</div>
+          <div class="telemetry-sub">Zero-Key Local Storage</div>
+        </div>
+        <div class="db-telemetry-card">
+          <div class="telemetry-label">AGENTIC AUDIT LOGS</div>
+          <div class="telemetry-val" id="kpiAgentRunsCount">Active</div>
+          <div class="telemetry-sub" id="kpiQueryLogs">Tracked in SQLite</div>
+        </div>
+      </div>
+
+      <!-- DB Studio Sub-Navigation Tabs -->
+      <div class="db-subnav-strip">
+        <button class="db-subnav-btn active" data-subtab="schema" onclick="switchDbSubTab('schema')">
+          <span>📑</span>
+          <span>Schema Inspector</span>
+        </button>
+        <button class="db-subnav-btn" data-subtab="data" onclick="switchDbSubTab('data')">
+          <span>📊</span>
+          <span>Table & Vector Data</span>
+        </button>
+        <button class="db-subnav-btn" data-subtab="files" onclick="switchDbSubTab('files')">
+          <span>📁</span>
+          <span>Physical Files Catalog</span>
+        </button>
+        <button class="db-subnav-btn" data-subtab="sql" onclick="switchDbSubTab('sql')">
+          <span>⚡</span>
+          <span>Interactive SQL Console</span>
+        </button>
+      </div>
+
+      <!-- Sub-Panel 1: Schema Inspector -->
+      <div id="dbsub-schema" class="db-subpanel active">
+        <div class="schema-layout">
+          <div class="schema-sidebar">
+            <h4>Application Tables</h4>
+            <div class="table-list-group" id="schemaTableList">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+          <div class="schema-main">
+            <div class="schema-table-header">
+              <div>
+                <h3 id="currentSchemaTableName">rag_books</h3>
+                <p id="currentSchemaTableDesc" style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.25rem;">
+                  Authoritative registry of technical textbooks.
+                </p>
+              </div>
+              <div class="schema-table-stats" id="currentSchemaTableStats">
+                <span class="badge" id="currentTableRowsCount">4 Rows</span>
+                <span class="badge" id="currentTableColsCount">11 Columns</span>
+              </div>
+            </div>
+
+            <!-- Columns Table -->
+            <div class="db-table-wrapper" style="margin-bottom: 1.5rem;">
+              <table class="db-data-table">
+                <thead>
+                  <tr>
+                    <th>CID</th>
+                    <th>Column Name</th>
+                    <th>Data Type</th>
+                    <th>Primary Key</th>
+                    <th>Not Null</th>
+                    <th>Default</th>
+                    <th>Semantic Description</th>
+                  </tr>
+                </thead>
+                <tbody id="schemaColumnsTbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- DDL Box -->
+            <div class="ddl-box-wrapper">
+              <div class="ddl-box-header">
+                <span>CREATE TABLE DDL Definition</span>
+                <button class="btn-copy-code" onclick="copyDdlDefinition()">📋 Copy SQL</button>
+              </div>
+              <pre class="ddl-code-block" id="schemaDdlCode">-- Loading DDL...</pre>
+            </div>
+
+            <!-- Indexes Box -->
+            <div style="margin-top: 1.25rem;">
+              <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase;">Table Indexes</h4>
+              <div id="schemaIndexesList" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Panel 2: Table & Vector Data Browser -->
+      <div id="dbsub-data" class="db-subpanel">
+        <div class="data-browser-toolbar">
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">Table:</label>
+            <select class="db-select" id="dataBrowserTableSelect" onchange="loadTableData(true)">
+              <option value="rag_books">rag_books (Catalog)</option>
+              <option value="rag_chunks">rag_chunks (Vectors & Text)</option>
+              <option value="agentic_runs">agentic_runs (Multi-Agent Trace)</option>
+              <option value="rag_queries_log">rag_queries_log (Query Audit)</option>
+            </select>
+
+            <input type="text" class="db-search-input" id="dataBrowserSearchInput" placeholder="Filter rows across all columns..." oninput="debounceTableSearch()">
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <label style="font-size: 0.82rem; color: var(--text-secondary);">Limit:</label>
+            <select class="db-select" id="dataBrowserLimitSelect" onchange="loadTableData(true)">
+              <option value="15">15 rows</option>
+              <option value="25" selected>25 rows</option>
+              <option value="50">50 rows</option>
+              <option value="100">100 rows</option>
+            </select>
+
+            <div class="pagination-controls">
+              <button class="btn-page" id="btnPrevPage" onclick="prevTablePage()">‹ Prev</button>
+              <span class="page-info" id="dataBrowserPageInfo">Page 1</span>
+              <button class="btn-page" id="btnNextPage" onclick="nextTablePage()">Next ›</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="db-table-wrapper" style="max-height: 480px; overflow-y: auto;">
+          <table class="db-data-table" id="dataBrowserTable">
+            <thead id="dataBrowserThead">
+              <!-- Rendered dynamically -->
+            </thead>
+            <tbody id="dataBrowserTbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sub-Panel 3: Physical Files Catalog -->
+      <div id="dbsub-files" class="db-subpanel">
+        <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.05rem;">Physical Files in <code>books/</code> Storage</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">
+              Inspect raw PDFs, JSON blueprints, and markdown manuals with OCR state and vector indexing parity.
+            </p>
+          </div>
+          <button class="btn-header" onclick="loadDbFiles()">
+            <span>🔄</span>
+            <span>Rescan Folder</span>
+          </button>
+        </div>
+
+        <div class="db-table-wrapper">
+          <table class="db-data-table">
+            <thead>
+              <tr>
+                <th>Filename</th>
+                <th>Format</th>
+                <th>File Size</th>
+                <th>Modified Date</th>
+                <th>Status</th>
+                <th>Pages</th>
+                <th>Chunks</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="dbFilesTbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sub-Panel 4: Interactive SQL Console -->
+      <div id="dbsub-sql" class="db-subpanel">
+        <div class="sql-console-layout">
+          <div class="sql-toolbar">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">Quick Templates:</span>
+              <select class="db-select" id="sqlTemplatesSelect" onchange="applySqlTemplate(this.value)">
+                <option value="">-- Choose Pre-Built Query --</option>
+                <option value="SELECT book_id, title, total_pages, total_chunks, created_at FROM rag_books;">List All Ingested Books</option>
+                <option value="SELECT book_id, count(*) as chunks, sum(token_count) as total_tokens, avg(token_count) as avg_tokens FROM rag_chunks GROUP BY book_id;">Aggregate Tokens per Book</option>
+                <option value="SELECT chunk_id, page_number, chapter_title, token_count, substr(chunk_text, 1, 120) as snippet FROM rag_chunks ORDER BY page_number ASC LIMIT 15;">Inspect First 15 Chunks</option>
+                <option value="SELECT run_id, timestamp, query, intent, verdict, duration_ms FROM agentic_runs ORDER BY timestamp DESC LIMIT 15;">Recent Multi-Agent Runs</option>
+                <option value="SELECT name, type, sql FROM sqlite_master WHERE type IN ('table', 'index');">Inspect Master Schema Objects</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn-header btn-header-primary" onclick="executeSqlConsoleQuery()">
+                <span>▶</span>
+                <span>Execute Query</span>
+              </button>
+              <button class="btn-header" onclick="exportSqlResultJson()">
+                <span>📥</span>
+                <span>JSON</span>
+              </button>
+              <button class="btn-header" onclick="exportSqlResultCsv()">
+                <span>📊</span>
+                <span>CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <textarea class="sql-editor" id="sqlConsoleInput" spellcheck="false" placeholder="SELECT * FROM rag_books LIMIT 10;">SELECT book_id, title, total_pages, total_chunks, created_at FROM rag_books;</textarea>
+
+          <div class="sql-status-bar" id="sqlStatusBar">
+            <span>Ready. Enter read-only SELECT or EXPLAIN query.</span>
+          </div>
+
+          <div class="db-table-wrapper" style="max-height: 380px; overflow-y: auto;">
+            <table class="db-data-table" id="sqlResultsTable">
+              <thead id="sqlResultsThead"></thead>
+              <tbody id="sqlResultsTbody">
+                <tr><td style="text-align: center; color: var(--text-muted); padding: 2rem;">Click "Execute Query" to inspect results.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         7. 3-Tier Multi-Agent AI System Panel (LangGraph Flow)
+         ======================================================================== -->
+    <section id="panel-agentic" class="tab-panel">
+      <!-- Agentic Header -->
+      <div class="db-studio-header">
+        <div class="db-studio-title-block">
+          <div class="db-studio-pill" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.4);">
+            🤖 3-Tier Enterprise Agentic AI • LangGraph StateGraph Architecture
+          </div>
+          <h2>3-Tier Autonomous Multi-Agent AI System</h2>
+          <p>
+            Coordinated state graph featuring Intent Router, Recursive Semantic Retriever, Grounding Grader, and Citation-Grounded Generator with zero hallucination guarantee.
+          </p>
+        </div>
+        <div class="db-header-actions">
+          <button class="btn-header" onclick="loadAgentRunsHistory()">
+            <span>🔄</span>
+            <span>Refresh Run History</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3-Tier Interactive Diagram -->
+      <div class="agent-architecture-card">
+        <div class="architecture-tier">
+          <div class="tier-badge">Tier 1 • Presentation</div>
+          <h4>OmniTech Client Web App</h4>
+          <p>Academy Bento Hub • Split-Screen Co-Reader • Interactive DB & Vector Studio</p>
+        </div>
+        <div class="tier-arrow">➔</div>
+        <div class="architecture-tier tier-active">
+          <div class="tier-badge" style="background: var(--accent-primary); color: #fff;">Tier 2 • Agentic Service</div>
+          <h4>LangGraph StateGraph Engine</h4>
+          <p>Router ➔ Recursive Retriever ➔ Grounding Grader ➔ Citation Synthesizer</p>
+        </div>
+        <div class="tier-arrow">➔</div>
+        <div class="architecture-tier">
+          <div class="tier-badge">Tier 3 • Storage</div>
+          <h4>Vector & Relational DB</h4>
+          <p>SQLite WAL Vector DB (768-d) • Local Ollama nomic-embed • Books File Store</p>
+        </div>
+      </div>
+
+      <!-- Interactive Query Runner -->
+      <div class="agent-runner-window">
+        <div class="agent-runner-header">
+          <div style="font-weight: 700; font-size: 0.95rem;">🔬 Test 3-Tier Agentic Execution Graph</div>
+          <div style="font-size: 0.75rem; color: var(--accent-success);">● Connected to Local RAG Catalog</div>
+        </div>
+
+        <div style="padding: 1.25rem;">
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <button class="btn-chip" onclick="setAgentQuery('What is the difference between LoRA and QLoRA in fine-tuning LLMs?')">💡 LoRA vs QLoRA</button>
+            <button class="btn-chip" onclick="setAgentQuery('How does Docker containerization integrate with Kubernetes in DevOps?')">⚙️ Docker & K8s DevOps</button>
+            <button class="btn-chip" onclick="setAgentQuery('How do B-Trees compare with LSM-Trees for high write throughput in databases?')">💾 B-Trees vs LSM-Trees</button>
+            <button class="btn-chip" onclick="setAgentQuery('What are autonomous agent swarms and LangGraph state graphs?')">🤖 Agentic Swarms</button>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem;">
+            <input type="text" class="agent-query-input" id="agenticQueryInput" placeholder="Ask a complex engineering question across all ingested textbooks...">
+            <button class="btn-header btn-header-primary" id="btnRunAgentFlow" onclick="executeAgenticPipeline()">
+              <span>🚀</span>
+              <span>Run Agentic Flow</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-Time StateGraph Nodes Waterfall -->
+        <div class="agent-graph-nodes-row" id="agentGraphNodes">
+          <div class="agent-node-card" id="node-router">
+            <div class="node-icon">🧭</div>
+            <div class="node-title">1. Intent Router</div>
+            <div class="node-status" id="status-router">Idle</div>
+          </div>
+          <div class="node-connector"></div>
+          <div class="agent-node-card" id="node-retriever">
+            <div class="node-icon">🔍</div>
+            <div class="node-title">2. Recursive Retriever</div>
+            <div class="node-status" id="status-retriever">Idle</div>
+          </div>
+          <div class="node-connector"></div>
+          <div class="agent-node-card" id="node-grader">
+            <div class="node-icon">⚖️</div>
+            <div class="node-title">3. Grounding Grader</div>
+            <div class="node-status" id="status-grader">Idle</div>
+          </div>
+          <div class="node-connector"></div>
+          <div class="agent-node-card" id="node-generator">
+            <div class="node-icon">✍️</div>
+            <div class="node-title">4. Citation Generator</div>
+            <div class="node-status" id="status-generator">Idle</div>
+          </div>
+        </div>
+
+        <!-- Output Split Screen -->
+        <div class="agent-output-grid" id="agentOutputGrid" style="display: none;">
+          <!-- Left: Node Telemetry & Transition Timeline -->
+          <div class="agent-telemetry-panel">
+            <h4 style="font-size: 0.85rem; color: var(--accent-secondary); margin-bottom: 0.75rem; text-transform: uppercase;">
+              StateGraph Transitions
+            </h4>
+            <div id="agentStepsTimeline">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Right: Staff Engineer Answer & Citations -->
+          <div class="agent-answer-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h4 style="font-size: 0.85rem; color: var(--accent-success); text-transform: uppercase;">
+                Verified Answer with Exact Citations
+              </h4>
+              <span class="badge" id="agentVerdictBadge">GROUNDED_FACTUAL</span>
+            </div>
+
+            <div class="agent-answer-text" id="agentAnswerContent">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <div style="margin-top: 1.25rem;">
+              <h5 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">CITED PASSAGES FROM VECTOR DB</h5>
+              <div id="agentCitationsList" class="citations-list">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historical Agent Runs Table -->
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem;">Recent Multi-Agent StateGraph Runs</h3>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Audit trail stored in SQLite table <code>agentic_runs</code> showing student queries, routing decisions, confidence scores, and execution latency.
+        </p>
+
+        <div class="db-table-wrapper">
+          <table class="db-data-table">
+            <thead>
+              <tr>
+                <th>Run ID</th>
+                <th>Timestamp</th>
+                <th>Query</th>
+                <th>Classified Intent</th>
+                <th>Chunks</th>
+                <th>Confidence</th>
+                <th>Verdict</th>
+                <th>Duration (ms)</th>
+              </tr>
+            </thead>
+            <tbody id="agentRunsHistoryTbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       Detail Drawer / Modal
+       ======================================================================== -->
+  <div class="academy-modal-backdrop" id="academyDetailModal" onclick="if(event.target===this) closeAllModals()">
+    <div class="academy-modal-container">
+      <div class="modal-header">
+        <h3 id="modalTitle">Roadmap Details</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()">×</button>
+      </div>
+      <div class="modal-scrollable-content" id="modalScrollContent">
+        <!-- Content populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       Theme & Color Customizer Modal
+       ======================================================================== -->
+  <div class="academy-modal-backdrop" id="themeCustomizerModal" onclick="if(event.target===this) closeAllModals()">
+    <div class="academy-modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>🎨 Theme, Color & Typography Studio</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()">×</button>
+      </div>
+      <div class="modal-scrollable-content">
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.85rem; font-weight: 700;">
+          Select Visual Theme
+        </h4>
+        <div class="theme-presets-grid">
+          <div class="theme-preset-card" data-theme-choice="cyber-dark" onclick="setAcademyTheme('cyber-dark')">
+            <div class="theme-swatch" style="background: #090a10; border-color: #6366f1;"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">Cyber Dark</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Deep Obsidian Space</div>
+            </div>
+          </div>
+
+          <div class="theme-preset-card" data-theme-choice="slate-dark" onclick="setAcademyTheme('slate-dark')">
+            <div class="theme-swatch" style="background: #0f141c; border-color: #3b82f6;"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">Slate Dark</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Balanced Charcoal</div>
+            </div>
+          </div>
+
+          <div class="theme-preset-card" data-theme-choice="sky-blue" onclick="setAcademyTheme('sky-blue')">
+            <div class="theme-swatch" style="background: #041021; border-color: #38bdf8;"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">Sky Blue</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Electric Sapphire Ocean</div>
+            </div>
+          </div>
+
+          <div class="theme-preset-card" data-theme-choice="dim-sky-blue" onclick="setAcademyTheme('dim-sky-blue')">
+            <div class="theme-swatch" style="background: #0a131f; border-color: #93c5fd;"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">Dim Sky Blue</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Calm Twilight Dusk</div>
+            </div>
+          </div>
+
+          <div class="theme-preset-card" data-theme-choice="whitemode" onclick="setAcademyTheme('whitemode')">
+            <div class="theme-swatch" style="background: #ffffff; border-color: #6366f1;"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">White Mode</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Crisp Alabaster Daylight</div>
+            </div>
+          </div>
+
+          <div class="theme-preset-card" data-theme-choice="emerald-matrix" onclick="setAcademyTheme('emerald-matrix')">
+            <div class="theme-swatch" style="background: #05140b; border-color: #10b981;"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">Emerald Matrix</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Phosphor Terminal</div>
+            </div>
+          </div>
+
+          <div class="theme-preset-card" data-theme-choice="royal-amethyst" onclick="setAcademyTheme('royal-amethyst')">
+            <div class="theme-swatch" style="background: #12091c; border-color: #a855f7;"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">Royal Amethyst</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Velvet Purple Neon</div>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin: 1.25rem 0 0.85rem 0; font-weight: 700;">
+          Typography Font Family
+        </h4>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn-header" onclick="setAcademyFont('sans')">Inter (Modern Sans)</button>
+          <button class="btn-header" onclick="setAcademyFont('mono')">JetBrains Mono (Tech)</button>
+          <button class="btn-header" onclick="setAcademyFont('outfit')">Outfit (Futuristic)</button>
+          <button class="btn-header" onclick="setAcademyFont('serif')">Merriweather (Editorial)</button>
+        </div>
+
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin: 1.25rem 0 0.85rem 0; font-weight: 700;">
+          Font Accent Color
+        </h4>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn-header" onclick="setAcademyTextColor('default')">Default (Adaptive)</button>
+          <button class="btn-header" style="color: #38bdf8;" onclick="setAcademyTextColor('cyan')">Sky Cyan</button>
+          <button class="btn-header" style="color: #93c5fd;" onclick="setAcademyTextColor('ice')">Ice Blue</button>
+          <button class="btn-header" style="color: #34d399;" onclick="setAcademyTextColor('emerald')">Emerald</button>
+          <button class="btn-header" style="color: #fbbf24;" onclick="setAcademyTextColor('amber')">Amber</button>
+          <button class="btn-header" style="color: #c084fc;" onclick="setAcademyTextColor('lavender')">Lilac</button>
+          <button class="btn-header" style="color: #f43f5e;" onclick="setAcademyTextColor('rose')">Rose</button>
+        </div>
+
+        <div style="margin-top: 1.75rem; text-align: right;">
+          <button class="btn-header btn-header-primary" onclick="closeAllModals()">Done & Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       Vector Embedding Inspector Modal
+       ======================================================================== -->
+  <div class="academy-modal-backdrop" id="vectorInspectorModal" onclick="if(event.target===this) closeAllModals()">
+    <div class="academy-modal-container" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3 id="vectorInspectorTitle">🔬 768-Dim Vector Embedding Inspector</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()">×</button>
+      </div>
+      <div class="modal-scrollable-content" id="vectorInspectorContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="academy.js"></script>
+</body>
+</html>

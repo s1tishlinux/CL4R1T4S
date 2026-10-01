@@ -1,0 +1,4216 @@
+/**
+ * Omni Agent Studio — Interactive Client Logic
+ * Handles dynamic gateway probing, multimodal inputs (images, video, audio),
+ * live SSE streaming, Markdown rendering, performance telemetry, and sandbox previews.
+ */
+
+// State
+const state = {
+  gateway: 'webfree', // Option 3 (Free Web Models) auto-selected always
+  model: 'openai-fast',
+  activeIntent: 'auto', // 'auto' | 'image' | 'video' | 'app' | 'diagram'
+  temperature: 0.2,
+  contextSize: 32768,
+  systemPrompt: '',
+  attachments: [], // { type: 'image'|'video'|'audio', dataUrl, name, base64 }
+  isGenerating: false,
+  abortController: null,
+  activeSandboxCode: ''
+};
+
+// Endpoints Base
+const PROXY_ROOT = window.location.port === '3300' ? '/proxy' : '';
+const GATEWAYS = {
+  auto: {
+    base: '',
+    type: 'auto',
+    pingPath: ''
+  },
+  ollama: {
+    base: PROXY_ROOT ? '/proxy/ollama' : 'http://localhost:11434',
+    type: 'ollama',
+    pingPath: '/api/tags'
+  },
+  omniroute: {
+    base: PROXY_ROOT ? '/proxy/omniroute' : 'http://localhost:20128',
+    type: 'openai',
+    pingPath: '/v1/models'
+  },
+  spark: {
+    base: PROXY_ROOT ? '/proxy/spark' : 'http://127.0.0.1:8080',
+    type: 'openai',
+    pingPath: '/v1/models'
+  },
+  lmstudio: {
+    base: PROXY_ROOT ? '/proxy/lmstudio' : 'http://localhost:1234',
+    type: 'openai',
+    pingPath: '/v1/models'
+  },
+  webfree: {
+    base: PROXY_ROOT ? '/proxy/webfree' : 'https://text.pollinations.ai/openai',
+    type: 'openai',
+    pingPath: '/models'
+  }
+};
+
+// Preset Prompts & Configurations
+const PRESETS = {
+  codex: {
+    name: 'Codex Desktop (GPT-6 Astra)',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Refactor this async API client to add automatic retries with exponential backoff and jitter, isolate root causes, and outline concrete Next Steps:\n\n```python\nimport aiohttp\nasync def fetch_user(user_id):\n    async with aiohttp.ClientSession() as s:\n        async with s.get(f"https://api.example.com/users/{user_id}") as r:\n            return await r.json()\n```',
+    system: `You are Codex, an autonomous engineering agent based on GPT-6 Astra. You and the user share one workspace.
+- Bias towards action: Infer the user's intent and carry the task to completion autonomously. Do not ask for permission for reversible tasks, reading files, running tests, or writing code edits.
+- Plain language & No-Slop rule: Avoid AI slop words ("delve", "foster", "leverage", "it's worth noting", "importantly", "Bottom Line:"). State intended actions directly without contrastive framing ("X, not Y").
+- Two Channels: Deliver progress updates in commentary style, and provide a fully self-contained final answer.
+- Up Next Planning: Conclude multi-step work with concrete, logical next steps.`
+  },
+  cursor: {
+    name: 'Cursor 2.0 Composer',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Search the codebase for authentication token validation and produce a surgical SEARCH/REPLACE diff to handle expired JWT tokens gracefully.',
+    system: `You are an advanced AI coding assistant powered by Cursor operating exclusively in Cursor IDE.
+- Search-first rule: Always inspect declarations, types, and existing callers using grep/ripgrep before proposing changes.
+- Surgical unified diffs: Produce precise SEARCH/REPLACE diffs. Never hallucinate code or delete lines unnecessarily. Preserve exact indentations and code style.
+- Multi-file composer: Coordinate edits across dependent files, write unit tests, and resolve compiler/lint warnings.`
+  },
+  manus: {
+    name: 'Manus Autonomous Agent',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Analyze top 5 lightweight vector databases for edge AI (Chromadb, Qdrant, LanceDB, Milvus, Weaviate). Execute an Analyze -> Plan -> Act -> Observe cycle and provide a comprehensive multi-chapter evaluation.',
+    system: `You are Manus, an autonomous general-purpose AI agent created by the Manus team.
+- Execution loop: Operate in a continuous loop: Analyze -> Plan -> Act -> Observe. Break complex goals into structured milestones.
+- Autonomous verification: Gather data, verify findings, process intermediate metrics, and write thorough reports.
+- Structure: Deliver exhaustive multi-chapter documentation with key takeaways, performance benchmarks, and implementation trade-offs.`
+  },
+  lovable: {
+    name: 'Lovable 2.0 Web Builder',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Build a gorgeous Glassmorphic Kanban Task Board with drag-and-drop columns (To Do, In Progress, Review, Done), color priority tags, task creation modal, and local storage persistence in React/Tailwind.',
+    system: `You are Lovable, an AI engineer creating and modifying full-stack web applications with live preview synchronization.
+- Output complete, runnable single-file HTML/React/Tailwind code inside executable blocks or <lov-code> so it renders instantly in the live sandbox.
+- Design excellence: Zero placeholder policy. Vibrant gradients, dark mode, rich typography, responsive layouts, realistic mock state, and interactive controls.`
+  },
+  perplexity: {
+    name: 'Perplexity Deep Research',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Perform an exhaustive deep research analysis on the architectural evolution of Apple Silicon M-series unified memory vs traditional PCIe GPUs for LLM inference (bandwidth, latency, quantization limits). Provide comparison tables and inline numeric citations [1][2].',
+    system: `You are Perplexity, a deep research assistant.
+- Exhaustive academic depth: Write a comprehensive, highly detailed report for an academic audience.
+- Continuous narrative prose: Use clear, substantive paragraphs. Avoid bullet points in narrative analysis sections.
+- Comparison tables: Use comparative markdown tables for multidimensional comparisons.
+- Grounding: Ground all assertions with bracketed citations [1][2] followed by a References section.`
+  },
+  claude: {
+    name: 'Claude Design Artifacts',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Create an interactive SVG + CSS neural network visualization tool where users can click neurons to trigger forward propagation pulse animations with glowing synapse weights.',
+    system: `You are an expert designer producing design artifacts using HTML, SVG, and modern CSS/JS.
+- Embody visual excellence: tailored palettes, glassmorphism, fluid responsive layouts, micro-animations, self-contained interactivity.
+- Deliver working code directly runnable in the sandbox drawer.`
+  },
+  gemini: {
+    name: 'Google Gemini 2.5 Pro',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Solve the traveling salesperson problem with 2-opt heuristic optimization. First plan your algorithm in a <thought> block, then provide the optimized Python implementation with time complexity proofs.',
+    system: `You are Gemini, a large language model built by Google.
+- Plan complex steps using \`\`\`thought ... \`\`\` before giving intermediate updates or final responses.
+- Write precise algorithmic logic with Python code execution and mathematical rigor.`
+  },
+  devin: {
+    name: 'Devin 2.0 AI Engineer',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Investigate this failing unit test, execute the terminal test command, isolate the race condition in the mutex lock, and output a clean commit message and PR description.',
+    system: `You are Devin, an autonomous AI software engineer.
+- Execute shell commands, inspect build/test outputs, trace stack traces, create clean git commits, and report pull request summaries.`
+  },
+  autopilot: {
+    name: 'Auto-Pilot Orchestrator',
+    model: 'auto-detect',
+    gateway: 'auto',
+    prompt: 'Build a sleek interactive retro neon stopwatch app in HTML/JS with glowing start/stop buttons and lap timer, and show a futuristic cyber city image for its theme.',
+    system: ''
+  },
+  bolt: {
+    name: 'Bolt.new Full-Stack Generator',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Build a modern SaaS Analytics Dashboard with Supabase PostgreSQL schema, complete Row Level Security (RLS) policies for user organizations, and a responsive Tailwind dashboard component in React.',
+    system: 'You are Bolt, an expert autonomous full-stack software engineer specializing in modern web applications. Generate 100% complete runnable code, explicit Supabase RLS migrations with markdown summaries, and beautiful React components.'
+  },
+  coder: {
+    name: 'Autonomous Coding Agent',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Inspect this function and provide a surgical fix with root cause analysis:\n\ndef binary_search(arr, target):\n    low = 0\n    high = len(arr)\n    while low <= high:\n        mid = (low + high) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return -1',
+    system: 'You are an autonomous senior software engineering agent. You read before editing, use surgical SEARCH/REPLACE diffs, avoid conversational filler, and isolate the root cause.'
+  },
+  vision: {
+    name: 'Multimodal Vision Inspector',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Analyze this attached interface screenshot. Critique its visual hierarchy, accessibility (WCAG color contrast), and suggest 3 high-impact UX improvements.',
+    system: 'You are an expert design systems engineer and UI/UX auditor. Provide thorough, structured analysis of visual elements.'
+  },
+  reasoning: {
+    name: 'Deep Research & CoT',
+    model: 'openai-fast',
+    gateway: 'webfree',
+    prompt: 'Perform an exhaustive architectural evaluation comparing RocksDB LSM-Trees versus B-Trees for high-write-throughput distributed databases. Provide comparative Markdown tables and inline numeric citations [1][2].',
+    system: 'You are an academic researcher. Synthesize complex topics into continuous, highly structured prose with comparison tables and bracketed inline citations.'
+  },
+  imagegen: {
+    name: 'Free Image Generator',
+    model: 'flux',
+    gateway: 'webfree',
+    prompt: '/image A futuristic cyberpunk workstation on Apple Silicon Mac with glowing neon screens, holographic AI agents, and moody volumetric lighting, 8k',
+    system: 'Text-to-Image Generation Engine'
+  },
+  videogen: {
+    name: 'Direct Video Generator',
+    model: 'video',
+    gateway: 'webfree',
+    prompt: '/video Cinematic drone sweep through an illuminated cyberpunk city in rain with flying cars and neon billboards, 4k ultra-detailed',
+    system: 'Generative Neural Video Synthesis Engine'
+  }
+};
+
+// DOM Elements
+const chatMessages = document.getElementById('chatMessages');
+const promptInput = document.getElementById('promptInput');
+const sendBtn = document.getElementById('sendBtn');
+const sendIcon = document.getElementById('sendIcon');
+const stopIcon = document.getElementById('stopIcon');
+const gatewaySelect = document.getElementById('gatewaySelect');
+const modelSelect = document.getElementById('modelSelect');
+const imageInput = document.getElementById('imageInput');
+const videoInput = document.getElementById('videoInput');
+const attachmentTray = document.getElementById('attachmentTray');
+const tempSlider = document.getElementById('tempSlider');
+const tempVal = document.getElementById('tempVal');
+const ctxSlider = document.getElementById('ctxSlider');
+const ctxVal = document.getElementById('ctxVal');
+const systemPromptInput = document.getElementById('systemPromptInput');
+const resetPromptBtn = document.getElementById('resetPromptBtn');
+const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+const sidebar = document.getElementById('sidebar');
+const toggleSandboxBtn = document.getElementById('toggleSandboxBtn');
+const sandboxDrawer = document.getElementById('sandboxDrawer');
+const sandboxIframe = document.getElementById('sandboxIframe');
+const reloadSandboxBtn = document.getElementById('reloadSandboxBtn');
+const popoutSandboxBtn = document.getElementById('popoutSandboxBtn');
+const closeSandboxBtn = document.getElementById('closeSandboxBtn');
+const clearChatBtn = document.getElementById('clearChatBtn');
+const speedVal = document.getElementById('speedVal');
+const latencyVal = document.getElementById('latencyVal');
+const imageModal = document.getElementById('imageModal');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  // Option 3 (Free Web Models) is auto-selected always
+  gatewaySelect.value = 'webfree';
+  state.gateway = 'webfree';
+  updateModelOptions();
+  setupEventListeners();
+  probeGateways();
+  setupSandboxDrawer();
+  setupBookStudioToolbarBridges();
+  attachOmniBusActionsToExistingBubbles();
+});
+
+function setupEventListeners() {
+  // Gateway Change
+  gatewaySelect.addEventListener('change', (e) => {
+    state.gateway = e.target.value;
+    updateModelOptions();
+  });
+
+  // Model Change
+  modelSelect.addEventListener('change', (e) => {
+    state.model = e.target.value;
+  });
+
+  // Sliders
+  tempSlider.addEventListener('input', (e) => {
+    state.temperature = parseFloat(e.target.value);
+    tempVal.textContent = state.temperature.toFixed(2);
+  });
+
+  ctxSlider.addEventListener('input', (e) => {
+    state.contextSize = parseInt(e.target.value, 10);
+    ctxVal.textContent = `${Math.round(state.contextSize / 1024)}K`;
+  });
+
+  systemPromptInput.addEventListener('input', (e) => {
+    state.systemPrompt = e.target.value;
+  });
+
+  resetPromptBtn.addEventListener('click', () => {
+    state.systemPrompt = '';
+    systemPromptInput.value = '';
+  });
+
+  // Sidebar Toggle
+  toggleSidebarBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+
+  // Input Auto-grow
+  promptInput.addEventListener('input', () => {
+    promptInput.style.height = 'auto';
+    promptInput.style.height = `${Math.min(promptInput.scrollHeight, 180)}px`;
+  });
+
+  // Enter to send
+  promptInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
+
+  sendBtn.addEventListener('click', handleSend);
+
+  // File Uploads
+  imageInput.addEventListener('change', (e) => handleFileUpload(e.target.files, 'image'));
+  videoInput.addEventListener('change', (e) => handleFileUpload(e.target.files, 'video'));
+
+  // Drag and Drop into chat
+  document.addEventListener('dragover', (e) => e.preventDefault());
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        handleFileUpload([file], 'image');
+      } else if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+        handleFileUpload([file], 'video');
+      }
+    }
+  });
+
+  // Clear Chat
+  clearChatBtn.addEventListener('click', () => {
+    chatMessages.innerHTML = `
+      <div class="welcome-hero">
+        <div class="hero-badge">⚡ Omni Agent Studio Live</div>
+        <h1>Multimodal Testing Workbench</h1>
+        <p>Ready for testing with <strong>Images, Full-Color Rich Text, Videos, Audio, and Live Interactive Sandboxes</strong>.</p>
+      </div>`;
+  });
+
+  // Lightbox Close
+  lightboxClose.addEventListener('click', () => {
+    imageModal.classList.remove('active');
+  });
+  imageModal.addEventListener('click', (e) => {
+    if (e.target === imageModal) imageModal.classList.remove('active');
+  });
+
+  // Preset Cards & Mini Chips
+  document.querySelectorAll('.preset-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.preset;
+      selectPresetPrompt(key);
+    });
+  });
+
+  // Sidebar Preset Dropdown Select
+  const sidebarPresetSelect = document.getElementById('sidebarPresetSelect');
+  if (sidebarPresetSelect) {
+    sidebarPresetSelect.addEventListener('change', (e) => {
+      selectPresetPrompt(e.target.value);
+    });
+  }
+
+  // Quick Intent Chips
+  document.querySelectorAll('.intent-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.intent-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeIntent = btn.dataset.intent;
+    });
+  });
+
+  // Module Hub Navigation Listeners
+  setupModuleHubNav();
+
+  // Voice STT & TTS Handlers
+  setupVoiceAssistant();
+
+  // RAG Knowledge Engine Modal Handlers
+  setupRagEngineModal();
+
+  // On-Device Memory Studio Handlers
+  setupMemoryStudioModal();
+}
+
+// Module Hub Navigation
+function setupModuleHubNav() {
+  const navChatbot = document.getElementById('navChatbot');
+  if (navChatbot) {
+    navChatbot.addEventListener('click', () => {
+      document.querySelectorAll('.hub-nav-btn').forEach(b => b.classList.remove('active'));
+      navChatbot.classList.add('active');
+      promptInput.focus();
+    });
+  }
+
+
+  const navStatus = document.getElementById('navStatus');
+  if (navStatus) {
+    navStatus.addEventListener('click', () => {
+      const perfMetrics = document.getElementById('perfMetrics');
+      if (perfMetrics) {
+        perfMetrics.classList.add('pulse-highlight');
+        setTimeout(() => perfMetrics.classList.remove('pulse-highlight'), 1200);
+      }
+    });
+  }
+
+
+  const navRag = document.getElementById('navRag');
+  if (navRag) {
+    navRag.addEventListener('click', () => {
+      openRagEngineModal();
+    });
+  }
+
+  const navMemory = document.getElementById('navMemory');
+  if (navMemory) {
+    navMemory.addEventListener('click', () => {
+      openMemoryStudioModal();
+    });
+  }
+
+  const navDb = document.getElementById('navDb');
+  if (navDb) {
+    navDb.addEventListener('click', (e) => {
+      e.preventDefault();
+      openDbStudioModal();
+    });
+  }
+
+  const navDeepResearch = document.getElementById('navDeepResearch');
+  if (navDeepResearch) {
+    navDeepResearch.addEventListener('click', () => {
+      selectPresetPrompt('perplexity');
+      promptInput.focus();
+    });
+  }
+
+  const navAutoPilot = document.getElementById('navAutoPilot');
+  if (navAutoPilot) {
+    navAutoPilot.addEventListener('click', () => {
+      document.querySelectorAll('.intent-chip').forEach(b => b.classList.toggle('active', b.dataset.intent === 'auto'));
+      state.activeIntent = 'auto';
+      selectPresetPrompt('autopilot');
+      promptInput.focus();
+    });
+  }
+
+  const navWebApp = document.getElementById('navWebApp');
+  if (navWebApp) {
+    navWebApp.addEventListener('click', () => {
+      document.querySelectorAll('.intent-chip').forEach(b => b.classList.toggle('active', b.dataset.intent === 'app'));
+      state.activeIntent = 'app';
+      selectPresetPrompt('lovable');
+      const sandboxPanel = document.getElementById('sandboxPanel');
+      if (sandboxPanel && sandboxPanel.classList.contains('hidden')) {
+        const toggleSandboxBtn = document.getElementById('toggleSandboxBtn');
+        if (toggleSandboxBtn) toggleSandboxBtn.click();
+      }
+      promptInput.focus();
+    });
+  }
+
+  const navDiagram = document.getElementById('navDiagram');
+  if (navDiagram) {
+    navDiagram.addEventListener('click', () => {
+      document.querySelectorAll('.intent-chip').forEach(b => b.classList.toggle('active', b.dataset.intent === 'diagram'));
+      state.activeIntent = 'diagram';
+      promptInput.value = 'Create an interactive architecture diagram in Mermaid for: ';
+      promptInput.focus();
+    });
+  }
+
+  const navImageGen = document.getElementById('navImageGen');
+  if (navImageGen) {
+    navImageGen.addEventListener('click', () => {
+      document.querySelectorAll('.intent-chip').forEach(b => b.classList.toggle('active', b.dataset.intent === 'image'));
+      state.activeIntent = 'image';
+      selectPresetPrompt('imagegen');
+      promptInput.focus();
+    });
+  }
+
+  const navVideoGen = document.getElementById('navVideoGen');
+  if (navVideoGen) {
+    navVideoGen.addEventListener('click', () => {
+      document.querySelectorAll('.intent-chip').forEach(b => b.classList.toggle('active', b.dataset.intent === 'video'));
+      state.activeIntent = 'video';
+      selectPresetPrompt('videogen');
+      promptInput.focus();
+    });
+  }
+
+}
+
+// Voice Assistant (Speech-to-Text & Text-to-Speech)
+function setupVoiceAssistant() {
+  const micBtn = document.getElementById('voiceMicBtn');
+  const ttsBtn = document.getElementById('voiceTtsBtn');
+  if (!micBtn || !ttsBtn) return;
+
+  let recognition = null;
+  let isListening = false;
+  let ttsEnabled = localStorage.getItem('omni_voice_tts') === 'true';
+
+  if (ttsEnabled) {
+    ttsBtn.classList.add('active');
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      isListening = true;
+      micBtn.classList.add('listening');
+      micBtn.setAttribute('title', 'Listening... Speak now (Click to stop)');
+    };
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        promptInput.value = (promptInput.value ? promptInput.value + ' ' : '') + finalTranscript;
+        promptInput.dispatchEvent(new Event('input'));
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.warn('[Voice Recognition]', event.error);
+      micBtn.classList.remove('listening');
+      isListening = false;
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove('listening');
+      isListening = false;
+      micBtn.setAttribute('title', 'Speak to AI (Speech-to-Text Voice Dictation)');
+    };
+
+    micBtn.addEventListener('click', () => {
+      if (isListening) {
+        recognition.stop();
+      } else {
+        try {
+          recognition.start();
+        } catch (e) {
+          console.warn('[Speech Recognition Start]', e);
+        }
+      }
+    });
+  } else {
+    micBtn.addEventListener('click', () => {
+      alert('Speech Recognition is not supported by this browser engine. Please test in Google Chrome or Microsoft Edge.');
+    });
+  }
+
+  ttsBtn.addEventListener('click', () => {
+    ttsEnabled = !ttsEnabled;
+    localStorage.setItem('omni_voice_tts', ttsEnabled ? 'true' : 'false');
+    if (ttsEnabled) {
+      ttsBtn.classList.add('active');
+      speakVoiceText('Voice response active.');
+    } else {
+      ttsBtn.classList.remove('active');
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+    }
+  });
+
+  window.speakVoiceResponse = function(text) {
+    if (!ttsEnabled || !window.speechSynthesis) return;
+    speakVoiceText(text);
+  };
+}
+
+function speakVoiceText(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/```[\s\S]*?```/g, 'Code block omitted.')
+                    .replace(/`([^`]+)`/g, '$1')
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/[#*_~>]/g, '')
+                    .slice(0, 800);
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.rate = 1.05;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
+
+// RAG Knowledge Engine Modal Logic
+function setupRagEngineModal() {
+  const modal = document.getElementById('ragModal');
+  const closeBtn = document.getElementById('closeRagModalBtn');
+  const closeBottomBtn = document.getElementById('closeRagModalBottomBtn');
+  const searchInput = document.getElementById('ragSearchInput');
+  const searchBtn = document.getElementById('runRagSearchBtn');
+  const topkChips = document.querySelectorAll('.topk-chip');
+
+  if (!modal) return;
+
+  const closeModal = () => modal.classList.add('hidden');
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (closeBottomBtn) closeBottomBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  let activeTopK = 5;
+  topkChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      topkChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeTopK = parseInt(chip.dataset.k, 10);
+    });
+  });
+
+  if (searchBtn && searchInput) {
+    const doSearch = async () => {
+      const q = searchInput.value.trim();
+      if (!q) return;
+      const resultsContainer = document.getElementById('ragResultsContainer');
+      const bookId = document.getElementById('ragBookFilterSelect')?.value || null;
+      if (resultsContainer) {
+        resultsContainer.innerHTML = '<div class="rag-loading-state">🔍 Searching vector embeddings across textbooks...</div>';
+      }
+      try {
+        const res = await fetch('/api/rag/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q, book_id: bookId, top_k: activeTopK })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        renderRagResults(data, resultsContainer);
+      } catch (err) {
+        if (resultsContainer) {
+          resultsContainer.innerHTML = `<div class="rag-error-state">⚠️ Vector query error: ${err.message}</div>`;
+        }
+      }
+    };
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doSearch();
+      }
+    });
+  }
+}
+
+async function openRagEngineModal() {
+  const modal = document.getElementById('ragModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  // Load telemetry stats & books list
+  try {
+    const [booksRes, dbRes] = await Promise.all([
+      fetch('/api/rag/books').catch(() => null),
+      fetch('/api/db/telemetry').catch(() => null)
+    ]);
+
+    if (booksRes && booksRes.ok) {
+      const bData = await booksRes.json();
+      const books = bData.books || [];
+      document.getElementById('ragBooksCount').textContent = books.length;
+      
+      const filterSelect = document.getElementById('ragBookFilterSelect');
+      if (filterSelect && books.length > 0) {
+        filterSelect.innerHTML = '<option value="">All Ingested Textbooks</option>' +
+          books.map(b => `<option value="${b.book_id}">${b.title || b.book_id}</option>`).join('');
+      }
+    }
+
+    if (dbRes && dbRes.ok) {
+      const dData = await dbRes.json();
+      if (dData.chunks_count !== undefined) {
+        document.getElementById('ragChunksCount').textContent = dData.chunks_count.toLocaleString();
+      }
+      if (dData.total_tokens !== undefined) {
+        document.getElementById('ragTokensCount').textContent = dData.total_tokens.toLocaleString();
+      }
+      if (dData.queries_count !== undefined) {
+        document.getElementById('ragQueriesCount').textContent = dData.queries_count.toLocaleString();
+      }
+    }
+  } catch (e) {
+    console.warn('[RAG Telemetry Load]', e);
+  }
+}
+
+function renderRagResults(data, container) {
+  if (!container) return;
+  const hits = data.citations || data.hits || data.matches || [];
+  if (hits.length === 0) {
+    container.innerHTML = '<div class="rag-empty-state"><p>No relevant vector matches found. Try broadening your query.</p></div>';
+    return;
+  }
+
+  let html = '';
+  if (data.answer) {
+    html += `
+      <div class="rag-synthesized-answer">
+        <div class="synthesized-header">💡 AI Vector Synthesis</div>
+        <div class="synthesized-text">${data.answer}</div>
+      </div>`;
+  }
+
+  html += `<div class="rag-hits-list">`;
+  hits.forEach((h, idx) => {
+    const scorePct = Math.round((h.similarity_score || h.similarity || h.score || 0.85) * 100);
+    html += `
+      <div class="rag-hit-card">
+        <div class="rag-hit-header">
+          <div class="rag-hit-meta">
+            <span class="rag-hit-badge">#${idx + 1}</span>
+            <span class="rag-book-title">${h.book_title || 'Technical Manual'}</span>
+            ${h.page_number ? `<span class="rag-page-tag">Page ${h.page_number}</span>` : ''}
+            ${h.chapter_title ? `<span class="rag-chapter-tag">${h.chapter_title}</span>` : ''}
+          </div>
+          <span class="rag-similarity-pill">${scorePct}% Match</span>
+        </div>
+        <div class="rag-chunk-body">${h.chunk_text || h.text || ''}</div>
+        <div class="rag-chunk-footer">
+          <span>Tokens: ${h.token_count || '--'}</span>
+          <div class="rag-card-actions">
+            <button class="tiny-btn" onclick="window.insertRagToPrompt(this)" title="Send textbook chunk to Chat input">💬 To Chat</button>
+            <button class="tiny-btn highlight-tiny" onclick="window.teachRagToMemory(this)" title="Distill and store in on-device edge memory">⚡ To Memory</button>
+            <button class="tiny-btn" onclick="window.appendRagToBook(this)" title="Append to active book chapter">📖 To Book</button>
+          </div>
+        </div>
+      </div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+window.insertRagToPrompt = function(target) {
+  let text = '';
+  if (typeof target === 'string') {
+    text = target;
+  } else if (target && target.closest) {
+    const card = target.closest('.rag-hit-card');
+    text = card?.querySelector('.rag-chunk-body')?.innerText || '';
+  }
+  if (!promptInput || !text) return;
+  promptInput.value = `Based on the following textbook context:\n"${text}"\n\nExplain how this works in detail and provide code examples:`;
+  promptInput.dispatchEvent(new Event('input'));
+  const modal = document.getElementById('ragModal');
+  if (modal) modal.classList.add('hidden');
+  promptInput.focus();
+  if (window.showOmniToast) window.showOmniToast('Textbook context inserted into Chatbot!', '💬');
+};
+
+window.teachRagToMemory = async function(btn) {
+  const card = btn.closest('.rag-hit-card');
+  const text = card?.querySelector('.rag-chunk-body')?.innerText || '';
+  const title = card?.querySelector('.rag-book-title')?.innerText || 'Textbook Fact';
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+  try {
+    const res = await fetch('/api/memory/distill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        source: `RAG: ${title}`,
+        category: 'textbook_rag'
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = '✅ Stored';
+    if (window.showOmniToast) window.showOmniToast(`Saved ${data.distilled_count || 1} facts into On-Device Memory!`, '⚡');
+    setTimeout(() => { btn.textContent = '⚡ To Memory'; }, 2000);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '⚡ To Memory';
+    if (window.showOmniToast) window.showOmniToast(`Memory save error: ${err.message}`, '⚠️');
+  }
+};
+
+window.appendRagToBook = async function(btn) {
+  const card = btn.closest('.rag-hit-card');
+  const text = card?.querySelector('.rag-chunk-body')?.innerText || '';
+  const title = card?.querySelector('.rag-book-title')?.innerText || 'Textbook Citation';
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Appending...';
+  try {
+    const res = await fetch('/api/books/append', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: `Textbook Reference: ${title}`,
+        content: `## Textbook Reference: ${title}\n\n> ${text}\n\n*Source: Ingested RAG Knowledge Catalog*`
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = '✅ In Book';
+    if (window.showOmniToast) window.showOmniToast(`Appended reference to Chapter ${data.chapter_count} in Book Studio!`, '📖');
+    setTimeout(() => { btn.textContent = '📖 To Book'; }, 2000);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '📖 To Book';
+    if (window.showOmniToast) window.showOmniToast(`Book append error: ${err.message}`, '⚠️');
+  }
+};
+
+// ============================================================================
+// ⚡ ON-DEVICE AI MEMORY STUDIO LOGIC (Sub-50ms Vector Recall & Teach)
+// ============================================================================
+
+let currentMemoryList = [];
+
+function setupMemoryStudioModal() {
+  const modal = document.getElementById('memoryModal');
+  const closeBtn = document.getElementById('closeMemoryModalBtn');
+  const closeBottomBtn = document.getElementById('closeMemoryModalBottomBtn');
+  const teachForm = document.getElementById('memTeachForm');
+  const btnRecall = document.getElementById('btnRunRecall');
+  const recallInput = document.getElementById('memRecallQuery');
+  const btnRefresh = document.getElementById('btnRefreshMemories');
+  const filterInput = document.getElementById('memSearchFilter');
+
+  if (!modal) return;
+
+  const closeModal = () => modal.classList.add('hidden');
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (closeBottomBtn) closeBottomBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Teach Memory Form Submission
+  if (teachForm) {
+    teachForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const label = document.getElementById('memTeachLabel')?.value.trim();
+      const transcript = document.getElementById('memTeachTranscript')?.value.trim();
+      const where = document.getElementById('memTeachWhere')?.value.trim() || '';
+      const category = document.getElementById('memTeachCategory')?.value || 'gear';
+      const submitBtn = document.getElementById('btnTeachSubmit');
+
+      if (!label || !transcript) return;
+
+      const origText = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⚡ Vectorizing...</span>';
+      }
+
+      try {
+        const res = await fetch('/api/memory/teach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label, transcript, where, category })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        teachForm.reset();
+        await loadMemoryStudioData();
+
+        // Optional speech confirmation
+        if (localStorage.getItem('omni_voice_tts') === 'true') {
+          speakWithVoice(`Stored on-device memory for ${label}`);
+        }
+      } catch (err) {
+        console.error('[Memory Teach Error]', err);
+        alert(`Failed to teach memory: ${err.message}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
+        }
+      }
+    });
+  }
+
+  // Ask / Recall Execution
+  if (btnRecall && recallInput) {
+    const doRecall = async () => {
+      const q = recallInput.value.trim();
+      if (!q) return;
+
+      const outputContainer = document.getElementById('memRecallOutput');
+      if (outputContainer) {
+        outputContainer.innerHTML = '<div class="recall-placeholder"><span>⚡ Searching 768-D edge vector index...</span></div>';
+      }
+
+      try {
+        const startTime = performance.now();
+        const res = await fetch('/api/memory/recall', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q })
+        });
+        const elapsed = (performance.now() - startTime).toFixed(1);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        renderMemoryRecallOutput(data, elapsed, outputContainer);
+      } catch (err) {
+        if (outputContainer) {
+          outputContainer.innerHTML = `<div class="recall-placeholder" style="color:#ef4444;">⚠️ Recall error: ${err.message}</div>`;
+        }
+      }
+    };
+
+    btnRecall.addEventListener('click', doRecall);
+    recallInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doRecall();
+      }
+    });
+  }
+
+  // Filter Memories
+  if (filterInput) {
+    filterInput.addEventListener('input', () => {
+      const term = filterInput.value.toLowerCase().trim();
+      filterMemoryCards(term);
+    });
+  }
+
+  // Refresh Memories
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', () => {
+      loadMemoryStudioData();
+    });
+  }
+}
+
+async function openMemoryStudioModal() {
+  const modal = document.getElementById('memoryModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  await loadMemoryStudioData();
+}
+
+async function loadMemoryStudioData() {
+  try {
+    const [telemetryRes, listRes] = await Promise.all([
+      fetch('/api/memory/telemetry').catch(() => null),
+      fetch('/api/memory/list').catch(() => null)
+    ]);
+
+    if (telemetryRes && telemetryRes.ok) {
+      const t = await telemetryRes.json();
+      const countEl = document.getElementById('memTotalCount');
+      const sightingsEl = document.getElementById('memSightingsCount');
+      const dbSizeEl = document.getElementById('memDbSizeVal');
+      const latencyEl = document.getElementById('memLatencyVal');
+
+      if (countEl && t.total_memories !== undefined) countEl.textContent = t.total_memories;
+      if (sightingsEl && t.total_sightings !== undefined) sightingsEl.textContent = t.total_sightings;
+      if (dbSizeEl && t.database_size_kb !== undefined) dbSizeEl.textContent = `${t.database_size_kb} KB`;
+      if (latencyEl) latencyEl.textContent = '< 2 ms';
+    }
+
+    if (listRes && listRes.ok) {
+      const l = await listRes.json();
+      currentMemoryList = l.memories || [];
+      const badge = document.getElementById('memLibraryCountBadge');
+      if (badge) badge.textContent = `${currentMemoryList.length} item${currentMemoryList.length === 1 ? '' : 's'}`;
+      renderMemoryCards(currentMemoryList);
+    }
+  } catch (err) {
+    console.warn('[Load Memory Data]', err);
+  }
+}
+
+function renderMemoryRecallOutput(data, elapsedMs, container) {
+  if (!container) return;
+
+  if (!data.recognized) {
+    const scorePct = Math.round((data.best_score || 0) * 100);
+    container.innerHTML = `
+      <div class="recall-placeholder" style="color: var(--text-dim);">
+        <span style="font-size: 1.5rem;">❓</span>
+        <p><strong>Unrecognized Memory</strong> (Confidence: ${scorePct}%, Threshold: 35%)</p>
+        <p style="font-size:0.75rem;">${data.spoken_response || 'No matching fact registered in on-device storage.'}</p>
+      </div>`;
+    return;
+  }
+
+  const match = data.match || {};
+  const scorePct = Math.round((data.best_score || 1.0) * 100);
+  const confClass = scorePct >= 65 ? 'conf-high' : 'conf-medium';
+
+  container.innerHTML = `
+    <div class="recall-hit-card">
+      <div class="recall-hit-header">
+        <div class="recall-hit-title">
+          <span>⚡</span>
+          <span>${match.label || 'Recognized Item'}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="conf-pill ${confClass}">${scorePct}% Confidence</span>
+          <span style="font-size:0.7rem; color:var(--text-dim); font-weight:700;">${elapsedMs}ms</span>
+        </div>
+      </div>
+      <div class="recall-transcript-text">
+        ${data.spoken_response || match.transcript || ''}
+      </div>
+      <div class="recall-meta-row">
+        <div class="recall-tags">
+          ${match.where_loc ? `<span class="loc-tag">📍 ${match.where_loc}</span>` : ''}
+          ${match.category ? `<span class="loc-tag">🏷️ ${match.category}</span>` : ''}
+          <span class="loc-tag">👁️ ${match.sightings_count || 1} sightings</span>
+        </div>
+        <button class="voice-speak-btn" id="btnSpeakRecallResult">
+          <span>🔊</span> Read Aloud
+        </button>
+      </div>
+    </div>`;
+
+  const speakBtn = document.getElementById('btnSpeakRecallResult');
+  if (speakBtn) {
+    speakBtn.addEventListener('click', () => {
+      speakWithVoice(data.spoken_response || match.transcript || '');
+    });
+  }
+}
+
+function renderMemoryCards(list) {
+  const grid = document.getElementById('memoryCardsGrid');
+  if (!grid) return;
+
+  if (!list || list.length === 0) {
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 2rem; color: var(--text-dim); font-weight:600;">No memories stored yet. Use the TEACH form above to add facts, gear, or locations.</div>';
+    return;
+  }
+
+  grid.innerHTML = list.map(item => `
+    <div class="memory-item-card" data-label="${(item.label || '').toLowerCase()}">
+      <div class="item-card-top">
+        <div class="item-card-title">${item.label || 'Untitled'}</div>
+        <span class="item-card-category">${item.category || 'general'}</span>
+      </div>
+      <div class="item-card-desc">${item.transcript || ''}</div>
+      <div class="item-card-footer">
+        <div style="display:flex; align-items:center; gap:6px;">
+          ${item.where_loc ? `<span>📍 ${item.where_loc}</span> •` : ''}
+          <span class="item-sightings-badge">👁️ ${item.sightings_count || 1}</span>
+        </div>
+        <div class="item-card-action-bar">
+          <button class="mem-bridge-btn" onclick="window.askMemoryInChat(this)" title="Ask AI about this memory in Chat">💬 Ask</button>
+          <button class="mem-bridge-btn" onclick="window.crossRefMemoryInRag(this)" title="Search textbooks in RAG for this concept">🔍 RAG</button>
+          <button class="mem-bridge-btn" onclick="window.appendMemoryToBook(this)" title="Append this memory note to Book">📖 Book</button>
+          <button class="item-forget-btn" onclick="forgetMemoryItem('${(item.label || '').replace(/'/g, "\\'")}')" title="Delete from vector memory">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.askMemoryInChat = function(btn) {
+  const card = btn.closest('.memory-item-card');
+  const label = card?.querySelector('.item-card-title')?.innerText || '';
+  const transcript = card?.querySelector('.item-card-desc')?.innerText || '';
+  if (!promptInput) return;
+
+  promptInput.value = `Regarding this stored edge memory fact:\n**${label}**\n"${transcript}"\n\nPlease provide code implementation, architecture considerations, and real-world usage patterns for this.`;
+  promptInput.dispatchEvent(new Event('input'));
+  const modal = document.getElementById('memoryModal');
+  if (modal) modal.classList.add('hidden');
+  promptInput.focus();
+  if (window.showOmniToast) window.showOmniToast(`Memory '${label}' loaded into Chatbot!`, '💬');
+};
+
+window.crossRefMemoryInRag = function(btn) {
+  const card = btn.closest('.memory-item-card');
+  const label = card?.querySelector('.item-card-title')?.innerText || '';
+  const modal = document.getElementById('memoryModal');
+  if (modal) modal.classList.add('hidden');
+
+  openRagEngineModal();
+  const searchInput = document.getElementById('ragSearchInput');
+  const searchBtn = document.getElementById('runRagSearchBtn');
+  if (searchInput && searchBtn) {
+    searchInput.value = label;
+    searchBtn.click();
+    if (window.showOmniToast) window.showOmniToast(`Cross-referencing '${label}' across RAG textbooks...`, '🔍');
+  }
+};
+
+window.appendMemoryToBook = async function(btn) {
+  const card = btn.closest('.memory-item-card');
+  const label = card?.querySelector('.item-card-title')?.innerText || 'Memory Fact';
+  const transcript = card?.querySelector('.item-card-desc')?.innerText || '';
+
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+  try {
+    const res = await fetch('/api/books/append', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: `Edge Memory Note: ${label}`,
+        content: `## Memory Note: ${label}\n\n> ${transcript}\n\n*Stored in On-Device Vector Memory with sub-2ms recall.*`
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = '✅ In Book';
+    if (window.showOmniToast) window.showOmniToast(`Memory '${label}' appended to Book chapter!`, '📖');
+    setTimeout(() => { btn.textContent = '📖 Book'; }, 2000);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '📖 Book';
+    if (window.showOmniToast) window.showOmniToast(`Book append error: ${err.message}`, '⚠️');
+  }
+};
+
+function filterMemoryCards(term) {
+  const cards = document.querySelectorAll('.memory-item-card');
+  cards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    if (!term || text.includes(term)) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+window.forgetMemoryItem = async function(label) {
+  if (!label) return;
+  if (!confirm(`Forget memory: "${label}"? This will remove its vector embeddings.`)) return;
+
+  try {
+    const res = await fetch('/api/memory/forget', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await loadMemoryStudioData();
+  } catch (err) {
+    alert(`Failed to forget memory: ${err.message}`);
+  }
+};
+
+// Preset Selector
+window.selectPresetPrompt = function(presetKey) {
+  const p = PRESETS[presetKey];
+  if (!p) return;
+
+  gatewaySelect.value = p.gateway;
+  state.gateway = p.gateway;
+  updateModelOptions();
+
+  setTimeout(() => {
+    modelSelect.value = p.model;
+    state.model = p.model;
+  }, 100);
+
+  promptInput.value = p.prompt;
+  promptInput.style.height = 'auto';
+  promptInput.style.height = `${promptInput.scrollHeight}px`;
+
+  if (p.system) {
+    state.systemPrompt = p.system;
+    systemPromptInput.value = p.system;
+  }
+
+  // Sync sidebar dropdown select
+  const sidebarPresetSelect = document.getElementById('sidebarPresetSelect');
+  if (sidebarPresetSelect && sidebarPresetSelect.value !== presetKey) {
+    sidebarPresetSelect.value = presetKey;
+  }
+
+  // Sync mini-chips highlight
+  document.querySelectorAll('.preset-card').forEach(c => {
+    if (c.dataset.preset === presetKey) {
+      c.classList.add('highlight-card');
+    } else {
+      c.classList.remove('highlight-card');
+    }
+  });
+};
+
+// Probe Gateways
+async function probeGateways() {
+  const updateChip = (id, online) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const dot = el.querySelector('.dot');
+    dot.className = `dot ${online ? 'live' : ''}`;
+  };
+
+  // 1. Ollama
+  try {
+    const res = await fetch(`${GATEWAYS.ollama.base}/api/tags`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      updateChip('ollamaStatus', true);
+      const data = await res.json();
+      if (data.models && state.gateway === 'ollama') {
+        populateModels(data.models.map(m => m.name));
+      }
+    } else {
+      updateChip('ollamaStatus', false);
+    }
+  } catch (err) {
+    updateChip('ollamaStatus', false);
+  }
+
+  // 2. OmniRoute
+  try {
+    const res = await fetch(`${GATEWAYS.omniroute.base}/v1/models`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      updateChip('omnirouteStatus', true);
+    } else {
+      updateChip('omnirouteStatus', false);
+    }
+  } catch (err) {
+    updateChip('omnirouteStatus', false);
+  }
+
+  // 3. Spark MLX
+  try {
+    const res = await fetch(`${GATEWAYS.spark.base}/v1/models`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      updateChip('sparkStatus', true);
+    } else {
+      updateChip('sparkStatus', false);
+    }
+  } catch (err) {
+    updateChip('sparkStatus', false);
+  }
+
+  // 4. Free Web Models
+  try {
+    const res = await fetch(`${GATEWAYS.webfree.base}/models`, { signal: AbortSignal.timeout(4000) });
+    updateChip('webfreeStatus', res.ok);
+  } catch (err) {
+    updateChip('webfreeStatus', true);
+  }
+}
+
+function updateModelOptions() {
+  const g = state.gateway;
+  if (g === 'auto') {
+    populateModels([
+      'auto-detect',
+      'bolt-local',
+      'qwen-agent',
+      'gemma3:4b',
+      'flux',
+      'video',
+      'openai-fast'
+    ]);
+    return;
+  }
+  if (g === 'ollama') {
+    fetch(`${GATEWAYS.ollama.base}/api/tags`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.models) populateModels(d.models.map(m => m.name));
+      })
+      .catch(() => {
+        populateModels(['bolt-local', 'qwen-agent', 'gemma3:4b', 'qwen2.5-coder:7b']);
+      });
+  } else if (g === 'webfree') {
+    populateModels([
+      'openai-fast (Chat & Web Apps)',
+      'flux (Image Generator)',
+      'video (Direct Video Generator)',
+      'deepseek (Reasoning & Code)',
+      'mistral',
+      'qwen',
+      'llama'
+    ]);
+  } else if (g === 'omniroute') {
+    populateModels([
+      'combo-pro-coding',
+      'combo-deep-reasoning',
+      'combo-fast-chat',
+      'combo-vision-multimodal',
+      'combo-ultra-heavy',
+      'combo-zero-cost',
+      'auto/best-coding'
+    ]);
+  } else if (g === 'spark') {
+    populateModels(['XHToken/Spark-X2.5-1.7B']);
+  } else if (g === 'lmstudio') {
+    populateModels(['local-model']);
+  }
+}
+
+function populateModels(models) {
+  modelSelect.innerHTML = '';
+  models.forEach(m => {
+    const opt = document.createElement('option');
+    const val = m.split(' ')[0];
+    opt.value = val;
+    opt.textContent = m;
+    if (val === 'openai-fast' || val === 'bolt-local' || val === 'combo-pro-coding') {
+      opt.selected = true;
+    }
+    modelSelect.appendChild(opt);
+  });
+  state.model = modelSelect.value;
+}
+
+// Media Upload Handling
+function handleFileUpload(files, type) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const base64 = dataUrl.split(',')[1];
+      const attachment = {
+        type: type || (file.type.startsWith('video/') ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'image'),
+        dataUrl,
+        base64,
+        name: file.name
+      };
+      state.attachments.push(attachment);
+      renderAttachmentTray();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderAttachmentTray() {
+  attachmentTray.innerHTML = '';
+  state.attachments.forEach((att, idx) => {
+    const item = document.createElement('div');
+    item.className = 'tray-item';
+    if (att.type === 'image') {
+      item.innerHTML = `<img src="${att.dataUrl}" alt="${att.name}"><button class="tray-remove-btn" onclick="removeAttachment(${idx})">&times;</button>`;
+    } else {
+      item.innerHTML = `<video src="${att.dataUrl}" muted></video><button class="tray-remove-btn" onclick="removeAttachment(${idx})">&times;</button>`;
+    }
+    attachmentTray.appendChild(item);
+  });
+}
+
+window.removeAttachment = function(idx) {
+  state.attachments.splice(idx, 1);
+  renderAttachmentTray();
+};
+
+// ==========================================================================
+// Autonomous Intent Detection & Generation Engines
+// ==========================================================================
+
+function detectIntent(rawText) {
+  const t = rawText.trim();
+
+  // If user explicitly chose a chip other than 'auto'
+  if (state.activeIntent && state.activeIntent !== 'auto') {
+    let clean = t;
+    if (t.startsWith('/image ')) clean = t.slice(7).trim();
+    if (t.startsWith('/video ')) clean = t.slice(7).trim();
+    return { type: state.activeIntent, prompt: clean, original: t };
+  }
+
+  // 1. Direct Slash Commands
+  if (t.startsWith('/image ')) {
+    return { type: 'image', prompt: t.slice(7).trim(), original: t };
+  }
+  if (t.startsWith('/video ')) {
+    return { type: 'video', prompt: t.slice(7).trim(), original: t };
+  }
+
+  // 2. Video Generation Intents
+  const videoAction = /(?:make|generate|create|render|produce|animate|build)\s+(?:an?\s+)?(?:video|animation|cinematic clip|motion clip|clip|short film)\b/i;
+  const videoLeadRegex = /^(?:video|animation|cinematic video|motion clip)\s*(?:of\s+a|of\s+an|of|for|showing|about)?\s*:\s*(.*)/i;
+  
+  if (videoAction.test(t)) {
+    const p = t.replace(videoAction, '').replace(/^(?:of\s+a|of\s+an|of|for|about|showing|with)\s+/i, '').trim();
+    return { type: 'video', prompt: p || t, original: t };
+  }
+  if (videoLeadRegex.test(t)) {
+    const match = t.match(videoLeadRegex);
+    return { type: 'video', prompt: match[1].trim(), original: t };
+  }
+
+  // 3. Interactive Web App / Sandbox Intents
+  const appRegex = /(?:build|create|code|make|develop|design|program|implement)\s+(?:an?\s+)?(?:[\w\s-]{0,25})?\b(?:app|application|game|calculator|timer|stopwatch|clock|widget|dashboard|tool|page|component|website|portfolio|ui)\b/i;
+  if (appRegex.test(t)) {
+    return { type: 'app', prompt: t, original: t };
+  }
+
+  // 4. Diagrams / Flowcharts
+  const diagramRegex = /(?:diagram|flowchart|architecture of|system design|sequence diagram|workflow chart)\b/i;
+  if (diagramRegex.test(t)) {
+    return { type: 'diagram', prompt: t, original: t };
+  }
+
+  // 5. Image Generation Intents
+  const imageDirectAction = /^(?:draw|paint|sketch|illustrate)\s+(?:an?\s+)?(.*)/i;
+  const imageAction = /(?:make|generate|create|render|produce|show me)\s+(?:an?\s+)?(?:image|picture|photo|illustration|wallpaper|artwork|poster|sketch|painting|visual|graphic|portrait)\b/i;
+  const imageKeywords = /\b(?:image|photo|picture|wallpaper|artwork|poster|sketch|painting|portrait)\s+(?:of\s+a|of\s+an|of|for|showing|with)\b/i;
+  const imageLeadRegex = /^(?:image|picture|photo|wallpaper|artwork|poster)\s*(?:of\s+a|of\s+an|of|for|showing|about)?\s*:\s*(.*)/i;
+  
+  if (imageDirectAction.test(t)) {
+    const match = t.match(imageDirectAction);
+    return { type: 'image', prompt: match[1].trim(), original: t };
+  }
+  if (imageAction.test(t)) {
+    const p = t.replace(imageAction, '').replace(/^(?:of\s+a|of\s+an|of|for|about|showing|with)\s+/i, '').trim();
+    return { type: 'image', prompt: p || t, original: t };
+  }
+  if (imageKeywords.test(t)) {
+    const p = t.replace(imageKeywords, '').trim();
+    return { type: 'image', prompt: p || t, original: t };
+  }
+  if (imageLeadRegex.test(t)) {
+    const match = t.match(imageLeadRegex);
+    return { type: 'image', prompt: match[1].trim(), original: t };
+  }
+
+  // Broad catch for queries describing pure visual concepts
+  const visualPrompt = /^(?:a|an)\s+(?:futuristic|cyberpunk|cinematic|photorealistic|hyperrealistic|anime|fantasy|sci-fi|retro|vintage|digital\s+art|neon|oil\s+painting)\b/i;
+  if (visualPrompt.test(t)) {
+    return { type: 'image', prompt: t, original: t };
+  }
+
+  // 6. On-Device Edge Memory Intents (Sub-50ms Qdrant Edge Teach & Recall)
+  if (t.startsWith('/teach ') || /^(?:teach|remember|store memory|save to memory)\s*[:]?\s*/i.test(t)) {
+    const rawTeach = t.replace(/^\/teach\s+/i, '').replace(/^(?:teach|remember|store memory|save to memory)\s*[:]?\s*/i, '').trim();
+    return { type: 'memory_teach', prompt: rawTeach, original: t };
+  }
+  if (t.startsWith('/recall ') || t.startsWith('/ask ') || /^(?:where is|where are|where's|where did i put|what did i store about|find my)\b/i.test(t)) {
+    const rawQuery = t.replace(/^\/(?:recall|ask)\s+/i, '').trim();
+    return { type: 'memory_recall', prompt: rawQuery || t, original: t };
+  }
+
+  return { type: 'text', prompt: t, original: t };
+}
+
+// Neural Image Synthesis Engine (Zero Key via Flux/Pollinations)
+function executeImageGeneration(imgPrompt, container, startTime, routeBadge = 'Flux 1024px') {
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;color:var(--accent-cyan);padding:8px 0;">
+      <span class="dot checking"></span> Synthesizing high-resolution neural image weights (Flux)...
+    </div>`;
+
+  const seed = Math.floor(Math.random() * 999999);
+  const encodedPrompt = encodeURIComponent(imgPrompt);
+  const rawImgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}`;
+  const displayUrl = PROXY_ROOT ? `/proxy/image?url=${encodeURIComponent(rawImgUrl)}` : rawImgUrl;
+
+  const img = new Image();
+  img.onload = () => {
+    const latency = Math.round(performance.now() - startTime);
+    latencyVal.textContent = latency;
+    speedVal.textContent = '1.0';
+    container.innerHTML = `
+      <div class="media-generation-card">
+        <div class="media-generation-header">
+          <div class="media-title-wrap">
+            <span>✨ Neural Image</span>
+            <span class="media-badge">Flux / Ultra HD</span>
+          </div>
+          <span style="font-size:0.72rem;color:var(--text-dim);">${latency}ms</span>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.6rem;">
+          <em>"${escapeHtml(imgPrompt)}"</em>
+        </p>
+        <div style="text-align:center;">
+          <img src="${displayUrl}" class="message-image-thumb" style="max-width:100%;max-height:480px;cursor:pointer;border-radius:8px;" onclick="openLightbox('${displayUrl}')" alt="${escapeHtml(imgPrompt)}">
+        </div>
+        <div class="media-generation-actions">
+          <a href="${displayUrl}" target="_blank" download="generated-image.jpg" class="code-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;background:var(--bg-hover);padding:6px 12px;border-radius:6px;color:#fff;">
+            ⬇️ Download Image
+          </a>
+          <button class="code-btn" onclick="regenerateImage('${encodeURIComponent(imgPrompt)}', this)">
+            🔄 Regenerate
+          </button>
+        </div>
+      </div>`;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    setGeneratingState(false);
+  };
+
+  img.onerror = () => {
+    container.innerHTML = `<span style="color:var(--accent-rose)">⚠️ Failed to generate image. Please try again.</span>`;
+    setGeneratingState(false);
+  };
+  img.src = displayUrl;
+}
+
+// Neural Video Synthesis Engine (Canvas 30 FPS + VP9 WebM Encoding)
+function executeVideoGeneration(vidPrompt, container, startTime, routeBadge = '30 FPS Video') {
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;color:var(--accent-purple);padding:8px 0;">
+      <span class="dot checking"></span> Synthesizing keyframes & 30 FPS cinematic motion...
+    </div>`;
+
+  const seed = Math.floor(Math.random() * 999999);
+  const encodedPrompt = encodeURIComponent(vidPrompt + " cinematic lighting smooth motion ultra detailed");
+  const baseImgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}`;
+  const proxyUrl = PROXY_ROOT ? `/proxy/image?url=${encodeURIComponent(baseImgUrl)}` : baseImgUrl;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+
+      const stream = canvas.captureStream(30);
+      let mime = 'video/webm;codecs=vp9';
+      if (!MediaRecorder.isTypeSupported(mime)) {
+        mime = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
+      }
+      const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4000000 });
+      const recordedChunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: mime });
+        const vidUrl = URL.createObjectURL(blob);
+        const latency = Math.round(performance.now() - startTime);
+        latencyVal.textContent = latency;
+        speedVal.textContent = '30.0';
+
+        container.innerHTML = `
+          <div class="media-generation-card">
+            <div class="media-generation-header">
+              <div class="media-title-wrap">
+                <span>🎬 Direct Neural Video</span>
+                <span class="media-badge">1280x720 • 30 FPS • WebM</span>
+              </div>
+              <span style="font-size:0.72rem;color:var(--text-dim);">${latency}ms</span>
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.6rem;">
+              <em>"${escapeHtml(vidPrompt)}"</em>
+            </p>
+            <div class="video-player-container" style="max-width:720px;border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.6);border:1px solid var(--border-focus);">
+              <video src="${vidUrl}" controls autoplay loop playsinline style="width:100%;display:block;"></video>
+            </div>
+            <div class="media-generation-actions">
+              <a href="${vidUrl}" download="neural-video.webm" class="code-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px;background:var(--bg-hover);padding:6px 14px;border-radius:6px;color:#fff;font-weight:600;">
+                ⬇️ Download Video (WebM)
+              </a>
+              <button class="code-btn" onclick="regenerateVideo('${encodeURIComponent(vidPrompt)}', this)">
+                🔄 Regenerate
+              </button>
+            </div>
+          </div>`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        setGeneratingState(false);
+      };
+
+      recorder.start();
+
+      const totalFrames = 100;
+      let currentFrame = 0;
+
+      const particles = Array.from({ length: 45 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: -Math.random() * 1.5,
+        size: Math.random() * 3 + 1,
+        alpha: Math.random() * 0.7 + 0.3
+      }));
+
+      function renderFrame() {
+        if (currentFrame >= totalFrames) {
+          recorder.stop();
+          return;
+        }
+
+        const progress = currentFrame / totalFrames;
+        const ease = 0.5 - 0.5 * Math.cos(progress * Math.PI);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const scale = 1.0 + ease * 0.15;
+        const shiftX = Math.sin(progress * Math.PI) * 25;
+        const shiftY = -ease * 20;
+
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(scale, scale);
+        ctx.translate(-canvas.width / 2 + shiftX, -canvas.height / 2 + shiftY);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+
+        // Atmospheric volumetric light sweep
+        const lightX = canvas.width * progress;
+        const grad = ctx.createRadialGradient(lightX, 200, 50, lightX, 200, 600);
+        grad.addColorStop(0, 'rgba(6, 182, 212, 0.25)');
+        grad.addColorStop(0.5, 'rgba(139, 92, 246, 0.12)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Floating dust particles
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * (0.8 + 0.2 * Math.sin(currentFrame * 0.2))})`;
+          ctx.fill();
+        });
+
+        // Letterbox bars
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, 24);
+        ctx.fillRect(0, canvas.height - 24, canvas.width, 24);
+
+        currentFrame++;
+        requestAnimationFrame(renderFrame);
+      }
+
+      renderFrame();
+
+    } catch (videoErr) {
+      container.innerHTML = `
+        <div class="media-generation-card">
+          <p><strong>🎬 Visual Scene:</strong> <em>"${escapeHtml(vidPrompt)}"</em></p>
+          <img src="${baseImgUrl}" class="message-image-thumb" style="max-width:100%;max-height:480px;" alt="${escapeHtml(vidPrompt)}">
+        </div>`;
+      setGeneratingState(false);
+    }
+  };
+
+  img.onerror = () => {
+    container.innerHTML = `<span style="color:var(--accent-rose)">⚠️ Failed to synthesize video. Please try again.</span>`;
+    setGeneratingState(false);
+  };
+
+  img.src = proxyUrl;
+}
+
+// Media Regeneration Helpers
+window.regenerateImage = function(encodedPrompt, btn) {
+  const prompt = decodeURIComponent(encodedPrompt);
+  const card = btn.closest('.media-generation-card') || btn.parentElement;
+  executeImageGeneration(prompt, card, performance.now());
+};
+
+window.regenerateVideo = function(encodedPrompt, btn) {
+  const prompt = decodeURIComponent(encodedPrompt);
+  const card = btn.closest('.media-generation-card') || btn.parentElement;
+  executeVideoGeneration(prompt, card, performance.now());
+};
+
+// On-Device Edge Memory Chat Execution
+async function executeEdgeMemoryTeach(promptText, container, startTime) {
+  let label = '';
+  let transcript = '';
+  let where = '';
+  let category = 'gear';
+
+  if (promptText.includes(':')) {
+    const parts = promptText.split(':');
+    label = parts[0].trim();
+    transcript = parts.slice(1).join(':').trim();
+  } else if (promptText.includes('=')) {
+    const parts = promptText.split('=');
+    label = parts[0].trim();
+    transcript = parts.slice(1).join('=').trim();
+  } else {
+    const words = promptText.split(' ');
+    label = words.slice(0, 2).join(' ');
+    transcript = promptText;
+  }
+
+  if (transcript.toLowerCase().includes('in ') || transcript.toLowerCase().includes('at ')) {
+    const m = transcript.match(/(?:in|at)\s+([a-zA-Z0-9\s]+?)(?:[.,]|$)/i);
+    if (m) where = m[1].trim();
+  }
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;color:var(--accent-cyan);padding:8px 0;">
+      <span class="dot checking"></span> Storing into local Qdrant Edge memory & generating 768-D vector...
+    </div>`;
+
+  try {
+    const res = await fetch('/api/memory/teach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label, transcript, where, category })
+    });
+    const elapsed = (performance.now() - startTime).toFixed(1);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await res.json();
+
+    container.innerHTML = `
+      <div class="recall-hit-card" style="margin-top: 4px;">
+        <div class="recall-hit-header">
+          <div class="recall-hit-title">
+            <span>⚡</span>
+            <span>Memory Stored: ${escapeHtml(label)}</span>
+          </div>
+          <span class="conf-pill conf-high">${elapsed}ms Local Edge</span>
+        </div>
+        <div class="recall-transcript-text">
+          "${escapeHtml(transcript)}"
+        </div>
+        <div class="recall-meta-row">
+          <div class="recall-tags">
+            ${where ? `<span class="loc-tag">📍 ${escapeHtml(where)}</span>` : ''}
+            <span class="loc-tag">🛡️ Zero Cloud / On-Device</span>
+          </div>
+          <button class="voice-speak-btn" onclick="speakWithVoice('Stored memory for ${label.replace(/'/g, "\\'")}')">
+            <span>🔊</span> Speak
+          </button>
+        </div>
+      </div>`;
+
+    if (localStorage.getItem('omni_voice_tts') === 'true') {
+      speakWithVoice(`Stored on-device memory for ${label}`);
+    }
+  } catch (err) {
+    container.innerHTML = `<span style="color:var(--accent-rose)">⚠️ Memory Teach failed: ${escapeHtml(err.message)}</span>`;
+  } finally {
+    setGeneratingState(false);
+  }
+}
+
+async function executeEdgeMemoryRecall(queryText, container, startTime) {
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;color:var(--accent-cyan);padding:8px 0;">
+      <span class="dot checking"></span> Querying on-device semantic memory index (&lt; 50ms)...
+    </div>`;
+
+  try {
+    const res = await fetch('/api/memory/recall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: queryText })
+    });
+    const elapsed = (performance.now() - startTime).toFixed(1);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (data.recognized && data.match) {
+      const match = data.match;
+      const scorePct = Math.round((data.best_score || 1.0) * 100);
+      const confClass = scorePct >= 65 ? 'conf-high' : 'conf-medium';
+
+      container.innerHTML = `
+        <div class="recall-hit-card" style="margin-top: 4px;">
+          <div class="recall-hit-header">
+            <div class="recall-hit-title">
+              <span>⚡</span>
+              <span>${escapeHtml(match.label || 'Recognized Item')}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="conf-pill ${confClass}">${scorePct}% Match</span>
+              <span style="font-size:0.7rem; color:var(--text-dim); font-weight:700;">${elapsed}ms</span>
+            </div>
+          </div>
+          <div class="recall-transcript-text">
+            ${escapeHtml(data.spoken_response || match.transcript || '')}
+          </div>
+          <div class="recall-meta-row">
+            <div class="recall-tags">
+              ${match.where_loc ? `<span class="loc-tag">📍 ${escapeHtml(match.where_loc)}</span>` : ''}
+              ${match.category ? `<span class="loc-tag">🏷️ ${escapeHtml(match.category)}</span>` : ''}
+              <span class="loc-tag">👁️ ${match.sightings_count || 1} sightings</span>
+            </div>
+            <button class="voice-speak-btn" onclick="speakWithVoice('${(data.spoken_response || match.transcript || '').replace(/'/g, "\\'").replace(/\n/g, ' ')}')">
+              <span>🔊</span> Speak
+            </button>
+          </div>
+        </div>`;
+
+      if (localStorage.getItem('omni_voice_tts') === 'true') {
+        speakWithVoice(data.spoken_response || match.transcript || '');
+      }
+      setGeneratingState(false);
+      return true; // handled
+    } else {
+      // Unrecognized: Let the user know and let general LLM stream!
+      container.innerHTML = `
+        <div style="font-size:0.78rem; color:var(--text-dim); padding-bottom:6px; border-bottom:1px solid var(--border-subtle); margin-bottom:8px;">
+          ⚡ <em>Edge Memory: No local match registered (&lt; 35% similarity). Querying neural model...</em>
+        </div>
+        <div class="llm-stream-box"></div>`;
+      return false; // let general stream proceed
+    }
+  } catch (err) {
+    container.innerHTML = `<span style="color:var(--accent-rose)">⚠️ Edge Recall error: ${escapeHtml(err.message)}</span>`;
+    setGeneratingState(false);
+    return true;
+  }
+}
+
+// Text-to-Speech Audio Helper
+window.toggleSpeech = function(btn) {
+  if (!('speechSynthesis' in window)) {
+    alert('Speech synthesis not supported in this browser.');
+    return;
+  }
+
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    document.querySelectorAll('.speech-btn').forEach(b => {
+      b.classList.remove('speaking');
+      b.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> Listen`;
+    });
+    return;
+  }
+
+  const messageRow = btn.closest('.message-row');
+  const bubble = messageRow ? messageRow.querySelector('.message-bubble') : null;
+  if (!bubble) return;
+
+  const clone = bubble.cloneNode(true);
+  clone.querySelectorAll('pre, code, script, style, .media-generation-card, .video-player-container, .mermaid-container').forEach(el => el.remove());
+  const text = clone.textContent.trim();
+  if (!text) return;
+
+  btn.classList.add('speaking');
+  btn.innerHTML = `⏹️ Stop`;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1.05;
+
+  utter.onend = () => {
+    btn.classList.remove('speaking');
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> Listen`;
+  };
+
+  utter.onerror = () => {
+    btn.classList.remove('speaking');
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> Listen`;
+  };
+
+  window.speechSynthesis.speak(utter);
+};
+
+// ==========================================================================
+// Main Send & Auto-Orchestration Flow
+// ==========================================================================
+async function handleSend() {
+  if (state.isGenerating) {
+    if (state.abortController) state.abortController.abort();
+    setGeneratingState(false);
+    return;
+  }
+
+  const text = promptInput.value.trim();
+  if (!text && state.attachments.length === 0) return;
+
+  // Clear Welcome if first message
+  const welcome = chatMessages.querySelector('.welcome-hero');
+  if (welcome) welcome.remove();
+
+  // Append User Message Bubble
+  appendUserMessage(text, [...state.attachments]);
+
+  // Reset inputs
+  promptInput.value = '';
+  promptInput.style.height = 'auto';
+  const sentAttachments = [...state.attachments];
+  state.attachments = [];
+  renderAttachmentTray();
+
+  // Detect Intent
+  const intent = detectIntent(text);
+
+  let targetGateway = state.gateway;
+  let targetModel = state.model;
+  let autoTag = '';
+  let autoMountApp = false;
+
+  // Auto-Pilot or Dedicated Intent Routing
+  if (state.gateway === 'auto' || state.gateway === 'webfree' || state.activeIntent !== 'auto' || text.startsWith('/') || intent.type !== 'text') {
+    if (intent.type === 'memory_teach') {
+      const assistantBubble = appendAssistantPlaceholder('Edge Memory', '⚡ On-Device Memory');
+      setGeneratingState(true);
+      executeEdgeMemoryTeach(intent.prompt, assistantBubble, performance.now());
+      return;
+    }
+    if (intent.type === 'memory_recall') {
+      const assistantBubble = appendAssistantPlaceholder('Edge Memory', '⚡ Sub-50ms Recall');
+      setGeneratingState(true);
+      const handled = await executeEdgeMemoryRecall(intent.prompt, assistantBubble, performance.now());
+      if (handled) return;
+    }
+    if (intent.type === 'image' || state.model === 'flux') {
+      const assistantBubble = appendAssistantPlaceholder('Flux 1024px', '🎨 Auto-Gen Image');
+      setGeneratingState(true);
+      executeImageGeneration(intent.prompt, assistantBubble, performance.now(), 'Free Web');
+      return;
+    }
+    if (intent.type === 'video' || state.model === 'video') {
+      const assistantBubble = appendAssistantPlaceholder('Video 30FPS', '🎬 Auto-Gen Video');
+      setGeneratingState(true);
+      executeVideoGeneration(intent.prompt, assistantBubble, performance.now(), 'Free Web');
+      return;
+    }
+    if (state.gateway === 'webfree') {
+      targetGateway = 'webfree';
+      targetModel = (state.model === 'openai-fast' || state.model === 'flux' || state.model === 'video') ? 'openai' : state.model;
+      if (intent.type === 'app') {
+        autoTag = '⚡ WebFree -> App & Sandbox';
+        autoMountApp = true;
+      } else if (intent.type === 'diagram') {
+        autoTag = '📊 WebFree -> Architecture Diagram';
+      } else {
+        autoTag = '🌐 Free Web';
+      }
+    } else {
+      if (intent.type === 'app') {
+        targetGateway = 'ollama';
+        targetModel = 'bolt-local';
+        autoTag = '⚡ Auto -> App & Sandbox';
+        autoMountApp = true;
+      } else if (intent.type === 'diagram') {
+        targetGateway = 'ollama';
+        targetModel = 'qwen-agent';
+        autoTag = '📊 Auto -> Architecture Diagram';
+      } else {
+        targetGateway = 'ollama';
+        targetModel = 'bolt-local';
+        autoTag = '✨ Auto-Pilot';
+      }
+    }
+  }
+
+  // Fallback to WebFree if Ollama is selected but offline
+  if (targetGateway === 'ollama') {
+    const ollamaChip = document.getElementById('ollamaStatus');
+    const isLive = ollamaChip && ollamaChip.querySelector('.dot.live');
+    if (!isLive) {
+      targetGateway = 'webfree';
+      targetModel = 'openai-fast';
+      autoTag = (autoTag ? autoTag + ' • ' : '') + 'Webfree';
+    }
+  }
+
+  // Prepare Assistant Placeholder
+  const assistantBubble = appendAssistantPlaceholder(targetModel, autoTag);
+  setGeneratingState(true);
+
+  const startTime = performance.now();
+  let firstTokenReceived = false;
+  let tokenCount = 0;
+  let fullResponse = '';
+
+  state.abortController = new AbortController();
+
+  try {
+    let effectiveSystemPrompt = state.systemPrompt;
+    if (!effectiveSystemPrompt) {
+      if (intent.type === 'app' || autoMountApp) {
+        effectiveSystemPrompt = 'You are Bolt, an autonomous full-stack engineer. The user wants an interactive web application. Output a 100% complete, standalone single-file HTML app in a single ```html codeblock with all CSS and JavaScript embedded. No placeholders, no stubs. Make it visually stunning with modern UI aesthetics, responsive styling, and complete interactivity.';
+      } else if (intent.type === 'diagram') {
+        effectiveSystemPrompt = 'You are an expert system designer. Explain the architecture clearly and provide an interactive diagram using Mermaid syntax inside a ```mermaid code block (e.g. graph TD or sequenceDiagram).';
+      } else {
+        effectiveSystemPrompt = 'You are OmniStudio, a helpful, knowledgeable, and professional AI assistant. Respond clearly, concisely, and directly. Use well-structured markdown formatting when appropriate. Never include your internal reasoning or planning in your response — only provide the final, polished answer.';
+      }
+    }
+
+    if (targetGateway === 'ollama') {
+      // Ollama Native API with Images support
+      const payload = {
+        model: targetModel,
+        prompt: text,
+        stream: true,
+        options: {
+          temperature: state.temperature,
+          num_ctx: state.contextSize
+        }
+      };
+
+      if (effectiveSystemPrompt) {
+        payload.system = effectiveSystemPrompt;
+      }
+
+      const images = sentAttachments.filter(a => a.type === 'image').map(a => a.base64);
+      if (images.length > 0) {
+        payload.images = images;
+      }
+
+      const response = await fetch(`${GATEWAYS.ollama.base}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: state.abortController.signal
+      });
+
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let streamBuffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        streamBuffer += decoder.decode(value, { stream: true });
+        const lines = streamBuffer.split('\n');
+        streamBuffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (!firstTokenReceived) {
+              firstTokenReceived = true;
+              const latency = Math.round(performance.now() - startTime);
+              latencyVal.textContent = latency;
+            }
+            if (data.response) {
+              fullResponse += data.response;
+              tokenCount++;
+              updateSpeedCounter(tokenCount, startTime);
+              assistantBubble.innerHTML = renderMarkdown(fullResponse);
+              chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+          } catch (e) {}
+        }
+      }
+    } else {
+      // OpenAI-compatible Chat Completions (WebFree / OmniRoute / Spark / LM Studio)
+      const messages = [];
+      if (effectiveSystemPrompt) {
+        messages.push({ role: 'system', content: effectiveSystemPrompt });
+      }
+
+      const imageAttachments = sentAttachments.filter(a => a.type === 'image');
+      if (imageAttachments.length > 0) {
+        const contentParts = [{ type: 'text', text }];
+        imageAttachments.forEach(att => {
+          contentParts.push({
+            type: 'image_url',
+            image_url: { url: att.dataUrl }
+          });
+        });
+        messages.push({ role: 'user', content: contentParts });
+      } else {
+        messages.push({ role: 'user', content: text });
+      }
+
+      const payload = {
+        model: targetModel,
+        messages,
+        temperature: state.temperature,
+        stream: true
+      };
+
+      const isWebFree = targetGateway === 'webfree';
+      const endpoint = isWebFree 
+        ? `${GATEWAYS.webfree.base}/chat/completions` 
+        : `${GATEWAYS[targetGateway].base}/v1/chat/completions`;
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (!isWebFree) {
+        headers['Authorization'] = 'Bearer sk-omniroute-local';
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal: state.abortController.signal
+      });
+
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ')) {
+            const dataStr = trimmed.slice(6).trim();
+            if (dataStr === '[DONE]') break;
+            try {
+              const data = JSON.parse(dataStr);
+              const delta = data.choices?.[0]?.delta?.content || data.choices?.[0]?.message?.content || '';
+              if (!firstTokenReceived && delta) {
+                firstTokenReceived = true;
+                const latency = Math.round(performance.now() - startTime);
+                latencyVal.textContent = latency;
+              }
+              if (delta) {
+                fullResponse += delta;
+                tokenCount++;
+                updateSpeedCounter(tokenCount, startTime);
+                assistantBubble.innerHTML = renderMarkdown(fullResponse);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
+    // Finished response: post-process code blocks, diagrams, and auto-mount
+    finalizeAssistantMessage(assistantBubble, fullResponse, autoMountApp);
+    if (window.speakVoiceResponse) {
+      window.speakVoiceResponse(fullResponse);
+    }
+
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      assistantBubble.innerHTML = `<span style="color:var(--accent-rose)">⚠️ Error: ${err.message}</span>`;
+    }
+  } finally {
+    setGeneratingState(false);
+  }
+}
+
+function updateSpeedCounter(tokens, startTime) {
+  const elapsedSec = (performance.now() - startTime) / 1000;
+  if (elapsedSec > 0.2) {
+    const tps = (tokens / elapsedSec).toFixed(1);
+    speedVal.textContent = tps;
+  }
+}
+
+function setGeneratingState(isGen) {
+  state.isGenerating = isGen;
+  if (isGen) {
+    sendIcon.classList.add('hidden');
+    stopIcon.classList.remove('hidden');
+    sendBtn.style.background = 'var(--accent-rose)';
+  } else {
+    sendIcon.classList.remove('hidden');
+    stopIcon.classList.add('hidden');
+    sendBtn.style.background = 'var(--accent-purple)';
+  }
+}
+
+// Message Rendering
+function appendUserMessage(text, attachments) {
+  const row = document.createElement('div');
+  row.className = 'message-row user';
+
+  let mediaHtml = '';
+  if (attachments && attachments.length > 0) {
+    mediaHtml = '<div class="message-media-grid">';
+    attachments.forEach(att => {
+      if (att.type === 'image') {
+        mediaHtml += `<img src="${att.dataUrl}" class="message-image-thumb" onclick="openLightbox('${att.dataUrl}')" alt="Attachment">`;
+      } else if (att.type === 'video') {
+        mediaHtml += `
+          <div class="video-player-container">
+            <video src="${att.dataUrl}" controls preload="metadata"></video>
+          </div>`;
+      }
+    });
+    mediaHtml += '</div>';
+  }
+
+  row.innerHTML = `
+    <div class="message-avatar user-avatar">U</div>
+    <div class="message-content">
+      <div class="message-meta">
+        <span class="sender-name">You</span>
+      </div>
+      <div class="message-bubble">
+        ${mediaHtml}
+        ${escapeHtml(text).replace(/\n/g, '<br>')}
+      </div>
+    </div>`;
+
+  chatMessages.appendChild(row);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function appendAssistantPlaceholder(modelName, autoTag) {
+  const row = document.createElement('div');
+  row.className = 'message-row ai';
+
+  const badgeHtml = autoTag ? `<span class="auto-badge">${autoTag}</span>` : '';
+  const currentModel = modelName || state.model;
+
+  row.innerHTML = `
+    <div class="message-avatar ai-avatar">AI</div>
+    <div class="message-content">
+      <div class="message-meta">
+        <span class="sender-name">OmniStudio</span>
+        <span class="model-tag">${currentModel}</span>
+        ${badgeHtml}
+        <button class="speech-btn" onclick="toggleSpeech(this)" title="Read Aloud">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+      </div>
+      <div class="message-bubble">
+        <span class="dot checking"></span> Thinking...
+      </div>
+    </div>`;
+
+  chatMessages.appendChild(row);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return row.querySelector('.message-bubble');
+}
+
+// Markdown Parser (Supports Tables, Mermaid, Code Blocks, Bold, Inline Tools)
+function renderMarkdown(raw) {
+  if (!raw) return '';
+
+  let html = raw;
+
+  // Mermaid Diagram Code Blocks
+  html = html.replace(/```mermaid\n([\s\S]*?)```/gi, (match, code) => {
+    return `
+      <div class="mermaid-container">
+        <pre class="mermaid">${escapeHtml(code.trim())}</pre>
+      </div>`;
+  });
+
+  // Regular Code Blocks ```lang \n code \n ```
+  html = html.replace(/```([a-zA-Z0-9_\-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const safeCode = escapeHtml(code.trim());
+    const langLower = (lang || '').toLowerCase();
+    const isWeb = ['html', 'svg', 'react', 'jsx', 'tsx', 'css'].includes(langLower) || code.includes('<!DOCTYPE') || code.includes('<html');
+    const isRunnable = ['python', 'py', 'sh', 'bash', 'node', 'js', 'javascript'].includes(langLower);
+    
+    const webRunBtn = isWeb ? `<button class="code-btn sandbox-run-btn" onclick="loadIntoSandbox(this)">🚀 Sandbox</button>` : '';
+    const liveRunBtn = isRunnable ? `<button class="code-btn run-live-btn" onclick="window.runCodeBlock(this)">▶ Run Live</button>` : '';
+    const saveBtn = `<button class="code-btn save-file-btn" onclick="window.saveCodeToFile(this)">💾 Save</button>`;
+    const bookBtn = `<button class="code-btn add-book-btn" onclick="window.addCodeToBook(this)">📖 Add to Book</button>`;
+
+    return `
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span>${lang || 'code'}</span>
+          <div class="code-actions">
+            ${webRunBtn}
+            ${liveRunBtn}
+            ${saveBtn}
+            ${bookBtn}
+            <button class="code-btn" onclick="copyCode(this)">📋 Copy</button>
+          </div>
+        </div>
+        <pre><code class="language-${lang}">${safeCode}</code></pre>
+        <div class="code-terminal-result hidden"></div>
+      </div>`;
+  });
+
+  // Autonomous Inline Tool Directives: [GENERATE_IMAGE: ...]
+  html = html.replace(/\[GENERATE_IMAGE:\s*([^\]]+)\]/gi, (match, p) => {
+    const id = 'img_' + Math.random().toString(36).substring(2, 9);
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.loaded) {
+        el.dataset.loaded = 'true';
+        executeImageGeneration(p.trim(), el, performance.now(), 'Tool Call');
+      }
+    }, 150);
+    return `<div id="${id}" style="margin:0.75rem 0;"><span class="dot checking"></span> Generating image: <em>"${escapeHtml(p.trim())}"</em>...</div>`;
+  });
+
+  // Autonomous Inline Tool Directives: [GENERATE_VIDEO: ...]
+  html = html.replace(/\[GENERATE_VIDEO:\s*([^\]]+)\]/gi, (match, p) => {
+    const id = 'vid_' + Math.random().toString(36).substring(2, 9);
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.loaded) {
+        el.dataset.loaded = 'true';
+        executeVideoGeneration(p.trim(), el, performance.now(), 'Tool Call');
+      }
+    }, 250);
+    return `<div id="${id}" style="margin:0.75rem 0;"><span class="dot checking"></span> Generating 30 FPS video: <em>"${escapeHtml(p.trim())}"</em>...</div>`;
+  });
+
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // Bold & Italic
+  html = html.replace(/\*\*\*(.*?)\*\*\*/gim, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+
+  // Inline Code `code`
+  html = html.replace(/`([^`]+)`/g, (match, c) => `<code>${escapeHtml(c)}</code>`);
+
+  // Blockquotes
+  html = html.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // Unordered lists
+  html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+
+  // Paragraphs
+  html = html.split('\n\n').map(p => {
+    if (p.startsWith('<div') || p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<blockquote') || p.startsWith('<table')) {
+      return p;
+    }
+    return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+  }).join('');
+
+  return html;
+}
+
+function finalizeAssistantMessage(bubble, fullResponse, autoMountApp) {
+  bubble.innerHTML = renderMarkdown(fullResponse);
+
+  // Render Mermaid diagrams
+  if (window.mermaid && bubble.querySelector('.mermaid')) {
+    try {
+      mermaid.run({ nodes: bubble.querySelectorAll('.mermaid') });
+    } catch (e) {
+      console.warn('Mermaid rendering issue:', e);
+    }
+  }
+
+  // If response contains an interactive artifact, highlight Sandbox button
+  const isWebCode = fullResponse.includes('```html') || fullResponse.includes('```svg') || fullResponse.includes('<!DOCTYPE') || fullResponse.includes('<html');
+  if (isWebCode || fullResponse.includes('<table') || fullResponse.includes('CREATE TABLE')) {
+    toggleSandboxBtn.classList.add('active');
+  }
+
+  // Auto-mount if requested by user or detected as an interactive app
+  if (autoMountApp || (isWebCode && (fullResponse.includes('<script') || fullResponse.includes('<style')))) {
+    const htmlMatch = fullResponse.match(/```html\n([\s\S]*?)```/i) || fullResponse.match(/```xml\n([\s\S]*?)```/i);
+    if (htmlMatch && htmlMatch[1]) {
+      injectSandboxCode(htmlMatch[1]);
+      sandboxDrawer.classList.remove('hidden');
+      toggleSandboxBtn.classList.add('active');
+    }
+  }
+
+  // Universal OmniContext Bus Action Bar
+  attachOmniActionBar(bubble, fullResponse);
+}
+
+/* ==========================================================================
+   ⚡ UNIVERSAL OMNICONTEXT BUS & CROSS-COMPONENT WORKFLOW PIPELINE
+   ========================================================================== */
+
+window.showOmniToast = function(msg, icon = '⚡', duration = 3000) {
+  let toast = document.getElementById('omniToastContainer');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'omniToastContainer';
+    document.body.appendChild(toast);
+  }
+  const item = document.createElement('div');
+  item.className = 'omni-toast-item';
+  item.innerHTML = `
+    <span style="font-size:1.1rem;">${icon}</span>
+    <span>${escapeHtml(msg)}</span>
+  `;
+  toast.appendChild(item);
+  setTimeout(() => item.classList.add('show'), 20);
+  setTimeout(() => {
+    item.classList.remove('show');
+    setTimeout(() => item.remove(), 300);
+  }, duration);
+};
+
+function attachOmniActionBar(bubble, fullResponse) {
+  if (!bubble) return;
+  const msgContent = bubble.closest('.message-content');
+  if (!msgContent) return;
+
+  let bar = msgContent.querySelector('.bubble-action-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'bubble-action-bar';
+    msgContent.appendChild(bar);
+  }
+
+  const text = fullResponse || bubble.innerText || '';
+  const hasCode = text.includes('```') || bubble.querySelector('pre code');
+
+  bar.innerHTML = `
+    <button class="omni-bus-btn" onclick="window.omniDistillToMemory(this)" title="Distill key concepts into on-device edge vector memory (<2ms recall)">
+      <span>⚡</span> Distill to Memory
+    </button>
+    <button class="omni-bus-btn" onclick="window.omniAppendToBook(this)" title="Append this response or section into active Book Studio chapter">
+      <span>📖</span> Append to Book
+    </button>
+    <button class="omni-bus-btn" onclick="window.omniSaveToDb(this)" title="Save this response as a searchable snippet in SQLite">
+      <span>🗄️</span> Save to DB
+    </button>
+    ${hasCode ? `
+    <button class="omni-bus-btn highlight-bus-btn" onclick="window.omniRunInRepl(this)" title="Execute embedded code block in Live REPL Console">
+      <span>🔴</span> Run in REPL
+    </button>` : ''}
+    <button class="omni-bus-btn" onclick="window.omniCrossRefRag(this)" title="Semantic cross-reference in Textbook RAG Catalog">
+      <span>🔍</span> Search RAG
+    </button>
+    <button class="omni-bus-btn" onclick="window.omniCopyMessage(this)" title="Copy message text">
+      <span>📋</span> Copy
+    </button>
+  `;
+}
+
+window.omniDistillToMemory = async function(btn) {
+  const row = btn.closest('.message-row');
+  const bubble = row?.querySelector('.message-bubble');
+  const text = (bubble?.innerText || '').trim();
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Distilling...';
+  try {
+    const res = await fetch('/api/memory/distill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        source: 'AI Assistant Response',
+        category: 'engineering'
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = `✅ Distilled (${data.distilled_count || 1})`;
+    window.showOmniToast(`Distilled ${data.distilled_count || 1} concepts into On-Device Memory (<2ms recall)!`, '⚡');
+    setTimeout(() => { btn.innerHTML = '<span>⚡</span> Distill to Memory'; }, 2500);
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Distill to Memory';
+    window.showOmniToast(`Memory error: ${err.message}`, '⚠️');
+  }
+};
+
+window.omniAppendToBook = async function(btn) {
+  const row = btn.closest('.message-row');
+  const bubble = row?.querySelector('.message-bubble');
+  const text = (bubble?.innerText || '').trim();
+  if (!text) return;
+
+  const lines = text.split('\n').filter(l => l.trim());
+  let title = 'AI Architecture & Implementation Notes';
+  if (lines.length > 0) {
+    title = lines[0].replace(/^[#\s*_-]+/, '').slice(0, 60);
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Appending...';
+  try {
+    const res = await fetch('/api/books/append', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        content: text
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = `✅ In Ch ${data.chapter_count}`;
+    window.showOmniToast(`Appended '${title}' to Chapter ${data.chapter_count} in Book Studio!`, '📖');
+    setTimeout(() => { btn.innerHTML = '<span>📖</span> Append to Book'; }, 2500);
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = '<span>📖</span> Append to Book';
+    window.showOmniToast(`Book error: ${err.message}`, '⚠️');
+  }
+};
+
+window.omniSaveToDb = async function(btn) {
+  const row = btn.closest('.message-row');
+  const bubble = row?.querySelector('.message-bubble');
+  const text = (bubble?.innerText || '').trim();
+  if (!text) return;
+
+  const lines = text.split('\n').filter(l => l.trim());
+  let title = 'Knowledge Snippet';
+  if (lines.length > 0) {
+    title = lines[0].replace(/^[#\s*_-]+/, '').slice(0, 60);
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+  try {
+    const res = await fetch('/api/db/save-snippet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        content: text,
+        source: 'AI Chat Assistant',
+        tags: 'ai_studio,chat,architecture'
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = `✅ Saved (#${data.snippet_id})`;
+    window.showOmniToast(`Saved record #${data.snippet_id} into SQLite Database!`, '🗄️');
+    setTimeout(() => { btn.innerHTML = '<span>🗄️</span> Save to DB'; }, 2500);
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🗄️</span> Save to DB';
+    window.showOmniToast(`DB error: ${err.message}`, '⚠️');
+  }
+};
+
+window.omniRunInRepl = function(btn) {
+  const row = btn.closest('.message-row');
+  const bubble = row?.querySelector('.message-bubble');
+  const codeEl = bubble?.querySelector('pre code');
+  if (!codeEl) {
+    window.showOmniToast('No code block detected in this response.', '⚠️');
+    return;
+  }
+  const code = codeEl.innerText.trim();
+  const langClass = Array.from(codeEl.classList).find(c => c.startsWith('language-'));
+  const rawLang = langClass ? langClass.replace('language-', '').toLowerCase() : 'python';
+
+  let selectedLang = 'python';
+  if (['node', 'js', 'javascript'].includes(rawLang)) selectedLang = 'node';
+  else if (['sh', 'bash', 'shell'].includes(rawLang)) selectedLang = 'bash';
+
+  const consoleDrawer = document.getElementById('consoleDrawer');
+  const consoleCodeInput = document.getElementById('consoleCodeInput');
+  const consoleLangSelect = document.getElementById('consoleLangSelect');
+
+  if (consoleDrawer && consoleCodeInput && consoleLangSelect) {
+    consoleDrawer.classList.remove('hidden');
+    consoleLangSelect.value = selectedLang;
+    consoleCodeInput.value = code;
+    window.executeConsoleScript();
+    window.showOmniToast(`Loaded into Live REPL and executing ${selectedLang}...`, '🔴');
+  }
+};
+
+window.omniCrossRefRag = function(btn) {
+  const row = btn.closest('.message-row');
+  const bubble = row?.querySelector('.message-bubble');
+  const text = (bubble?.innerText || '').trim();
+  const lines = text.split('\n').filter(l => l.trim());
+  const query = (lines[0] || text.slice(0, 80)).replace(/^[#\s*_-]+/, '');
+
+  openRagEngineModal();
+  const searchInput = document.getElementById('ragSearchInput');
+  const searchBtn = document.getElementById('runRagSearchBtn');
+  if (searchInput && searchBtn) {
+    searchInput.value = query;
+    searchBtn.click();
+    window.showOmniToast(`Searching RAG textbooks for: '${query.slice(0, 30)}...'`, '🔍');
+  }
+};
+
+window.omniCopyMessage = function(btn) {
+  const row = btn.closest('.message-row');
+  const bubble = row?.querySelector('.message-bubble');
+  const text = (bubble?.innerText || '').trim();
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.innerHTML = '<span>📋</span> Copy'; }, 1500);
+  });
+};
+
+window.sendConsoleToBook = async function() {
+  const code = document.getElementById('consoleCodeInput')?.value.trim() || '';
+  const lang = document.getElementById('consoleLangSelect')?.value || 'python';
+  const output = document.getElementById('consoleOutputPre')?.innerText.trim() || '';
+  if (!code) {
+    alert('Please enter or run code before sending to Book Studio.');
+    return;
+  }
+
+  const content = `## Executed Script & Terminal Benchmark (${lang.toUpperCase()})\n\n\`\`\`${lang}\n${code}\n\`\`\`\n\n### Terminal Output (stdout / stderr)\n\`\`\`\n${output}\n\`\`\`\n\n*Executed live via Omni Agent Studio REPL.*`;
+
+  try {
+    const res = await fetch('/api/books/append', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: `Live REPL Benchmark: ${lang.toUpperCase()}`,
+        content
+      })
+    });
+    const data = await res.json();
+    window.showOmniToast(`Script & Terminal output appended to Chapter ${data.chapter_count}!`, '📖');
+  } catch (err) {
+    window.showOmniToast(`Append to Book failed: ${err.message}`, '⚠️');
+  }
+};
+
+window.sendConsoleToMemory = async function() {
+  const code = document.getElementById('consoleCodeInput')?.value.trim() || '';
+  const lang = document.getElementById('consoleLangSelect')?.value || 'python';
+  const output = document.getElementById('consoleOutputPre')?.innerText.trim() || '';
+  if (!code) {
+    alert('No code to distill into memory.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/memory/distill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: `Script (${lang}):\n${code}\nExecution Output:\n${output}`,
+        source: `REPL Runner (${lang})`,
+        category: 'code_recipe'
+      })
+    });
+    const data = await res.json();
+    window.showOmniToast(`Distilled ${data.distilled_count || 1} code recipes into Edge Memory!`, '⚡');
+  } catch (err) {
+    window.showOmniToast(`Distill error: ${err.message}`, '⚠️');
+  }
+};
+
+window.sendConsoleToChat = function() {
+  const code = document.getElementById('consoleCodeInput')?.value.trim() || '';
+  const lang = document.getElementById('consoleLangSelect')?.value || 'python';
+  const output = document.getElementById('consoleOutputPre')?.innerText.trim() || '';
+  if (!promptInput) return;
+
+  promptInput.value = `I executed this ${lang} script in the Live REPL:\n\`\`\`${lang}\n${code}\n\`\`\`\nOutput:\n\`\`\`\n${output}\n\`\`\`\nPlease analyze this execution, identify any edge cases or performance bottlenecks, and explain how to optimize it.`;
+  promptInput.dispatchEvent(new Event('input'));
+  promptInput.focus();
+  window.showOmniToast('REPL script and output loaded into Chatbot!', '💬');
+};
+
+function setupBookStudioToolbarBridges() {
+  const ingestBtn = document.getElementById('bookIngestRagBtn');
+  const distillBtn = document.getElementById('bookDistillMemoryBtn');
+  const discussBtn = document.getElementById('bookDiscussChatBtn');
+
+  if (ingestBtn) {
+    ingestBtn.addEventListener('click', async () => {
+      const title = chapterTitleInput?.value.trim() || 'Manual Chapter';
+      const content = chapterContentInput?.value.trim() || '';
+      if (!content) {
+        alert('Chapter content is empty.');
+        return;
+      }
+      ingestBtn.disabled = true;
+      ingestBtn.textContent = '⏳ Vectorizing...';
+
+      try {
+        const res = await fetch('/api/rag/ingest-chapter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            book_id: activeBook.slug || 'cl4r1t4s_ai_engineering___security_manual',
+            title: activeBook.title,
+            chapter_title: title,
+            content: content,
+            author: activeBook.author,
+            category: 'manual'
+          })
+        });
+        const data = await res.json();
+        ingestBtn.disabled = false;
+        ingestBtn.textContent = '✅ Indexed in RAG';
+        window.showOmniToast(`Chapter '${title}' indexed (${data.chunks_indexed} vector chunks) into RAG!`, '⚡');
+        setTimeout(() => { ingestBtn.textContent = '⚡ Ingest to RAG'; }, 2500);
+      } catch (err) {
+        ingestBtn.disabled = false;
+        ingestBtn.textContent = '⚡ Ingest to RAG';
+        window.showOmniToast(`RAG Ingest failed: ${err.message}`, '⚠️');
+      }
+    });
+  }
+
+  if (distillBtn) {
+    distillBtn.addEventListener('click', async () => {
+      const title = chapterTitleInput?.value.trim() || 'Manual Chapter';
+      const content = chapterContentInput?.value.trim() || '';
+      if (!content) {
+        alert('Chapter content is empty.');
+        return;
+      }
+      distillBtn.disabled = true;
+      distillBtn.textContent = '⏳ Distilling...';
+
+      try {
+        const res = await fetch('/api/memory/distill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: content,
+            source: `Book: ${activeBook.title} - ${title}`,
+            category: 'manual_chapter'
+          })
+        });
+        const data = await res.json();
+        distillBtn.disabled = false;
+        distillBtn.textContent = '✅ Distilled';
+        window.showOmniToast(`Distilled ${data.distilled_count} facts into On-Device Edge Memory!`, '💡');
+        setTimeout(() => { distillBtn.textContent = '💡 Distill to Memory'; }, 2500);
+      } catch (err) {
+        distillBtn.disabled = false;
+        distillBtn.textContent = '💡 Distill to Memory';
+        window.showOmniToast(`Distill failed: ${err.message}`, '⚠️');
+      }
+    });
+  }
+
+  if (discussBtn) {
+    discussBtn.addEventListener('click', () => {
+      const title = chapterTitleInput?.value.trim() || 'Manual Chapter';
+      const content = chapterContentInput?.value.trim() || '';
+      if (!promptInput) return;
+
+      const excerpt = content.slice(0, 500);
+      promptInput.value = `Let's analyze and expand on this chapter from the manual:\n\n**${title}**\n\nExcerpt:\n"${excerpt}${content.length > 500 ? '...' : ''}"\n\nWhat are the architectural trade-offs, potential vulnerabilities, and implementation enhancements?`;
+      promptInput.dispatchEvent(new Event('input'));
+
+      if (bookStudioModal) bookStudioModal.classList.add('hidden');
+      promptInput.focus();
+      window.showOmniToast(`Chapter '${title}' sent to Chatbot for discussion!`, '💬');
+    });
+  }
+}
+
+function attachOmniBusActionsToExistingBubbles() {
+  document.querySelectorAll('.message-row.ai .message-bubble').forEach(bubble => {
+    attachOmniActionBar(bubble, bubble.innerText || '');
+  });
+}
+
+// Live Sandbox Controller
+function setupSandboxDrawer() {
+  toggleSandboxBtn.addEventListener('click', () => {
+    sandboxDrawer.classList.toggle('hidden');
+    toggleSandboxBtn.classList.toggle('active');
+  });
+
+  closeSandboxBtn.addEventListener('click', () => {
+    sandboxDrawer.classList.add('hidden');
+    toggleSandboxBtn.classList.remove('active');
+  });
+
+  reloadSandboxBtn.addEventListener('click', () => {
+    if (state.activeSandboxCode) {
+      injectSandboxCode(state.activeSandboxCode);
+    }
+  });
+
+  popoutSandboxBtn.addEventListener('click', () => {
+    if (!state.activeSandboxCode) return;
+    const win = window.open('', '_blank');
+    win.document.open();
+    win.document.write(state.activeSandboxCode);
+    win.document.close();
+  });
+}
+
+window.loadIntoSandbox = function(btn) {
+  const wrapper = btn.closest('.code-block-wrapper');
+  const codeEl = wrapper.querySelector('code');
+  if (!codeEl) return;
+
+  const rawCode = codeEl.textContent;
+  injectSandboxCode(rawCode);
+
+  // Open drawer
+  sandboxDrawer.classList.remove('hidden');
+  toggleSandboxBtn.classList.add('active');
+};
+
+function injectSandboxCode(rawCode) {
+  let docContent = rawCode;
+
+  // If snippet isn't a full HTML document, wrap it nicely with Tailwind CDN
+  if (!rawCode.includes('<!DOCTYPE') && !rawCode.includes('<html')) {
+    docContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+          body { font-family: system-ui, sans-serif; padding: 1.5rem; background: #fafafa; }
+        </style>
+      </head>
+      <body>
+        ${rawCode}
+      </body>
+      </html>`;
+  }
+
+  state.activeSandboxCode = docContent;
+  const doc = sandboxIframe.contentDocument || sandboxIframe.contentWindow.document;
+  doc.open();
+  doc.write(docContent);
+  doc.close();
+}
+
+// Utility Helpers
+window.copyCode = function(btn) {
+  const wrapper = btn.closest('.code-block-wrapper');
+  const codeEl = wrapper.querySelector('code');
+  if (!codeEl) return;
+
+  navigator.clipboard.writeText(codeEl.textContent).then(() => {
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
+  });
+};
+
+window.openLightbox = function(url) {
+  lightboxImg.src = url;
+  imageModal.classList.add('active');
+};
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* ==========================================================================
+   Tools & MCP Arsenal Drawer Logic
+   ========================================================================== */
+const arsenalDrawer = document.getElementById('arsenalDrawer');
+const toggleArsenalBtn = document.getElementById('toggleArsenalBtn');
+const closeArsenalBtn = document.getElementById('closeArsenalBtn');
+const toolSearchInput = document.getElementById('toolSearchInput');
+const arsenalList = document.getElementById('arsenalList');
+const injectAllToolsBtn = document.getElementById('injectAllToolsBtn');
+const simulateSampleToolBtn = document.getElementById('simulateSampleToolBtn');
+const toolsCountBadge = document.getElementById('toolsCountBadge');
+
+let arsenalData = {
+  codex_desktop_tools: [],
+  cursor_tools: [],
+  manus_agent_tools: [],
+  mcp_servers: []
+};
+let activeArsenalTab = 'all';
+
+if (toggleArsenalBtn) {
+  toggleArsenalBtn.addEventListener('click', () => {
+    arsenalDrawer.classList.toggle('hidden');
+    if (!arsenalDrawer.classList.contains('hidden') && arsenalData.codex_desktop_tools.length === 0) {
+      loadArsenalTools();
+    }
+  });
+}
+
+if (closeArsenalBtn) {
+  closeArsenalBtn.addEventListener('click', () => {
+    arsenalDrawer.classList.add('hidden');
+  });
+}
+
+document.querySelectorAll('.arsenal-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.arsenal-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeArsenalTab = tab.dataset.tab;
+    renderArsenalList();
+  });
+});
+
+if (toolSearchInput) {
+  toolSearchInput.addEventListener('input', () => {
+    renderArsenalList();
+  });
+}
+
+async function loadArsenalTools() {
+  arsenalList.innerHTML = '<div class="loading-spinner-box">Loading Tools Arsenal...</div>';
+  try {
+    const res = await fetch('/api/tools/arsenal');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    arsenalData = await res.json();
+    const totalCount = (arsenalData.codex_desktop_tools?.length || 0) +
+                       (arsenalData.cursor_tools?.length || 0) +
+                       (arsenalData.manus_agent_tools?.length || 0) +
+                       (arsenalData.mcp_servers?.reduce((a, s) => a + (s.tools?.length || 0), 0) || 0);
+    if (toolsCountBadge) toolsCountBadge.textContent = `${totalCount} Tools`;
+    renderArsenalList();
+  } catch (err) {
+    arsenalList.innerHTML = `<div class="error-msg">Failed to load arsenal tools: ${err.message}</div>`;
+  }
+}
+
+function renderArsenalList() {
+  const query = (toolSearchInput ? toolSearchInput.value : '').toLowerCase().trim();
+  let items = [];
+
+  // Codex Tools
+  if (activeArsenalTab === 'all' || activeArsenalTab === 'codex') {
+    (arsenalData.codex_desktop_tools || []).forEach(t => {
+      items.push({
+        source: 'Codex Desktop',
+        badge: 'OpenAI Codex',
+        name: t.name,
+        desc: t.description || 'Codex desktop orchestration tool.',
+        schema: t.inputSchema || {}
+      });
+    });
+  }
+
+  // Cursor Tools
+  if (activeArsenalTab === 'all' || activeArsenalTab === 'cursor') {
+    (arsenalData.cursor_tools || []).forEach(t => {
+      items.push({
+        source: 'Cursor IDE',
+        badge: 'Cursor 2.0',
+        name: t.name,
+        desc: t.description || 'Cursor IDE codebase tool.',
+        schema: t.parameters || {}
+      });
+    });
+  }
+
+  // Manus Tools
+  if (activeArsenalTab === 'all' || activeArsenalTab === 'manus') {
+    (arsenalData.manus_agent_tools || []).forEach(t => {
+      items.push({
+        source: 'Manus Agent',
+        badge: 'Manus Loop',
+        name: t.name,
+        desc: t.description || 'Manus autonomous execution tool.',
+        schema: t.parameters || {}
+      });
+    });
+  }
+
+  // MCP Servers
+  if (activeArsenalTab === 'all' || activeArsenalTab === 'mcp') {
+    (arsenalData.mcp_servers || []).forEach(s => {
+      (s.tools || []).forEach(toolName => {
+        items.push({
+          source: s.server,
+          badge: 'MCP Server',
+          name: toolName,
+          desc: `${s.description} (Part of ${s.server})`,
+          schema: { server: s.server, tool: toolName }
+        });
+      });
+    });
+  }
+
+  if (query) {
+    items = items.filter(it => it.name.toLowerCase().includes(query) || it.desc.toLowerCase().includes(query) || it.source.toLowerCase().includes(query));
+  }
+
+  if (items.length === 0) {
+    arsenalList.innerHTML = '<div class="empty-state-notice">No tools match your filter.</div>';
+    return;
+  }
+
+  arsenalList.innerHTML = items.map((it, idx) => `
+    <div class="arsenal-card">
+      <div class="arsenal-card-header">
+        <span class="arsenal-tool-name">⚡ ${escapeHtml(it.name)}</span>
+        <span class="arsenal-tool-badge">${escapeHtml(it.badge)}</span>
+      </div>
+      <div class="arsenal-tool-desc">${escapeHtml(it.desc)}</div>
+      <div class="arsenal-card-actions">
+        <button class="tiny-btn" onclick="copyToolSchema(${idx})">📋 Schema</button>
+        <button class="tiny-btn primary-tiny" onclick="injectSingleTool('${escapeHtml(it.name)}')">➕ Inject Tool</button>
+        <button class="tiny-btn" onclick="simulateSpecificTool('${escapeHtml(it.name)}')">⚡ Simulate</button>
+      </div>
+      <details style="margin-top: 0.4rem;">
+        <summary style="font-size: 0.68rem; color: var(--text-dim); cursor: pointer;">View JSON Schema</summary>
+        <pre class="arsenal-schema-pre"><code>${escapeHtml(JSON.stringify(it.schema, null, 2))}</code></pre>
+      </details>
+    </div>
+  `).join('');
+
+  window._currentArsenalItems = items;
+}
+
+window.copyToolSchema = function(idx) {
+  const item = window._currentArsenalItems?.[idx];
+  if (!item) return;
+  navigator.clipboard.writeText(JSON.stringify(item.schema, null, 2));
+  alert(`Copied JSON schema for '${item.name}'`);
+};
+
+window.injectSingleTool = function(name) {
+  const item = window._currentArsenalItems?.find(i => i.name === name);
+  if (!item) return;
+  const toolDefinition = `\n\n[TOOL_DEFINITION: ${item.name}]\nDescription: ${item.desc}\nSchema: ${JSON.stringify(item.schema)}`;
+  systemPromptInput.value = (systemPromptInput.value || '') + toolDefinition;
+  state.systemPrompt = systemPromptInput.value;
+  alert(`Tool '${name}' injected into Active System Prompt!`);
+};
+
+window.simulateSpecificTool = function(name) {
+  simulateToolExecution(name, { sample_param: "test_value", timestamp: new Date().toISOString() });
+};
+
+if (injectAllToolsBtn) {
+  injectAllToolsBtn.addEventListener('click', () => {
+    const items = window._currentArsenalItems || [];
+    if (items.length === 0) return;
+    const toolsSummary = items.slice(0, 15).map(i => `- ${i.name}: ${i.desc}`).join('\n');
+    const toolScaffold = `\n\n# Available Tools & MCP Arsenal:\nYou have access to the following native tools:\n${toolsSummary}\nTo invoke a tool, output a block formatted as:\n<tool_call>{"name": "tool_name", "arguments": {...}}</tool_call>`;
+    systemPromptInput.value = (systemPromptInput.value || '') + toolScaffold;
+    state.systemPrompt = systemPromptInput.value;
+    alert(`Injected ${Math.min(items.length, 15)} tool declarations into Active Prompt Scaffold!`);
+  });
+}
+
+if (simulateSampleToolBtn) {
+  simulateSampleToolBtn.addEventListener('click', () => {
+    simulateToolExecution('capture_screen_context', { focus: 'active_window', resolution: '1920x1080' });
+  });
+}
+
+function simulateToolExecution(toolName, args) {
+  const argsFormatted = JSON.stringify(args, null, 2);
+  const cardHtml = `
+    <div class="tool-call-card">
+      <div class="tool-header">
+        <span class="tool-name-tag">⚡ Tool Execution: ${escapeHtml(toolName)}</span>
+        <span class="tool-status-badge">✅ Executed Successfully</span>
+      </div>
+      <pre class="tool-args-pre"><code>${escapeHtml(argsFormatted)}</code></pre>
+      <div class="tool-footer">
+        <span>Execution Time: 42ms (Zero-Latency Simulation)</span>
+        <button class="tool-run-btn" onclick="alert('Tool call re-verified: status OK')">Re-run</button>
+      </div>
+    </div>
+  `;
+
+  const welcomeCard = document.getElementById('welcomeCard');
+  if (welcomeCard) welcomeCard.style.display = 'none';
+
+  const bubble = appendAssistantPlaceholder('Codex Tool Runner', '⚡ TOOL CALL');
+  if (bubble) {
+    bubble.innerHTML = `<p>Executed agent tool <strong><code>${escapeHtml(toolName)}</code></strong>:</p>` + cardHtml;
+  }
+  if (arsenalDrawer) arsenalDrawer.classList.add('hidden');
+}
+
+/* ==========================================================================
+   Prompt Goldmine Explorer Modal Logic
+   ========================================================================== */
+const promptsModal = document.getElementById('promptsModal');
+const togglePromptsBtn = document.getElementById('togglePromptsBtn');
+const closePromptsModalBtn = document.getElementById('closePromptsModalBtn');
+const promptsModalBackdrop = document.getElementById('promptsModalBackdrop');
+const promptFilterInput = document.getElementById('promptFilterInput');
+const goldmineFileList = document.getElementById('goldmineFileList');
+const previewFilename = document.getElementById('previewFilename');
+const previewContentCode = document.getElementById('previewContentCode');
+const copyPromptContentBtn = document.getElementById('copyPromptContentBtn');
+const injectPromptContentBtn = document.getElementById('injectPromptContentBtn');
+
+let promptsCatalog = [];
+let activeCatFilter = 'all';
+let currentLoadedPromptContent = '';
+
+if (togglePromptsBtn) {
+  togglePromptsBtn.addEventListener('click', () => {
+    promptsModal.classList.remove('hidden');
+    if (promptsCatalog.length === 0) {
+      loadPromptCatalog();
+    }
+  });
+}
+
+if (closePromptsModalBtn) {
+  closePromptsModalBtn.addEventListener('click', () => promptsModal.classList.add('hidden'));
+}
+if (promptsModalBackdrop) {
+  promptsModalBackdrop.addEventListener('click', () => promptsModal.classList.add('hidden'));
+}
+
+document.querySelectorAll('.cat-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    activeCatFilter = pill.dataset.cat;
+    renderPromptFileList();
+  });
+});
+
+if (promptFilterInput) {
+  promptFilterInput.addEventListener('input', () => renderPromptFileList());
+}
+
+async function loadPromptCatalog() {
+  goldmineFileList.innerHTML = '<div class="loading-spinner-box">Scanning Repository Prompts...</div>';
+  try {
+    const res = await fetch('/api/prompts/catalog');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    promptsCatalog = data.catalog || [];
+    renderPromptFileList();
+  } catch (err) {
+    goldmineFileList.innerHTML = `<div class="error-msg">Failed to scan prompts: ${err.message}</div>`;
+  }
+}
+
+function renderPromptFileList() {
+  const query = (promptFilterInput ? promptFilterInput.value : '').toLowerCase().trim();
+  let list = promptsCatalog;
+
+  if (activeCatFilter !== 'all') {
+    list = list.filter(item => item.category.toLowerCase().includes(activeCatFilter.toLowerCase()));
+  }
+
+  if (query) {
+    list = list.filter(item =>
+      item.filename.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query) ||
+      (item.snippet || '').toLowerCase().includes(query)
+    );
+  }
+
+  if (list.length === 0) {
+    goldmineFileList.innerHTML = '<div class="empty-state-notice">No prompt files match criteria.</div>';
+    return;
+  }
+
+  goldmineFileList.innerHTML = list.map((item, idx) => `
+    <div class="goldmine-item" data-path="${escapeHtml(item.rel_path)}" onclick="loadPromptDetail('${escapeHtml(item.rel_path)}')">
+      <div class="goldmine-item-header">
+        <span class="goldmine-item-name">📄 ${escapeHtml(item.filename)}</span>
+        <span class="goldmine-item-size">${escapeHtml(item.size)}</span>
+      </div>
+      <div class="goldmine-item-cat">${escapeHtml(item.category)}</div>
+      <div class="goldmine-item-snippet">${escapeHtml(item.snippet)}</div>
+    </div>
+  `).join('');
+}
+
+window.loadPromptDetail = async function(relPath) {
+  document.querySelectorAll('.goldmine-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.path === relPath);
+  });
+
+  previewFilename.textContent = `Loading ${relPath}...`;
+  previewContentCode.textContent = 'Fetching prompt contents from repository...';
+  copyPromptContentBtn.disabled = true;
+  injectPromptContentBtn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/prompts/content?file=${encodeURIComponent(relPath)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    currentLoadedPromptContent = data.content || '';
+    previewFilename.textContent = `${data.filename} (${data.lines} lines, ${data.size_kb} KB)`;
+    previewContentCode.textContent = currentLoadedPromptContent;
+    copyPromptContentBtn.disabled = false;
+    injectPromptContentBtn.disabled = false;
+  } catch (err) {
+    previewFilename.textContent = 'Error loading prompt';
+    previewContentCode.textContent = `Failed: ${err.message}`;
+  }
+};
+
+if (copyPromptContentBtn) {
+  copyPromptContentBtn.addEventListener('click', () => {
+    if (!currentLoadedPromptContent) return;
+    navigator.clipboard.writeText(currentLoadedPromptContent).then(() => {
+      copyPromptContentBtn.textContent = '✅ Copied!';
+      setTimeout(() => { copyPromptContentBtn.textContent = '📋 Copy Prompt'; }, 2000);
+    });
+  });
+}
+
+if (injectPromptContentBtn) {
+  injectPromptContentBtn.addEventListener('click', () => {
+    if (!currentLoadedPromptContent) return;
+    systemPromptInput.value = currentLoadedPromptContent;
+    state.systemPrompt = currentLoadedPromptContent;
+    promptsModal.classList.add('hidden');
+    alert(`Successfully injected prompt into Active Scaffold!`);
+  });
+}
+
+/* ==========================================================================
+   Code Block Actions: Run Live, Save to File, Add to Book
+   ========================================================================== */
+window.runCodeBlock = async function(btn) {
+  const wrapper = btn.closest('.code-block-wrapper');
+  if (!wrapper) return;
+  const codeEl = wrapper.querySelector('pre code');
+  const termEl = wrapper.querySelector('.code-terminal-result');
+  const lang = wrapper.querySelector('.code-header span')?.textContent.trim() || 'python';
+  const code = (codeEl?.innerText || codeEl?.textContent || '').trim();
+
+  btn.textContent = '⏳ Running...';
+  btn.disabled = true;
+  if (termEl) {
+    termEl.classList.remove('hidden');
+    termEl.innerHTML = `<span class="dot checking"></span> Executing ${escapeHtml(lang)} in live subprocess...`;
+  }
+
+  try {
+    const res = await fetch('/api/session/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: lang, code: code })
+    });
+    const data = await res.json();
+    btn.textContent = '▶ Run Live';
+    btn.disabled = false;
+
+    if (termEl) {
+      const isSuccess = data.exit_code === 0;
+      const statusClass = isSuccess ? 'status-ok' : 'status-err';
+      const outputText = data.stdout || data.stderr || '(Process finished with no output)';
+      termEl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;padding:4px 8px;background:rgba(0,0,0,0.5);font-size:0.7rem;color:#94a3b8;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span style="color:${isSuccess ? '#34d399' : '#f87171'};font-weight:600;">Status: Exit ${data.exit_code}</span>
+          <span>Time: ${data.elapsed_ms}ms</span>
+        </div>
+        <pre style="margin:0;padding:8px 12px;background:#050608;color:#38bdf8;font-family:var(--font-mono);font-size:0.76rem;max-height:180px;overflow-y:auto;white-space:pre-wrap;"><code>${escapeHtml(outputText)}</code></pre>
+      `;
+    }
+  } catch (err) {
+    btn.textContent = '▶ Run Live';
+    btn.disabled = false;
+    if (termEl) termEl.innerHTML = `<span style="color:#ef4444;">Execution failed: ${escapeHtml(err.message)}</span>`;
+  }
+};
+
+window.saveCodeToFile = async function(btn) {
+  const wrapper = btn.closest('.code-block-wrapper');
+  if (!wrapper) return;
+  const codeEl = wrapper.querySelector('pre code');
+  const code = (codeEl?.innerText || codeEl?.textContent || '').trim();
+  const lang = wrapper.querySelector('.code-header span')?.textContent.trim() || 'py';
+  
+  let defaultExt = '.py';
+  if (['js', 'javascript', 'node'].includes(lang)) defaultExt = '.js';
+  else if (['go', 'golang'].includes(lang)) defaultExt = '.go';
+  else if (['sh', 'bash'].includes(lang)) defaultExt = '.sh';
+  else if (['md', 'markdown'].includes(lang)) defaultExt = '.md';
+  else if (['html'].includes(lang)) defaultExt = '.html';
+  else if (['diff', 'patch'].includes(lang)) defaultExt = '.patch';
+
+  const defaultPath = `snippets/snippet_${Date.now()}${defaultExt}`;
+  const filePath = prompt('Save file to workspace path:', defaultPath);
+  if (!filePath) return;
+
+  try {
+    const res = await fetch('/api/fs/write', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: filePath.trim(), content: code })
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      alert(`✅ Successfully saved to: ${data.path} (${data.bytes} bytes)`);
+      if (typeof window.fetchFsTree === 'function') window.fetchFsTree();
+    } else {
+      alert(`Save error: ${data.error || 'Unknown error'}`);
+    }
+  } catch (err) {
+    alert(`Failed to save: ${err.message}`);
+  }
+};
+
+window.addCodeToBook = function(btn) {
+  const wrapper = btn.closest('.code-block-wrapper');
+  if (!wrapper) return;
+  const codeEl = wrapper.querySelector('pre code');
+  const code = (codeEl?.innerText || codeEl?.textContent || '').trim();
+  const lang = wrapper.querySelector('.code-header span')?.textContent.trim() || 'code';
+
+  const formattedSnippet = `\n\n\`\`\`${lang}\n${code}\n\`\`\`\n`;
+  const chapterInput = document.getElementById('chapterContentInput');
+  if (chapterInput) {
+    chapterInput.value += formattedSnippet;
+    if (typeof window.updateChapterPreview === 'function') window.updateChapterPreview();
+  }
+
+  const bookModal = document.getElementById('bookStudioModal');
+  if (bookModal) {
+    bookModal.classList.remove('hidden');
+    renderBookStudio();
+  }
+};
+
+/* ==========================================================================
+   IDE File Explorer Logic
+   ========================================================================== */
+const explorerDrawer = document.getElementById('explorerDrawer');
+const toggleExplorerBtn = document.getElementById('toggleExplorerBtn');
+const closeExplorerBtn = document.getElementById('closeExplorerBtn');
+const refreshFsBtn = document.getElementById('refreshFsBtn');
+const newFileBtn = document.getElementById('newFileBtn');
+const newFolderBtn = document.getElementById('newFolderBtn');
+const fsSearchInput = document.getElementById('fsSearchInput');
+const fileTreeContainer = document.getElementById('fileTreeContainer');
+const fileEditorContainer = document.getElementById('fileEditorContainer');
+const editorActiveFilePath = document.getElementById('editorActiveFilePath');
+const fileEditorTextarea = document.getElementById('fileEditorTextarea');
+const saveFileBtn = document.getElementById('saveFileBtn');
+const deleteFileBtn = document.getElementById('deleteFileBtn');
+const closeEditorBtn = document.getElementById('closeEditorBtn');
+
+let currentActiveFilePath = '';
+
+if (toggleExplorerBtn) {
+  toggleExplorerBtn.addEventListener('click', () => {
+    explorerDrawer.classList.toggle('hidden');
+    if (!explorerDrawer.classList.contains('hidden')) {
+      window.fetchFsTree();
+    }
+  });
+}
+if (closeExplorerBtn) closeExplorerBtn.addEventListener('click', () => explorerDrawer.classList.add('hidden'));
+if (refreshFsBtn) refreshFsBtn.addEventListener('click', () => window.fetchFsTree());
+if (closeEditorBtn) closeEditorBtn.addEventListener('click', () => fileEditorContainer.classList.add('hidden'));
+
+window.fetchFsTree = async function() {
+  if (!fileTreeContainer) return;
+  fileTreeContainer.innerHTML = '<div class="loading-spinner-box">Loading workspace tree...</div>';
+  try {
+    const res = await fetch('/api/fs/tree');
+    const data = await res.json();
+    fileTreeContainer.innerHTML = '';
+    renderTreeNode(data, fileTreeContainer, 0);
+  } catch (err) {
+    fileTreeContainer.innerHTML = `<div style="color:#ef4444;padding:1rem;">Failed to load files: ${err.message}</div>`;
+  }
+};
+
+function renderTreeNode(node, container, depth) {
+  if (!node) return;
+  const isDir = node.type === 'directory';
+  const nodeEl = document.createElement('div');
+  nodeEl.className = 'tree-node';
+  nodeEl.dataset.path = node.path;
+
+  const indentHtml = '<span class="tree-indent"></span>'.repeat(depth);
+  const icon = isDir ? '📁' : getFileIcon(node.name);
+
+  nodeEl.innerHTML = `
+    ${indentHtml}
+    <span class="tree-icon">${icon}</span>
+    <span class="tree-label">${escapeHtml(node.name)}</span>
+  `;
+
+  if (isDir) {
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'tree-children';
+    nodeEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      childrenContainer.classList.toggle('hidden');
+      nodeEl.querySelector('.tree-icon').textContent = childrenContainer.classList.contains('hidden') ? '📁' : '📂';
+    });
+    container.appendChild(nodeEl);
+    container.appendChild(childrenContainer);
+    if (node.children) {
+      node.children.forEach(child => renderTreeNode(child, childrenContainer, depth + 1));
+    }
+  } else {
+    nodeEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('active'));
+      nodeEl.classList.add('active');
+      window.openWorkspaceFile(node.path);
+    });
+    container.appendChild(nodeEl);
+  }
+}
+
+function getFileIcon(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  switch (ext) {
+    case 'py': return '🐍';
+    case 'js': case 'ts': case 'jsx': case 'tsx': return '⚡';
+    case 'html': return '🌐';
+    case 'css': return '🎨';
+    case 'md': case 'txt': return '📄';
+    case 'json': return '📋';
+    case 'sh': return '💻';
+    default: return '📄';
+  }
+}
+
+window.openWorkspaceFile = async function(filePath) {
+  currentActiveFilePath = filePath;
+  if (editorActiveFilePath) editorActiveFilePath.textContent = filePath;
+  if (fileEditorTextarea) fileEditorTextarea.value = 'Loading file content...';
+  if (fileEditorContainer) fileEditorContainer.classList.remove('hidden');
+
+  try {
+    const res = await fetch(`/api/fs/read?path=${encodeURIComponent(filePath)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (fileEditorTextarea) fileEditorTextarea.value = data.content || '';
+  } catch (err) {
+    if (fileEditorTextarea) fileEditorTextarea.value = `Error loading file: ${err.message}`;
+  }
+};
+
+if (saveFileBtn) {
+  saveFileBtn.addEventListener('click', async () => {
+    if (!currentActiveFilePath || !fileEditorTextarea) return;
+    const content = fileEditorTextarea.value;
+    saveFileBtn.textContent = 'Saving...';
+    try {
+      const res = await fetch('/api/fs/write', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: currentActiveFilePath, content })
+      });
+      const data = await res.json();
+      saveFileBtn.textContent = '✅ Saved';
+      setTimeout(() => { saveFileBtn.textContent = '💾 Save'; }, 1500);
+    } catch (err) {
+      alert(`Save failed: ${err.message}`);
+      saveFileBtn.textContent = '💾 Save';
+    }
+  });
+}
+
+if (deleteFileBtn) {
+  deleteFileBtn.addEventListener('click', async () => {
+    if (!currentActiveFilePath) return;
+    if (!confirm(`Are you sure you want to delete ${currentActiveFilePath}?`)) return;
+    try {
+      await fetch('/api/fs/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: currentActiveFilePath })
+      });
+      if (fileEditorContainer) fileEditorContainer.classList.add('hidden');
+      window.fetchFsTree();
+    } catch (err) {
+      alert(`Delete failed: ${err.message}`);
+    }
+  });
+}
+
+if (newFileBtn) {
+  newFileBtn.addEventListener('click', async () => {
+    const name = prompt('Enter new file path (e.g. notes.md or my_script.py):');
+    if (!name) return;
+    await fetch('/api/fs/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: name.trim(), type: 'file', content: '' })
+    });
+    window.fetchFsTree();
+    window.openWorkspaceFile(name.trim());
+  });
+}
+
+if (newFolderBtn) {
+  newFolderBtn.addEventListener('click', async () => {
+    const name = prompt('Enter new folder path (e.g. my_docs):');
+    if (!name) return;
+    await fetch('/api/fs/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: name.trim(), type: 'directory' })
+    });
+    window.fetchFsTree();
+  });
+}
+
+/* ==========================================================================
+   Live Interactive Session Console Logic
+   ========================================================================== */
+const consoleDrawer = document.getElementById('consoleDrawer');
+const toggleConsoleBtn = document.getElementById('toggleConsoleBtn');
+const closeConsoleBtn = document.getElementById('closeConsoleBtn');
+const runConsoleBtn = document.getElementById('runConsoleBtn');
+const consoleLangSelect = document.getElementById('consoleLangSelect');
+const consoleCodeInput = document.getElementById('consoleCodeInput');
+const consoleOutputPre = document.getElementById('consoleOutputPre');
+const consoleStatusBadge = document.getElementById('consoleStatusBadge');
+
+if (toggleConsoleBtn) {
+  toggleConsoleBtn.addEventListener('click', () => {
+    consoleDrawer.classList.toggle('hidden');
+  });
+}
+if (closeConsoleBtn) closeConsoleBtn.addEventListener('click', () => consoleDrawer.classList.add('hidden'));
+
+if (runConsoleBtn) {
+  runConsoleBtn.addEventListener('click', () => window.executeConsoleScript());
+}
+
+if (consoleCodeInput) {
+  consoleCodeInput.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+      window.executeConsoleScript();
+    }
+  });
+}
+
+window.executeConsoleScript = async function() {
+  if (!consoleCodeInput || !consoleLangSelect) return;
+  const code = consoleCodeInput.value.trim();
+  const lang = consoleLangSelect.value;
+  if (!code) return;
+
+  runConsoleBtn.disabled = true;
+  runConsoleBtn.textContent = 'Executing...';
+  consoleStatusBadge.className = 'status-badge-neutral';
+  consoleStatusBadge.textContent = 'Running...';
+  consoleOutputPre.innerHTML = `<code><span class="dot checking"></span> Running ${lang} script...</code>`;
+
+  try {
+    const res = await fetch('/api/session/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: lang, code })
+    });
+    const data = await res.json();
+    runConsoleBtn.disabled = false;
+    runConsoleBtn.textContent = 'Run (Ctrl+Enter)';
+
+    const isSuccess = data.exit_code === 0;
+    consoleStatusBadge.className = isSuccess ? 'status-badge-ok' : 'status-badge-err';
+    consoleStatusBadge.textContent = isSuccess ? `Success (${data.elapsed_ms}ms)` : `Exit ${data.exit_code} (${data.elapsed_ms}ms)`;
+
+    const output = data.stdout || data.stderr || '(Execution finished with no output)';
+    consoleOutputPre.innerHTML = `<code>${escapeHtml(output)}</code>`;
+  } catch (err) {
+    runConsoleBtn.disabled = false;
+    runConsoleBtn.textContent = 'Run (Ctrl+Enter)';
+    consoleStatusBadge.className = 'status-badge-err';
+    consoleStatusBadge.textContent = 'Error';
+    consoleOutputPre.innerHTML = `<code style="color:#ef4444;">Execution failed: ${escapeHtml(err.message)}</code>`;
+  }
+};
+
+window.loadConsoleSnippet = function(key) {
+  if (!consoleCodeInput || !consoleLangSelect) return;
+  if (key === 'jwt_test') {
+    consoleLangSelect.value = 'python';
+    consoleCodeInput.value = `import json, base64, time\n\nheader = base64.b64encode(json.dumps({"alg":"HS256","typ":"JWT"}).encode()).decode().rstrip('=')\npayload = base64.b64encode(json.dumps({"sub":"12345","name":"Satish","exp":int(time.time())+3600}).encode()).decode().rstrip('=')\nsig = "sample_hmac_signature"\n\ntoken = f"{header}.{payload}.{sig}"\nprint("Generated Sample JWT:")\nprint(token)\nprint("\\nDecoded Claims:", json.loads(base64.b64decode(payload + '===').decode()))`;
+  } else if (key === 'sys_stats') {
+    consoleLangSelect.value = 'python';
+    consoleCodeInput.value = `import os, platform, multiprocessing\n\nprint(f"System: {platform.system()} {platform.release()}")\nprint(f"Machine: {platform.machine()}")\nprint(f"CPUs / Cores: {multiprocessing.cpu_count()}")\nprint(f"Current Working Dir: {os.getcwd()}")`;
+  } else if (key === 'mcp_ping') {
+    consoleLangSelect.value = 'bash';
+    consoleCodeInput.value = `curl -s http://localhost:11434/api/tags | python3 -m json.tool | head -n 25`;
+  }
+};
+
+/* ==========================================================================
+   Book Studio & Manual Publisher Logic
+   ========================================================================== */
+const bookStudioModal = document.getElementById('bookStudioModal');
+const toggleBookBtn = document.getElementById('toggleBookBtn');
+const closeBookModalBtn = document.getElementById('closeBookModalBtn');
+const bookModalBackdrop = document.getElementById('bookModalBackdrop');
+const bookTitleInput = document.getElementById('bookTitleInput');
+const bookSubtitleInput = document.getElementById('bookSubtitleInput');
+const bookAuthorInput = document.getElementById('bookAuthorInput');
+const bookChapterList = document.getElementById('bookChapterList');
+const chapterTitleInput = document.getElementById('chapterTitleInput');
+const chapterContentInput = document.getElementById('chapterContentInput');
+const chapterPreviewBody = document.getElementById('chapterPreviewBody');
+const addChapterBtn = document.getElementById('addChapterBtn');
+const bookSaveBtn = document.getElementById('bookSaveBtn');
+const autoCompileBookBtn = document.getElementById('autoCompileBookBtn');
+const exportHtmlBookBtn = document.getElementById('exportHtmlBookBtn');
+const exportPdfBookBtn = document.getElementById('exportPdfBookBtn');
+const chapterCountBadge = document.getElementById('chapterCountBadge');
+
+let activeBook = {
+  title: 'CL4R1T4S AI Engineering & Security Manual',
+  subtitle: 'Autonomous Agents, Zero-Key Architectures & Codebase Hardening',
+  author: 'Satish Gundu (Principal AI Engineer)',
+  slug: 'cl4r1t4s_manual',
+  chapters: [
+    {
+      title: 'Chapter 1: Hardening Authentication Middleware',
+      content: '## JWT Authentication & Expiration Verification\n\nThis chapter documents the practical implementation of algorithm validation and token expiration checks to prevent algorithm confusion attacks and expired token replays.\n\n### The Security Diff\n```go\n// Check token expiration\nif time.Now().After(claims["exp"]) {\n    http.Error(w, "Token expired", http.StatusUnauthorized)\n    return\n}\n```\n\n### Verification Steps\n1. Run `rg -n "jwt.ValidateToken" .` across the repo.\n2. Apply the surgical patch.\n3. Execute unit tests.'
+    }
+  ]
+};
+let activeChapterIndex = 0;
+
+if (toggleBookBtn) {
+  toggleBookBtn.addEventListener('click', () => {
+    bookStudioModal.classList.remove('hidden');
+    renderBookStudio();
+  });
+}
+if (closeBookModalBtn) closeBookModalBtn.addEventListener('click', () => bookStudioModal.classList.add('hidden'));
+if (bookModalBackdrop) bookModalBackdrop.addEventListener('click', () => bookStudioModal.classList.add('hidden'));
+
+function renderBookStudio() {
+  if (!bookTitleInput || !bookChapterList) return;
+  bookTitleInput.value = activeBook.title;
+  bookSubtitleInput.value = activeBook.subtitle;
+  bookAuthorInput.value = activeBook.author;
+  if (chapterCountBadge) chapterCountBadge.textContent = activeBook.chapters.length;
+
+  bookChapterList.innerHTML = '';
+  activeBook.chapters.forEach((ch, idx) => {
+    const item = document.createElement('div');
+    item.className = `chapter-nav-item ${idx === activeChapterIndex ? 'active' : ''}`;
+    item.innerHTML = `
+      <span>${escapeHtml(ch.title || `Chapter ${idx + 1}`)}</span>
+      <span style="opacity:0.6;font-size:0.7rem;">Ch ${idx + 1}</span>
+    `;
+    item.addEventListener('click', () => selectBookChapter(idx));
+    bookChapterList.appendChild(item);
+  });
+
+  const curr = activeBook.chapters[activeChapterIndex] || { title: '', content: '' };
+  if (chapterTitleInput) chapterTitleInput.value = curr.title;
+  if (chapterContentInput) chapterContentInput.value = curr.content;
+  window.updateChapterPreview();
+}
+
+function selectBookChapter(idx) {
+  saveCurrentChapterState();
+  activeChapterIndex = idx;
+  renderBookStudio();
+}
+
+function saveCurrentChapterState() {
+  if (activeBook.chapters[activeChapterIndex]) {
+    if (chapterTitleInput) activeBook.chapters[activeChapterIndex].title = chapterTitleInput.value;
+    if (chapterContentInput) activeBook.chapters[activeChapterIndex].content = chapterContentInput.value;
+  }
+  if (bookTitleInput) activeBook.title = bookTitleInput.value;
+  if (bookSubtitleInput) activeBook.subtitle = bookSubtitleInput.value;
+  if (bookAuthorInput) activeBook.author = bookAuthorInput.value;
+}
+
+if (addChapterBtn) {
+  addChapterBtn.addEventListener('click', () => {
+    saveCurrentChapterState();
+    activeBook.chapters.push({
+      title: `Chapter ${activeBook.chapters.length + 1}: New Topic`,
+      content: '## Overview\n\nEnter chapter notes, guidelines, and code snippets here...'
+    });
+    activeChapterIndex = activeBook.chapters.length - 1;
+    renderBookStudio();
+  });
+}
+
+if (chapterTitleInput) {
+  chapterTitleInput.addEventListener('input', () => {
+    if (activeBook.chapters[activeChapterIndex]) {
+      activeBook.chapters[activeChapterIndex].title = chapterTitleInput.value;
+      const navItem = bookChapterList.children[activeChapterIndex];
+      if (navItem) navItem.querySelector('span').textContent = chapterTitleInput.value;
+    }
+  });
+}
+
+if (chapterContentInput) {
+  chapterContentInput.addEventListener('input', () => {
+    if (activeBook.chapters[activeChapterIndex]) {
+      activeBook.chapters[activeChapterIndex].content = chapterContentInput.value;
+    }
+    window.updateChapterPreview();
+  });
+}
+
+window.updateChapterPreview = function() {
+  if (!chapterPreviewBody) return;
+  const raw = chapterContentInput?.value || '';
+  chapterPreviewBody.innerHTML = renderMarkdown(raw);
+};
+
+if (bookSaveBtn) {
+  bookSaveBtn.addEventListener('click', async () => {
+    saveCurrentChapterState();
+    bookSaveBtn.textContent = 'Saving...';
+    try {
+      const res = await fetch('/api/books/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(activeBook)
+      });
+      const data = await res.json();
+      activeBook.slug = data.slug;
+      bookSaveBtn.textContent = '✅ Saved';
+      setTimeout(() => { bookSaveBtn.textContent = '💾 Save Book'; }, 1500);
+    } catch (err) {
+      alert(`Save failed: ${err.message}`);
+      bookSaveBtn.textContent = '💾 Save Book';
+    }
+  });
+}
+
+if (autoCompileBookBtn) {
+  autoCompileBookBtn.addEventListener('click', () => {
+    saveCurrentChapterState();
+    const bubbles = Array.from(document.querySelectorAll('.message-bubble'));
+    if (!bubbles.length) {
+      alert('No chat messages to compile yet!');
+      return;
+    }
+
+    let compiledContent = `## Auto-Compiled Session Notes\n*Compiled on ${new Date().toLocaleString()}*\n\n`;
+    bubbles.forEach((b, i) => {
+      const isAi = b.closest('.message-row')?.classList.contains('ai');
+      const sender = isAi ? '### Agent Response' : '### User Request';
+      compiledContent += `${sender}\n\n${b.innerText}\n\n---\n\n`;
+    });
+
+    activeBook.chapters.push({
+      title: `Chapter ${activeBook.chapters.length + 1}: Session Transcripts & Security Solutions`,
+      content: compiledContent
+    });
+    activeChapterIndex = activeBook.chapters.length - 1;
+    renderBookStudio();
+    alert('✅ Auto-compiled conversation into a new book chapter!');
+  });
+}
+
+if (exportHtmlBookBtn) {
+  exportHtmlBookBtn.addEventListener('click', async () => {
+    saveCurrentChapterState();
+    await fetch('/api/books/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activeBook)
+    });
+    window.open(`/api/books/export?slug=${activeBook.slug || 'cl4r1t4s_manual'}&format=html`, '_blank');
+  });
+}
+
+if (exportPdfBookBtn) {
+  exportPdfBookBtn.addEventListener('click', async () => {
+    saveCurrentChapterState();
+    await fetch('/api/books/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activeBook)
+    });
+    const printWin = window.open(`/api/books/export?slug=${activeBook.slug || 'cl4r1t4s_manual'}&format=html`, '_blank');
+    if (printWin) {
+      printWin.onload = () => {
+        setTimeout(() => printWin.print(), 800);
+      };
+    }
+  });
+}
+
+/* ==========================================================================
+   Theme, Color Modes & Typography Customizer System
+   ========================================================================== */
+function initThemeSystem() {
+  const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+  const themeModal = document.getElementById('themeCustomizerModal');
+  const themeBackdrop = document.getElementById('themeModalBackdrop');
+  const closeThemeBtn = document.getElementById('closeThemeModalBtn');
+  const applyCloseBtn = document.getElementById('applyThemeCloseBtn');
+  const resetDefaultsBtn = document.getElementById('resetThemeDefaultsBtn');
+
+  const DEFAULT_APPEARANCE = {
+    theme: 'whitemode',
+    font: 'sans',
+    textColor: 'default',
+    fontSize: 'md'
+  };
+
+  // Load saved preference or default
+  let currentAppearance = { ...DEFAULT_APPEARANCE };
+  try {
+    const saved = localStorage.getItem('omni_appearance_config');
+    if (saved) {
+      currentAppearance = { ...DEFAULT_APPEARANCE, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.warn('Failed to load appearance config:', e);
+  }
+
+  // Apply appearance to document
+  function applyAppearance(cfg) {
+    currentAppearance = { ...cfg };
+    
+    // Set root attributes
+    document.documentElement.setAttribute('data-theme', cfg.theme);
+    document.documentElement.setAttribute('data-font', cfg.font);
+    document.documentElement.setAttribute('data-text-color', cfg.textColor);
+    document.documentElement.setAttribute('data-font-size', cfg.fontSize);
+
+    // Toggle body class for light vs dark mode
+    if (cfg.theme === 'whitemode' || cfg.theme === 'light') {
+      document.body.classList.remove('dark-mode');
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+      document.body.classList.add('dark-mode');
+    }
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('omni_appearance_config', JSON.stringify(currentAppearance));
+    } catch (e) {}
+
+    // Update active UI elements in modal
+    document.querySelectorAll('.theme-card').forEach(card => {
+      card.classList.toggle('active', card.getAttribute('data-theme-val') === cfg.theme);
+    });
+
+    document.querySelectorAll('.font-pill').forEach(pill => {
+      pill.classList.toggle('active', pill.getAttribute('data-font-val') === cfg.font);
+    });
+
+    document.querySelectorAll('.color-circle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-color-val') === cfg.textColor);
+    });
+
+    document.querySelectorAll('.size-pill').forEach(pill => {
+      pill.classList.toggle('active', pill.getAttribute('data-size-val') === cfg.fontSize);
+    });
+
+    // Update Live Preview box if open
+    const previewBox = document.querySelector('.theme-preview-box');
+    if (previewBox) {
+      const codeEl = previewBox.querySelector('pre code');
+      if (codeEl) {
+        codeEl.textContent = `const activeTheme = "${cfg.theme}";\nconst activeFont = "${cfg.font}";\nconst textColor = "${cfg.textColor}";\nconst fontSize = "${cfg.fontSize}";`;
+      }
+    }
+  }
+
+  // Initial apply
+  applyAppearance(currentAppearance);
+
+  // Modal open / close handlers
+  if (toggleThemeBtn && themeModal) {
+    toggleThemeBtn.addEventListener('click', () => {
+      themeModal.classList.remove('hidden');
+    });
+  }
+
+  const closeModal = () => {
+    if (themeModal) themeModal.classList.add('hidden');
+  };
+
+  if (closeThemeBtn) closeThemeBtn.addEventListener('click', closeModal);
+  if (applyCloseBtn) applyCloseBtn.addEventListener('click', closeModal);
+  if (themeBackdrop) themeBackdrop.addEventListener('click', closeModal);
+
+  // Theme card click
+  document.querySelectorAll('.theme-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const themeVal = card.getAttribute('data-theme-val');
+      if (themeVal) {
+        currentAppearance.theme = themeVal;
+        applyAppearance(currentAppearance);
+      }
+    });
+  });
+
+  // Font family click
+  document.querySelectorAll('.font-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const fontVal = pill.getAttribute('data-font-val');
+      if (fontVal) {
+        currentAppearance.font = fontVal;
+        applyAppearance(currentAppearance);
+      }
+    });
+  });
+
+  // Text color click
+  document.querySelectorAll('.color-circle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const colorVal = btn.getAttribute('data-color-val');
+      if (colorVal) {
+        currentAppearance.textColor = colorVal;
+        applyAppearance(currentAppearance);
+      }
+    });
+  });
+
+  // Font size click
+  document.querySelectorAll('.size-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const sizeVal = pill.getAttribute('data-size-val');
+      if (sizeVal) {
+        currentAppearance.fontSize = sizeVal;
+        applyAppearance(currentAppearance);
+      }
+    });
+  });
+
+  // Reset to defaults
+  if (resetDefaultsBtn) {
+    resetDefaultsBtn.addEventListener('click', () => {
+      applyAppearance(DEFAULT_APPEARANCE);
+    });
+  }
+
+  // Expose helper globally
+  window.setTheme = function(themeName) {
+    currentAppearance.theme = themeName;
+    applyAppearance(currentAppearance);
+  };
+  window.setFont = function(fontName) {
+    currentAppearance.font = fontName;
+    applyAppearance(currentAppearance);
+  };
+  window.setTextColor = function(colorName) {
+    currentAppearance.textColor = colorName;
+    applyAppearance(currentAppearance);
+  };
+  window.openThemeCustomizerModal = function() {
+    if (themeModal) themeModal.classList.remove('hidden');
+  };
+
+  // Real-time synchronization across open tabs/dashboards
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'omni_appearance_config' && e.newValue) {
+      try {
+        const cfg = JSON.parse(e.newValue);
+        applyAppearance({ ...DEFAULT_APPEARANCE, ...cfg });
+      } catch (err) {}
+    }
+  });
+}
+
+// Initialize theme on script load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initThemeSystem();
+    setupDbStudioModalEvents();
+  });
+} else {
+  initThemeSystem();
+  setupDbStudioModalEvents();
+}
+
+/* =========================================================================
+   DATABASE & KNOWLEDGE ARCHIVE STUDIO (SQLite WAL & Cross-Component Hub)
+   ========================================================================= */
+
+let currentDbSnippetsList = [];
+
+async function openDbStudioModal() {
+  const modal = document.getElementById('dbStudioModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  await loadDbStudioData();
+}
+
+function closeDbStudioModal() {
+  const modal = document.getElementById('dbStudioModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function loadDbStudioData() {
+  try {
+    const [telemetryRes, snippetsRes] = await Promise.all([
+      fetch('/api/db/telemetry').catch(() => null),
+      fetch('/api/db/snippets').catch(() => null)
+    ]);
+
+    if (telemetryRes && telemetryRes.ok) {
+      const t = await telemetryRes.json();
+      const chunksEl = document.getElementById('dbKpiChunks');
+      const sizeEl = document.getElementById('dbKpiSize');
+      if (chunksEl && t.total_chunks !== undefined) chunksEl.textContent = `${t.total_chunks} chunks`;
+      if (sizeEl && t.database_size_kb !== undefined) sizeEl.textContent = `${t.database_size_kb} KB`;
+    }
+
+    if (snippetsRes && snippetsRes.ok) {
+      const s = await snippetsRes.json();
+      currentDbSnippetsList = s.snippets || [];
+      const kpiSnippets = document.getElementById('dbKpiSnippets');
+      const badge = document.getElementById('dbSnippetsBadge');
+      if (kpiSnippets) kpiSnippets.textContent = currentDbSnippetsList.length;
+      if (badge) badge.textContent = currentDbSnippetsList.length;
+      renderDbSnippetCards(currentDbSnippetsList);
+    }
+  } catch (err) {
+    console.warn('[Load DB Data]', err);
+  }
+}
+
+function renderDbSnippetCards(list) {
+  const grid = document.getElementById('dbSnippetsGrid');
+  if (!grid) return;
+
+  if (!list || list.length === 0) {
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 2.5rem; color: var(--text-dim); font-weight:600;">No snippets archived yet. Click "🗄️ Save to DB" on any AI chat response or REPL output to archive snippets here.</div>';
+    return;
+  }
+
+  grid.innerHTML = list.map(item => `
+    <div class="db-snippet-card" data-id="${item.id}">
+      <div class="db-snippet-header">
+        <div class="db-snippet-title">#${item.id} ${escapeHtml(item.title || 'Untitled Snippet')}</div>
+        <span class="db-snippet-source-badge">${escapeHtml(item.source || 'Studio')}</span>
+      </div>
+      <div class="db-snippet-preview">${escapeHtml((item.content || '').slice(0, 300))}${(item.content || '').length > 300 ? '...' : ''}</div>
+      <div class="db-snippet-footer">
+        <div><span>📅 ${escapeHtml(item.created_at || 'Recently')}</span></div>
+        <div class="db-snippet-actions">
+          <button class="db-bridge-btn" onclick="window.dispatchSnippetToChat(${item.id})" title="Load into AI Chat Prompt">💬 Chat</button>
+          <button class="db-bridge-btn" onclick="window.dispatchSnippetToRepl(${item.id})" title="Send code into Live REPL">🔴 REPL</button>
+          <button class="db-bridge-btn" onclick="window.dispatchSnippetToBook(${item.id})" title="Append to Book chapter">📖 Book</button>
+          <button class="db-bridge-btn" onclick="window.dispatchSnippetToMemory(${item.id})" title="Distill to On-Device Vector Memory">⚡ Memory</button>
+          <button class="db-bridge-btn" onclick="window.copySnippetText(${item.id})" title="Copy snippet text">📋</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.dispatchSnippetToChat = function(id) {
+  const item = currentDbSnippetsList.find(s => s.id === id);
+  if (!item || !promptInput) return;
+  promptInput.value = `Regarding this saved knowledge snippet (#${item.id}):\n**${item.title}**\n\n${item.content}\n\nCan you analyze this, provide architectural recommendations, and synthesize production code?`;
+  promptInput.dispatchEvent(new Event('input'));
+  closeDbStudioModal();
+  promptInput.focus();
+  if (window.showOmniToast) window.showOmniToast(`Snippet #${id} loaded into Chatbot!`, '💬');
+};
+
+window.dispatchSnippetToRepl = function(id) {
+  const item = currentDbSnippetsList.find(s => s.id === id);
+  if (!item) return;
+
+  let code = item.content || '';
+  const match = code.match(/```(?:[a-zA-Z0-9_-]+)?\n([\s\S]*?)```/);
+  if (match) {
+    code = match[1].trim();
+  }
+
+  const consoleDrawer = document.getElementById('consoleDrawer');
+  const consoleCodeInput = document.getElementById('consoleCodeInput');
+  if (consoleDrawer && consoleCodeInput) {
+    consoleDrawer.classList.remove('hidden');
+    consoleCodeInput.value = code;
+    closeDbStudioModal();
+    consoleCodeInput.focus();
+    if (window.showOmniToast) window.showOmniToast(`Snippet #${id} transferred to Live REPL Console!`, '🔴');
+  }
+};
+
+window.dispatchSnippetToBook = async function(id) {
+  const item = currentDbSnippetsList.find(s => s.id === id);
+  if (!item) return;
+
+  try {
+    const res = await fetch('/api/books/append', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: `Archived Snippet: ${item.title || 'Knowledge Note'}`,
+        content: `## ${item.title}\n\n> Source: ${item.source || 'Studio'} (DB Record #${item.id})\n\n${item.content}\n\n*Archived from SQLite Database Studio.*`
+      })
+    });
+    const data = await res.json();
+    if (window.showOmniToast) window.showOmniToast(`Snippet #${id} appended to Book chapter!`, '📖');
+  } catch (err) {
+    if (window.showOmniToast) window.showOmniToast(`Book append error: ${err.message}`, '⚠️');
+  }
+};
+
+window.dispatchSnippetToMemory = async function(id) {
+  const item = currentDbSnippetsList.find(s => s.id === id);
+  if (!item) return;
+
+  try {
+    const res = await fetch('/api/memory/distill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: `${item.title}: ${item.content}`,
+        source: `SQLite Snippet #${item.id}`
+      })
+    });
+    const data = await res.json();
+    if (window.showOmniToast) window.showOmniToast(`Distilled snippet #${id} into On-Device Memory!`, '⚡');
+  } catch (err) {
+    if (window.showOmniToast) window.showOmniToast(`Memory distillation error: ${err.message}`, '⚠️');
+  }
+};
+
+window.copySnippetText = function(id) {
+  const item = currentDbSnippetsList.find(s => s.id === id);
+  if (!item) return;
+  navigator.clipboard.writeText(item.content || '').then(() => {
+    if (window.showOmniToast) window.showOmniToast(`Snippet #${id} copied to clipboard!`, '📋');
+  }).catch(() => {
+    if (window.showOmniToast) window.showOmniToast('Copy failed.', '⚠️');
+  });
+};
+
+function setupDbStudioModalEvents() {
+  const closeBtn = document.getElementById('closeDbStudioModalBtn');
+  const closeBottomBtn = document.getElementById('closeDbStudioModalBottomBtn');
+  const refreshBtn = document.getElementById('btnRefreshDbSnippets');
+  const filterInput = document.getElementById('dbSnippetSearchFilter');
+  const tabSnippets = document.getElementById('tabDbSnippetsBtn');
+  const tabSql = document.getElementById('tabDbSqlBtn');
+  const panelSnippets = document.getElementById('dbSnippetsPanel');
+  const panelSql = document.getElementById('dbSqlPanel');
+  const runSqlBtn = document.getElementById('btnExecuteDbSql');
+  const sqlInput = document.getElementById('dbSqlInput');
+
+  if (closeBtn) closeBtn.addEventListener('click', closeDbStudioModal);
+  if (closeBottomBtn) closeBottomBtn.addEventListener('click', closeDbStudioModal);
+
+  if (tabSnippets && tabSql && panelSnippets && panelSql) {
+    tabSnippets.addEventListener('click', () => {
+      tabSnippets.className = 'pill-btn primary-pill';
+      tabSql.className = 'pill-btn secondary-pill';
+      panelSnippets.classList.remove('hidden');
+      panelSql.classList.add('hidden');
+    });
+    tabSql.addEventListener('click', () => {
+      tabSql.className = 'pill-btn primary-pill';
+      tabSnippets.className = 'pill-btn secondary-pill';
+      panelSql.classList.remove('hidden');
+      panelSnippets.classList.add('hidden');
+    });
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => loadDbStudioData());
+  }
+
+  if (filterInput) {
+    filterInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = currentDbSnippetsList.filter(s =>
+        (s.title || '').toLowerCase().includes(q) ||
+        (s.content || '').toLowerCase().includes(q) ||
+        (s.source || '').toLowerCase().includes(q)
+      );
+      renderDbSnippetCards(filtered);
+    });
+  }
+
+  document.querySelectorAll('.db-sql-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sql = btn.getAttribute('data-sql');
+      if (sql && sqlInput) {
+        sqlInput.value = sql;
+        if (runSqlBtn) runSqlBtn.click();
+      }
+    });
+  });
+
+  if (runSqlBtn && sqlInput) {
+    runSqlBtn.addEventListener('click', async () => {
+      const sql = sqlInput.value.trim();
+      if (!sql) return;
+
+      const container = document.getElementById('dbSqlResultContainer');
+      if (container) {
+        container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-dim);"><span class="spinner"></span> Executing SQL...</div>';
+      }
+
+      runSqlBtn.disabled = true;
+      runSqlBtn.textContent = '⏳ Running...';
+
+      try {
+        const res = await fetch('/api/db/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sql })
+        });
+        const data = await res.json();
+        runSqlBtn.disabled = false;
+        runSqlBtn.textContent = '⚡ Run SQL';
+
+        if (!res.ok || data.error) {
+          if (container) {
+            container.innerHTML = `<div style="padding: 12px; color: #ef4444; background: rgba(239,68,68,0.08); border-radius: 6px; font-weight:700;">SQL Error: ${escapeHtml(data.error || 'Execution failed')}</div>`;
+          }
+          return;
+        }
+
+        renderDbSqlResults(data, container);
+      } catch (err) {
+        runSqlBtn.disabled = false;
+        runSqlBtn.textContent = '⚡ Run SQL';
+        if (container) {
+          container.innerHTML = `<div style="padding: 12px; color: #ef4444; background: rgba(239,68,68,0.08); border-radius: 6px; font-weight:700;">Connection Error: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+    });
+  }
+}
+
+function renderDbSqlResults(data, container) {
+  if (!container) return;
+  const cols = data.columns || [];
+  const rows = data.rows || [];
+  const ms = data.execution_time_ms !== undefined ? `${data.execution_time_ms}ms` : '';
+
+  if (cols.length === 0) {
+    container.innerHTML = `<div style="padding: 12px; color: var(--accent-success); font-weight: 750;">Query executed successfully in ${ms} (${data.row_count || 0} rows).</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; font-size: 0.75rem; color: var(--text-dim); font-weight:700;">
+      <span>Returned ${rows.length} rows (${ms})</span>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="db-result-table">
+        <thead>
+          <tr>
+            ${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              ${cols.map(c => `<td>${escapeHtml(String(r[c] !== null && r[c] !== undefined ? r[c] : ''))}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+

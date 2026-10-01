@@ -1,0 +1,13 @@
+{
+  "title": "CL4R1T4S AI Engineering & Security Manual",
+  "subtitle": "Autonomous Agents, Zero-Key Architectures & Codebase Hardening",
+  "author": "Satish Gundu (Principal AI Engineer)",
+  "slug": "cl4r1t4s_ai_engineering___security_manual",
+  "chapters": [
+    {
+      "title": "Chapter 1: Hardening Authentication Middleware",
+      "content": "## JWT Authentication & Expiration Verification\n\nThis chapter documents the practical implementation of algorithm validation and token expiration checks to prevent algorithm confusion attacks and expired token replays.\n\n### The Security Diff\n```go\n// Check token expiration\nif time.Now().After(claims[\"exp\"]) {\n    http.Error(w, \"Token expired\", http.StatusUnauthorized)\n    return\n}\n```\n\n### Verification Steps\n1. Run `rg -n \"jwt.ValidateToken\" .` across the repo.\n2. Apply the surgical patch.\n3. Execute unit tests."
+    }
+  ],
+  "updated_at": "2026-10-01 18:12:10"
+}

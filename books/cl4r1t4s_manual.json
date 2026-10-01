@@ -1,0 +1,13 @@
+{
+  "title": "CL4R1T4S Master Handbook",
+  "subtitle": "AI Knowledge & Security",
+  "author": "Omni Agent",
+  "chapters": [
+    {
+      "title": "Realtime Edge Memory Ingestion",
+      "content": "Edge memory allows <2ms local vector recall without cloud tokens.",
+      "created_at": "2026-10-01 16:16:05"
+    }
+  ],
+  "updated_at": "2026-10-01 16:16:05"
+}

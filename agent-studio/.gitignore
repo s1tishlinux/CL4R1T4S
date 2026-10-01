@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+books/uploads/
+books/vectors/*.db
+books/vectors/*.db-wal
+books/vectors/*.db-shm
+books/vectors/edge_memory/
+*.pyc
+.env
