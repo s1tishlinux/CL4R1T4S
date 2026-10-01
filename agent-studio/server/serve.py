@@ -1163,6 +1163,83 @@ Expert Answer (with citations):"""
         except Exception as e:
             self._send_json_error(500, str(e))
 
+    def _handle_multi_role_query(self):
+        """Query multiple role databases simultaneously."""
+        content_len = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_len).decode("utf-8")
+        try:
+            # Import enhanced RAG engine
+            try:
+                from rag_engine_enhanced import query_multiple_roles
+            except ImportError:
+                self._send_json_error(500, "Enhanced RAG engine not available")
+                return
+            
+            data = json.loads(body)
+            query = data.get("query", "").strip()
+            roles = data.get("roles", [])
+            top_k_per_role = int(data.get("top_k_per_role", 3))
+            
+            if not query:
+                self._send_json_error(400, "Query is required")
+                return
+            
+            if not roles:
+                self._send_json_error(400, "At least one role must be specified")
+                return
+            
+            # Query all selected roles
+            start_time = time.time()
+            role_results = query_multiple_roles(
+                query_text=query,
+                roles=roles,
+                top_k_per_role=top_k_per_role
+            )
+            query_time_ms = int((time.time() - start_time) * 1000)
+            
+            # Flatten and combine results from all roles
+            all_results = []
+            for role, docs in role_results.items():
+                for doc in docs:
+                    all_results.append({
+                        "role": role,
+                        "book_title": doc.book_title,
+                        "chapter_title": doc.chapter_title,
+                        "page_number": doc.page_number,
+                        "text": doc.content,
+                        "score": doc.similarity_score,
+                        "metadata": doc.metadata
+                    })
+            
+            # Sort by score
+            all_results.sort(key=lambda x: x["score"], reverse=True)
+            
+            # Calculate stats
+            avg_score = sum(r["score"] for r in all_results) / len(all_results) if all_results else 0
+            
+            response = {
+                "success": True,
+                "query": query,
+                "databases_queried": len(roles),
+                "results": all_results,
+                "stats": {
+                    "databases_queried": len(roles),
+                    "query_time_ms": query_time_ms,
+                    "total_results": len(all_results),
+                    "avg_score": round(avg_score, 3)
+                }
+            }
+            
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps(response, ensure_ascii=False).encode("utf-8"))
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self._send_json_error(500, str(e))
+
     def _handle_rag_index(self):
         content_len = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_len).decode("utf-8")
@@ -1404,6 +1481,10 @@ Expert Answer (with citations):"""
 
         if self.path.startswith("/api/rag/ingest-chapter"):
             self._handle_rag_ingest_chapter()
+            return
+
+        if self.path.startswith("/api/multi_role_query"):
+            self._handle_multi_role_query()
             return
 
         if self.path.startswith("/api/memory/distill"):

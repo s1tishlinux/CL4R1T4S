@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 Unified RAG Dashboard - Multi-Role Query</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .main-container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    
+    .header-card h1 {
+      font-size: 36px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    
+    .query-section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .query-input-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .query-input {
+      flex: 1;
+      min-width: 300px;
+      padding: 15px 20px;
+      font-size: 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      transition: all 0.3s;
+    }
+    
+    .query-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn {
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .role-selector {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    
+    .role-chip {
+      padding: 10px 20px;
+      border-radius: 25px;
+      border: 2px solid #667eea;
+      background: white;
+      color: #667eea;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+      user-select: none;
+    }
+    
+    .role-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .role-chip.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .role-chip.all {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+    
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+    }
+    
+    .result-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      transition: all 0.3s;
+      border-left: 5px solid #667eea;
+    }
+    
+    .result-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 15px;
+    }
+    
+    .result-role {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    
+    .result-score {
+      font-size: 24px;
+      font-weight: bold;
+      color: #10b981;
+    }
+    
+    .result-content {
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .result-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 13px;
+      color: #666;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      opacity: 0.9;
+      text-transform: uppercase;
+    }
+    
+    .example-queries {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    
+    .example-query {
+      padding: 8px 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .example-query:hover {
+      background: #667eea;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    
+    <!-- Header -->
+    <div class="header-card">
+      <h1>🎯 Unified Multi-Role RAG Dashboard</h1>
+      <p style="color: #666; font-size: 16px; margin-bottom: 15px;">
+        Query ALL technical domains simultaneously: DevOps, AWS, MLE, MLOps, GenAI, AIOps, Python, Kubernetes, Data Science, Linux
+      </p>
+      
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="/academy/" class="btn btn-secondary">🏠 Academy Home</a>
+        <a href="/academy/system-overview.html" class="btn btn-secondary">📊 System Overview</a>
+        <button class="btn btn-secondary" onclick="location.reload()">🔄 Refresh</button>
+      </div>
+    </div>
+    
+    <!-- Query Interface -->
+    <div class="query-section">
+      <h2 style="margin-bottom: 20px;">🔍 Multi-Database Query Interface</h2>
+      
+      <!-- Role Selector -->
+      <div style="margin-bottom: 15px;">
+        <strong>Select Roles to Query:</strong>
+        <button class="btn btn-secondary" onclick="selectAllRoles()" style="margin-left: 10px; padding: 8px 16px; font-size: 14px;">Select All</button>
+        <button class="btn btn-secondary" onclick="deselectAllRoles()" style="margin-left: 5px; padding: 8px 16px; font-size: 14px;">Deselect All</button>
+      </div>
+      
+      <div class="role-selector" id="roleSelector">
+        <div class="role-chip active" data-role="devops" onclick="toggleRole('devops')">🚀 DevOps</div>
+        <div class="role-chip active" data-role="kubernetes" onclick="toggleRole('kubernetes')">☸️ Kubernetes</div>
+        <div class="role-chip active" data-role="python" onclick="toggleRole('python')">🐍 Python</div>
+        <div class="role-chip active" data-role="genai" onclick="toggleRole('genai')">🤖 GenAI</div>
+        <div class="role-chip active" data-role="agentic_ai" onclick="toggleRole('agentic_ai')">🎯 Agentic AI</div>
+        <div class="role-chip active" data-role="mle" onclick="toggleRole('mle')">🧠 MLE</div>
+        <div class="role-chip active" data-role="mlops" onclick="toggleRole('mlops')">⚙️ MLOps</div>
+        <div class="role-chip active" data-role="data_science" onclick="toggleRole('data_science')">📊 Data Science</div>
+        <div class="role-chip active" data-role="aws_cloud" onclick="toggleRole('aws_cloud')">☁️ AWS Cloud</div>
+        <div class="role-chip active" data-role="linux" onclick="toggleRole('linux')">🐧 Linux</div>
+        <div class="role-chip active" data-role="general" onclick="toggleRole('general')">📚 General</div>
+      </div>
+      
+      <!-- Query Input -->
+      <div class="query-input-group">
+        <input 
+          type="text" 
+          class="query-input" 
+          id="queryInput"
+          placeholder="Ask anything across all selected domains..."
+          onkeypress="if(event.key==='Enter') executeMultiRoleQuery()"
+        />
+        <button class="btn btn-primary" onclick="executeMultiRoleQuery()">
+          <span>🔍</span>
+          <span>Search</span>
+        </button>
+      </div>
+      
+      <!-- Example Queries -->
+      <div>
+        <strong style="font-size: 14px; color: #666;">Example Queries:</strong>
+        <div class="example-queries">
+          <div class="example-query" onclick="setQuery('What are Kubernetes best practices for production?')">
+            K8s production best practices
+          </div>
+          <div class="example-query" onclick="setQuery('How do I deploy ML models with MLOps?')">
+            MLOps model deployment
+          </div>
+          <div class="example-query" onclick="setQuery('Python async/await patterns explained')">
+            Python async patterns
+          </div>
+          <div class="example-query" onclick="setQuery('AWS Lambda vs EC2 comparison')">
+            AWS Lambda vs EC2
+          </div>
+          <div class="example-query" onclick="setQuery('How does RAG improve LLM responses?')">
+            RAG for LLMs
+          </div>
+          <div class="example-query" onclick="setQuery('DevOps CI/CD pipeline setup with Jenkins')">
+            CI/CD with Jenkins
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="query-section" id="statsSection" style="display: none;">
+      <h3>📊 Query Statistics</h3>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+    
+    <!-- Results -->
+    <div class="query-section" id="resultsSection" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 id="resultsTitle">🎯 Results</h3>
+        <div>
+          <select id="sortSelect" onchange="sortResults()" style="padding: 8px 12px; border-radius: 8px; border: 2px solid #e0e0e0;">
+            <option value="score">Sort by Score</option>
+            <option value="role">Sort by Role</option>
+          </select>
+        </div>
+      </div>
+      <div class="results-grid" id="resultsGrid"></div>
+    </div>
+    
+    <!-- Loading -->
+    <div class="query-section" id="loadingSection" style="display: none;">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Searching across selected databases...</p>
+        <p style="font-size: 14px; color: #999; margin-top: 10px;" id="loadingStatus">Initializing...</p>
+      </div>
+    </div>
+    
+  </div>
+  
+  <script>
+    let selectedRoles = new Set([
+      'devops', 'kubernetes', 'python', 'genai', 'agentic_ai',
+      'mle', 'mlops', 'data_science', 'aws_cloud', 'linux', 'general'
+    ]);
+    let currentResults = [];
+    
+    function toggleRole(role) {
+      const chip = document.querySelector(`[data-role="${role}"]`);
+      if (selectedRoles.has(role)) {
+        selectedRoles.delete(role);
+        chip.classList.remove('active');
+      } else {
+        selectedRoles.add(role);
+        chip.classList.add('active');
+      }
+    }
+    
+    function selectAllRoles() {
+      document.querySelectorAll('.role-chip').forEach(chip => {
+        const role = chip.dataset.role;
+        selectedRoles.add(role);
+        chip.classList.add('active');
+      });
+    }
+    
+    function deselectAllRoles() {
+      selectedRoles.clear();
+      document.querySelectorAll('.role-chip').forEach(chip => {
+        chip.classList.remove('active');
+      });
+    }
+    
+    function setQuery(text) {
+      document.getElementById('queryInput').value = text;
+      executeMultiRoleQuery();
+    }
+    
+    async function executeMultiRoleQuery() {
+      const query = document.getElementById('queryInput').value.trim();
+      
+      if (!query) {
+        alert('Please enter a query');
+        return;
+      }
+      
+      if (selectedRoles.size === 0) {
+        alert('Please select at least one role to query');
+        return;
+      }
+      
+      // Show loading
+      document.getElementById('resultsSection').style.display = 'none';
+      document.getElementById('statsSection').style.display = 'none';
+      document.getElementById('loadingSection').style.display = 'block';
+      document.getElementById('loadingStatus').textContent = 
+        `Querying ${selectedRoles.size} databases...`;
+      
+      try {
+        // Call backend API (we'll create this)
+        const response = await fetch('/api/multi_role_query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: query,
+            roles: Array.from(selectedRoles),
+            top_k_per_role: 3
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Query failed');
+        }
+        
+        const data = await response.json();
+        currentResults = data.results || [];
+        
+        // Display results
+        displayResults(currentResults, data.stats);
+        
+      } catch (error) {
+        console.error('Query error:', error);
+        document.getElementById('loadingSection').style.display = 'none';
+        alert('Query failed. Make sure the server is running.');
+      }
+    }
+    
+    function displayResults(results, stats) {
+      document.getElementById('loadingSection').style.display = 'none';
+      
+      if (results.length === 0) {
+        document.getElementById('resultsSection').style.display = 'block';
+        document.getElementById('resultsGrid').innerHTML = 
+          '<div style="text-align: center; padding: 40px; color: #666;">No results found. Try a different query or select more roles.</div>';
+        return;
+      }
+      
+      // Show stats
+      if (stats) {
+        document.getElementById('statsSection').style.display = 'block';
+        document.getElementById('statsGrid').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-value">${results.length}</div>
+            <div class="stat-label">Total Results</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${stats.databases_queried}</div>
+            <div class="stat-label">Databases Queried</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${stats.query_time_ms}ms</div>
+            <div class="stat-label">Query Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${(stats.avg_score * 100).toFixed(1)}%</div>
+            <div class="stat-label">Avg Confidence</div>
+          </div>
+        `;
+      }
+      
+      // Show results
+      document.getElementById('resultsSection').style.display = 'block';
+      document.getElementById('resultsTitle').textContent = 
+        `🎯 Results (${results.length} found across ${selectedRoles.size} databases)`;
+      
+      renderResults(results);
+    }
+    
+    function renderResults(results) {
+      const grid = document.getElementById('resultsGrid');
+      grid.innerHTML = results.map((r, i) => `
+        <div class="result-card">
+          <div class="result-header">
+            <div class="result-role">${r.role}</div>
+            <div class="result-score">${(r.score * 100).toFixed(1)}%</div>
+          </div>
+          <div class="result-content">
+            ${r.text.substring(0, 300)}${r.text.length > 300 ? '...' : ''}
+          </div>
+          <div class="result-meta">
+            <span>📚 ${r.book_title}</span>
+            <span>📄 Page ${r.page_number}</span>
+            <span>🔖 ${r.chapter_title || 'N/A'}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function sortResults() {
+      const sortBy = document.getElementById('sortSelect').value;
+      
+      if (sortBy === 'score') {
+        currentResults.sort((a, b) => b.score - a.score);
+      } else if (sortBy === 'role') {
+        currentResults.sort((a, b) => a.role.localeCompare(b.role));
+      }
+      
+      renderResults(currentResults);
+    }
+    
+    // Auto-focus query input on load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('queryInput').focus();
+    });
+  </script>
+</body>
+</html>
