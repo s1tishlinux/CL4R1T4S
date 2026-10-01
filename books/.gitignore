@@ -1,0 +1,14 @@
+# Large book files (>10MB) - store locally or use Git LFS
+# These are available locally but not pushed to GitHub due to size
+
+Python/python\ basics.pdf
+Python/Learn\ Python\ Step\ by\ Step.pdf
+Kubernetes/Kubernetes_notes_1743669531.pdf
+Mathematics_for_ML.pdf
+generative-ai-visual-notebook.pdf
+complete-data-science-visual-notebook.pdf
+
+# Note: If you want to share these, consider:
+# 1. Git LFS: https://git-lfs.github.com/
+# 2. Cloud storage (Dropbox, Google Drive) with links
+# 3. Release attachments on GitHub
