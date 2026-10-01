@@ -1,0 +1,4089 @@
+{
+  "total_databases": 11,
+  "total_size_mb": 0.43999999999999995,
+  "total_tables": 33,
+  "total_rows": 0,
+  "databases": {
+    "devops": {
+      "role": "devops",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/devops/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "mle": {
+      "role": "mle",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/mle/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "mlops": {
+      "role": "mlops",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/mlops/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "genai": {
+      "role": "genai",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/genai/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "agentic_ai": {
+      "role": "agentic_ai",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/agentic_ai/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "data_science": {
+      "role": "data_science",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/data_science/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "aws_cloud": {
+      "role": "aws_cloud",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/aws_cloud/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "linux": {
+      "role": "linux",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/linux/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "python": {
+      "role": "python",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/python/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "kubernetes": {
+      "role": "kubernetes",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/kubernetes/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    },
+    "general": {
+      "role": "general",
+      "path": "/Users/satishgundu/CL4R1T4S-main/books/vectors/general/rag_catalog.db",
+      "exists": true,
+      "size_bytes": 45056,
+      "size_mb": 0.04,
+      "tables": [
+        "rag_books",
+        "rag_chunks",
+        "rag_queries_log"
+      ],
+      "table_count": 3,
+      "total_rows": 0,
+      "table_details": {
+        "rag_books": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "title",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "subtitle",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "author",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "category",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "file_path",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "file_type",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "total_pages",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "total_chunks",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "status",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'pending'",
+              "primary_key": false
+            },
+            {
+              "cid": 11,
+              "name": "created_at",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 12,
+              "name": "chunking_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 13,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_books_role",
+              "unique": false,
+              "columns": [
+                "role"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_books_1",
+              "unique": true,
+              "columns": [
+                "book_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_chunks": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "chunk_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "chapter_title",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "page_number",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "1",
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "chunk_index",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunk_text",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "token_count",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "embedding_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "l2_norm",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "1.0",
+              "primary_key": false
+            },
+            {
+              "cid": 9,
+              "name": "chunk_strategy",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": "'langchain_recursive'",
+              "primary_key": false
+            },
+            {
+              "cid": 10,
+              "name": "metadata_json",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_chunks_page",
+              "unique": false,
+              "columns": [
+                "book_id",
+                "page_number"
+              ]
+            },
+            {
+              "name": "idx_chunks_book",
+              "unique": false,
+              "columns": [
+                "book_id"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_chunks_1",
+              "unique": true,
+              "columns": [
+                "chunk_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        },
+        "rag_queries_log": {
+          "schema": [
+            {
+              "cid": 0,
+              "name": "query_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": true
+            },
+            {
+              "cid": 1,
+              "name": "timestamp",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 2,
+              "name": "user_query",
+              "type": "TEXT",
+              "notnull": true,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 3,
+              "name": "role",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 4,
+              "name": "book_id",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            },
+            {
+              "cid": 5,
+              "name": "chunks_retrieved",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 6,
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "notnull": false,
+              "default_value": "0",
+              "primary_key": false
+            },
+            {
+              "cid": 7,
+              "name": "top_score",
+              "type": "REAL",
+              "notnull": false,
+              "default_value": "0.0",
+              "primary_key": false
+            },
+            {
+              "cid": 8,
+              "name": "response_preview",
+              "type": "TEXT",
+              "notnull": false,
+              "default_value": null,
+              "primary_key": false
+            }
+          ],
+          "indexes": [
+            {
+              "name": "idx_query_logs_time",
+              "unique": false,
+              "columns": [
+                "timestamp"
+              ]
+            },
+            {
+              "name": "sqlite_autoindex_rag_queries_log_1",
+              "unique": true,
+              "columns": [
+                "query_id"
+              ]
+            }
+          ],
+          "stats": {
+            "row_count": 0,
+            "size_bytes": 4096,
+            "size_mb": 0.0
+          }
+        }
+      }
+    }
+  }
+}
