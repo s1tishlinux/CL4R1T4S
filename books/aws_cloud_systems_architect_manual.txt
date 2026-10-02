@@ -1,0 +1,24 @@
+# AWS Cloud Infrastructure & Platform Engineering Architect Manual
+Author: AWS Certified Solutions Architect Professional & Platform Guild
+Discipline: Cloud Computing, VPC Networking, Multi-Region Resilience, Serverless & FinOps
+
+## Chapter 1: AWS VPC Networking & Multi-Region Topology
+- **Virtual Private Cloud (VPC)**: Design 10.0.0.0/16 subnets across 3 Availability Zones with dedicated Public (ALB, NAT Gateway), Private Application (EKS, EC2, ECS), and Isolated Database (Aurora RDS, ElastiCache) tiers.
+- **Transit Gateway (TGW) & Direct Connect (DX)**: Interconnect multiple VPCs, on-premise data centers, and multi-region hubs using AWS Transit Gateway route tables with deterministic BGP peering.
+- **VPC Endpoints & PrivateLink**: Secure S3, DynamoDB, ECR, and Secrets Manager traffic within the AWS private backbone without routing through public Internet gateways.
+
+## Chapter 2: Compute Architecture & Container Orchestration
+- **AWS Elastic Kubernetes Service (EKS)**: Implement Managed Node Groups with Bottlerocket OS and Karpenter auto-provisioning for instant sub-minute node scaling based on pod CPU/Memory resource requests.
+- **AWS ECS with Fargate**: Serverless container execution for stateless microservices with AWS App Mesh and CloudWatch Container Insights observability.
+- **AWS Lambda & EventBridge**: Event-driven serverless architectures leveraging Lambda SnapStart for low-latency Java/Python runtimes and EventBridge schema registry routing.
+
+## Chapter 3: Storage, Database & Cache Architectures
+- **Amazon S3 Tiering & Security**: Enforce S3 Object Ownership, SSE-KMS Customer Managed Keys (CMK), S3 Versioning, Multi-Region Access Points (MRAP), and Lifecycle rules (Standard -> Glacier Instant Retrieval -> Deep Archive).
+- **Amazon Aurora PostgreSQL**: Global Database with cross-region read replicas (<1s latency), Aurora Serverless v2 dynamic ACU auto-scaling, and RDS Proxy connection pooling.
+- **Amazon DynamoDB**: Single-table design with Partition Keys (PK), Sort Keys (SK), Global Secondary Indexes (GSI), and DynamoDB Streams triggering real-time Lambda processing.
+- **Amazon ElastiCache Redis**: Multi-AZ cluster with Redis cluster sharding and read replicas for sub-millisecond session caching.
+
+## Chapter 4: IAM, Security Governance & Compliance
+- **AWS IAM & Identity Center (SSO)**: Enforce Least Privilege Principle, SCP (Service Control Policies) at AWS Organizations root, ABAC (Attribute-Based Access Control), and temporary STS AssumeRole credentials.
+- **AWS KMS & Secrets Manager**: Centralized envelope encryption and automated 30-day credential rotation for database passwords and API tokens.
+- **AWS GuardDuty & Security Hub**: Real-time threat detection, anomalous IAM activity alerts, and automated remediation workflows using AWS Step Functions.

@@ -1,0 +1,5 @@
+chunk_id,text,char_count,word_count,embedding_dim,embedding_preview
+0,Kubernetes cluster architecture consists of control plane nodes and worker nodes. The control plane runs the API Server ,120,18,768,"[-1.0579, 0.4660, -3.0573, -0.5793, 0.8581...]"
+1,"runs the API Server (kube-apiserver), etcd distributed key-value store, controller manager, and scheduler. Worker nodes ",120,15,768,"[-1.6776, 0.1367, -3.4195, -0.7553, 0.6519...]"
+2,"duler. Worker nodes run kubelet, kube-proxy, and the container runtime. High availability requires deploying etcd in an ",120,17,768,"[-1.0216, 0.5422, -3.8702, -0.5060, 0.8546...]"
+3,eploying etcd in an odd-numbered quorum across multiple availability zones.,75,10,768,"[0.0430, 0.4573, -4.5784, -1.0165, 1.5179...]"

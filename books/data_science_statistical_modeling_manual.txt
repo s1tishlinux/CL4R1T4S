@@ -1,0 +1,22 @@
+# Data Science, Statistical Analysis & Predictive Modeling Manual
+Author: Principal Data Scientist & Quantitative Research Guild
+Discipline: Data Science, Exploratory Data Analysis, Bayesian Statistics, Feature Engineering & Deep Analytics
+
+## Chapter 1: Advanced Exploratory Data Analysis (EDA) & Data Wrangling
+- **Data Quality & Schema Diagnostics**: Automated profiling using Polars and Pandas for missingness mechanisms (MCAR, MAR, MNAR), distributional kurtosis, skewness, and cardinality.
+- **Robust Feature Scaling**: StandardScaler vs RobustScaler (interquartile range scaling) for outlier-heavy real-world datasets; PowerTransformer (Yeo-Johnson) for normal distribution stabilization.
+- **Categorical Encodings**: Target Encoding with smoothing priors, Weight of Evidence (WoE) for credit scoring, and CatBoost native ordered target encoding to eliminate target leakage.
+
+## Chapter 2: Statistical Inference, Hypothesis Testing & A/B Experimentation
+- **Parametric & Non-Parametric Tests**: Student's t-test, Mann-Whitney U test, ANOVA, and Kruskal-Wallis tests with Bonferroni and Benjamini-Hochberg False Discovery Rate (FDR) corrections for multi-arm A/B tests.
+- **Sequential A/B Testing**: Wald's Sequential Probability Ratio Test (SPRT) and Bayesian Thompson Sampling for continuous multi-armed bandit optimization without p-hacking.
+- **Causal Inference**: Propensity Score Matching (PSM), Difference-in-Differences (DiD), and Instrumental Variables (IV) to estimate Average Treatment Effects (ATE) from observational data.
+
+## Chapter 3: Time Series Analysis, Forecasting & Anomaly Detection
+- **Decomposition**: Additive and Multiplicative STL decomposition (Seasonal-Trend decomposition using LOESS) to extract underlying trend and periodic seasonality.
+- **Statistical & ML Forecasting**: ARIMA, SARIMAX with exogenous regressors, Prophet, and Temporal Fusion Transformers (TFT) with prediction intervals.
+- **Unsupervised Anomaly Detection**: Isolation Forests, Local Outlier Factor (LOF), One-Class SVM, and Mahalanobis distance matrices for multivariate fraud and telemetry drift detection.
+
+## Chapter 4: Supervised & Unsupervised Machine Learning
+- **Tree Ensembles**: LightGBM, XGBoost, and CatBoost hyperparameter optimization via Optuna (Tree-structured Parzen Estimator); SHAP (SHapley Additive exPlanations) for global and local feature attribution.
+- **Dimensionality Reduction & Clustering**: PCA (Principal Component Analysis), UMAP (Uniform Manifold Approximation and Projection), and HDBSCAN density-based clustering for high-dimensional customer segmentation.

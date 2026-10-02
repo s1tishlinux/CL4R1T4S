@@ -16,14 +16,16 @@ That's it! This single command starts:
 
 ## 🌐 Access Points
 
-Once started, open your browser to:
+Once started, **open your browser to http://localhost:3300** - all features are accessible via **one-click navigation cards**!
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| **Unified Dashboard** ⭐ | http://localhost:3300/academy/unified-dashboard.html | Query ALL databases at once |
-| **Academy Home** | http://localhost:3300 | Main interface |
-| **System Overview** | http://localhost:3300/academy/system-overview.html | Complete system map |
-| **Multi-DB Dashboard** | http://localhost:5000 | Technical database viewer |
+| **Academy Home** ⭐ | http://localhost:3300 | **START HERE** - Main interface with navigation cards |
+| **Unified Dashboard** | http://localhost:3300/unified-dashboard.html | Query ALL databases at once (click 🎯 purple card) |
+| **System Overview** | http://localhost:3300/system-overview.html | Complete system map (click 🗺️ green card) |
+| **Multi-DB Dashboard** | http://localhost:5000 | Technical database viewer (click 📊 orange card) |
+
+**💡 Pro Tip**: Just go to http://localhost:3300 and click the prominent cards at the top - no need to type URLs!
 
 ---
 
@@ -347,16 +349,21 @@ tail -f logs/academy.log
 ## 📚 Next Steps
 
 1. **Start the system**: `./start_all.sh`
-2. **Open unified dashboard**: http://localhost:3300/academy/unified-dashboard.html
-3. **Select your roles**: Check DevOps, AWS, MLE, MLOps, GenAI, etc.
-4. **Ask your question**: Get answers from all selected domains
-5. **Explore results**: Sorted by relevance with source citations
+2. **Open main page**: http://localhost:3300
+3. **Click navigation cards**: Choose from:
+   - 🎯 **Unified Multi-Role Dashboard** (purple card) - query 11 databases
+   - 🗺️ **System Architecture Overview** (green card) - view system map
+   - 📊 **Original RAG Dashboard** (orange card) - deep database inspection
+4. **Select your roles**: Check DevOps, AWS, MLE, MLOps, GenAI, etc.
+5. **Ask your question**: Get answers from all selected domains
+6. **Explore results**: Sorted by relevance with source citations
 
 ---
 
 ## 🆘 Need Help?
 
-- **System Overview**: http://localhost:3300/academy/system-overview.html
+- **Navigation Guide**: `NAVIGATION_GUIDE.md` - Complete navigation walkthrough
+- **System Overview**: http://localhost:3300/system-overview.html
 - **Documentation**: `DATABASE_GUIDE.md`, `AGENTIC_RAG_GUIDE.md`
 - **Logs**: `logs/academy.log`
 

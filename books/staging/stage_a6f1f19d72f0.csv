@@ -1,0 +1,10 @@
+chunk_id,text,char_count,word_count,embedding_dim,embedding_preview
+0,"# Kubernetes & DevOps Production Engineering Guide
+
+## Chapter 1: Microservices Container Orchestration
+Kubernetes automates deployment, scaling, and operations of containerized applications across host clusters. In modern cloud architecture, pods represent the smallest deployable computing units.
+
+### Service Mesh & Ingress Architecture
+1. Ingress Controllers: Direct external traffic with TLS termination to internal services.
+2. Sidecar Proxies: Enforce mutual TLS (mTLS), observability, and dis",848,108,768,"[-0.4860, 0.8267, -3.0744, -0.7097, 0.6125...]"
+1,Docker image builds with vulnerability scanning.,48,6,768,"[0.5119, 1.7893, -3.1134, 0.0342, 1.0863...]"

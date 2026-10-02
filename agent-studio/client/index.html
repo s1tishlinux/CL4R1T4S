@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=theme_studio">
+  <link rel="stylesheet" href="style.css?v=20261002_v2">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <!-- Inline theme hydration: apply saved theme before first paint to prevent flash -->
   <script>
@@ -107,86 +107,155 @@
       <!-- Left Sidebar: Controls & Presets -->
       <aside class="studio-sidebar" id="sidebar">
         <!-- Core Navigation & Module Hub -->
+        <!-- Section 1: Workspace -->
         <div class="sidebar-module-hub">
           <div class="hub-header">
-            <span class="hub-label">Core Workbenches</span>
-            <span class="hub-badge">Hub</span>
+            <span class="hub-label">1. Workspace</span>
+            <span class="hub-badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">Core</span>
           </div>
-          <div class="hub-nav-grid">
-            <button class="hub-nav-btn active" id="navChatbot" title="Multimodal AI Voice & Chatbot">
+          <div class="hub-nav-grid hub-nav-2col">
+            <button class="hub-nav-btn active" id="navChatbot" title="Multimodal AI Voice & Chatbot Studio">
               <span class="hub-nav-icon">💬</span>
-              <span class="hub-nav-title">Chatbot</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Chat Studio</span>
+                <span class="hub-nav-desc">Multi-Agent</span>
+              </div>
             </button>
-            <a href="/academy/" class="hub-nav-btn" id="openAcademyBtn" title="OmniTech Academy (Masterclasses & Simulators)">
-              <span class="hub-nav-icon">🎓</span>
-              <span class="hub-nav-title">Academy</span>
-            </a>
-            <button class="hub-nav-btn" id="navDb" title="Database & Knowledge Archive Studio (SQLite WAL, Snippets, Queries)">
-              <span class="hub-nav-icon">🗄️</span>
-              <span class="hub-nav-title">DB Studio</span>
-            </button>
-            <button class="hub-nav-btn" id="navRag" title="RAG Knowledge Engine (Vector Search & Ingested Books)">
-              <span class="hub-nav-icon">🧠</span>
-              <span class="hub-nav-title">RAG Engine</span>
-            </button>
-            <button class="hub-nav-btn" id="toggleBookBtn" title="Book Studio & Manuals">
-              <span class="hub-nav-icon">📖</span>
-              <span class="hub-nav-title">Book Studio</span>
-            </button>
-            <button class="hub-nav-btn" id="toggleConsoleBtn" title="Live Console & REPL">
-              <span class="hub-nav-icon">🔴</span>
-              <span class="hub-nav-title">Live Console</span>
-            </button>
-            <button class="hub-nav-btn" id="navMemory" title="On-Device Edge Memory (Sub-50ms Qdrant Edge Recall & Teach)">
-              <span class="hub-nav-icon">⚡</span>
-              <span class="hub-nav-title">Memory</span>
-            </button>
-            <button class="hub-nav-btn" id="toggleExplorerBtn" title="IDE File Explorer">
-              <span class="hub-nav-icon">📁</span>
-              <span class="hub-nav-title">Files</span>
-            </button>
-            <button class="hub-nav-btn" id="navStatus" title="Status Tracker & Engine Health">
-              <span class="hub-nav-icon">📊</span>
-              <span class="hub-nav-title">Tracker</span>
-            </button>
-            <button class="hub-nav-btn" id="navDeepResearch" title="Perplexity Deep Research (Academic reports with citations)">
+            <button class="hub-nav-btn" id="navDeepResearch" title="Perplexity Deep Research (Academic Citations)">
               <span class="hub-nav-icon">🔍</span>
-              <span class="hub-nav-title">Research</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Deep Search</span>
+                <span class="hub-nav-desc">Citations</span>
+              </div>
             </button>
-            <button class="hub-nav-btn" id="toggleThemeBtn" title="Theme & Appearance Customizer">
-              <span class="hub-nav-icon">🎨</span>
-              <span class="hub-nav-title">Theme</span>
+            <button class="hub-nav-btn" id="navWebSearch" title="Live Web Search Grounding (DuckDuckGo)">
+              <span class="hub-nav-icon">🌐</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Web Search</span>
+                <span class="hub-nav-desc">Live Docs</span>
+              </div>
             </button>
             <button class="hub-nav-btn" id="toggleSandboxBtn" title="Toggle Live Sandbox Preview">
               <span class="hub-nav-icon">🏗️</span>
-              <span class="hub-nav-title">Sandbox</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Sandbox</span>
+                <span class="hub-nav-desc">Live UI</span>
+              </div>
             </button>
           </div>
         </div>
 
-        <!-- Academy Tracks & Simulators (Connected to Academy Dashboards) -->
-        <div class="sidebar-module-hub sidebar-subgroup">
+        <!-- Section 2: Knowledge & RAG -->
+        <div class="sidebar-module-hub">
           <div class="hub-header">
-            <span class="hub-label">Academy Tracks</span>
+            <span class="hub-label">2. Knowledge & RAG</span>
+            <span class="hub-badge" style="background: rgba(13, 148, 136, 0.15); color: #0d9488;">11 DBs</span>
+          </div>
+          <div class="hub-nav-grid hub-nav-2col">
+            <a href="/academy/rag-management.html" class="hub-nav-btn" id="openRagPipelineBtn" title="Multi-Role RAG Ingestion Pipeline">
+              <span class="hub-nav-icon">⚡</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title" style="color: #0d9488; font-weight: 750;">RAG Pipeline</span>
+                <span class="hub-nav-desc">Ingest & Status</span>
+              </div>
+            </a>
+            <button class="hub-nav-btn" id="navRag" title="RAG Knowledge Engine & Semantic Search">
+              <span class="hub-nav-icon">🧠</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">RAG Engine</span>
+                <span class="hub-nav-desc">Vector Search</span>
+              </div>
+            </button>
+            <button class="hub-nav-btn" id="toggleBookBtn" title="Book Studio & 32+ Textbooks">
+              <span class="hub-nav-icon">📖</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Textbooks</span>
+                <span class="hub-nav-desc">32+ Books</span>
+              </div>
+            </button>
+            <button class="hub-nav-btn" id="navMemory" title="On-Device Edge Memory (Sub-50ms Vector Recall)">
+              <span class="hub-nav-icon">⚡</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Edge Memory</span>
+                <span class="hub-nav-desc">&lt;50ms Recall</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 3: Academy & Skills -->
+        <div class="sidebar-module-hub">
+          <div class="hub-header">
+            <span class="hub-label">3. Academy & Skills</span>
             <span class="hub-badge" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">Learn</span>
           </div>
-          <div class="hub-nav-grid">
-            <a href="/academy/#roadmaps" class="hub-nav-btn" id="navRoadmaps" title="Career Roadmaps & Interactive Skill Trees">
+          <div class="hub-nav-grid hub-nav-2col">
+            <a href="/academy/" class="hub-nav-btn" id="openAcademyBtn" title="OmniTech Academy (Masterclasses & Textbooks)">
+              <span class="hub-nav-icon">🎓</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Academy Hub</span>
+                <span class="hub-nav-desc">Masterclasses</span>
+              </div>
+            </a>
+            <button class="hub-nav-btn" id="navRoadmaps" title="Career Roadmaps & Interactive Skill Trees">
               <span class="hub-nav-icon">🗺️</span>
-              <span class="hub-nav-title">Roadmaps</span>
-            </a>
-            <a href="/academy/#simulators" class="hub-nav-btn" id="navSimulators" title="In-Browser Simulators (Docker, Linux, SQL)">
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Roadmaps</span>
+                <span class="hub-nav-desc">10 Paths</span>
+              </div>
+            </button>
+            <a href="/academy/#simulators" class="hub-nav-btn" id="navSimulators" title="In-Browser Simulators (SQL, Linux, Python)">
               <span class="hub-nav-icon">💻</span>
-              <span class="hub-nav-title">Simulators</span>
-            </a>
-            <a href="/academy/#resources" class="hub-nav-btn" id="navCheatsheets" title="Curated Cheatsheets & Production Guides">
-              <span class="hub-nav-icon">📖</span>
-              <span class="hub-nav-title">Cheatsheets</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Simulators</span>
+                <span class="hub-nav-desc">SQL & Linux</span>
+              </div>
             </a>
             <a href="/academy/#agentic" class="hub-nav-btn" id="navAgenticFlow" title="Agentic AI StateGraphs & Architecture">
               <span class="hub-nav-icon">🤖</span>
-              <span class="hub-nav-title">Agent Flow</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Agent Flow</span>
+                <span class="hub-nav-desc">LangGraph</span>
+              </div>
             </a>
+          </div>
+        </div>
+
+        <!-- Section 4: Dev Tools & System -->
+        <div class="sidebar-module-hub">
+          <div class="hub-header">
+            <span class="hub-label">4. Dev Tools</span>
+            <span class="hub-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Tools</span>
+          </div>
+          <div class="hub-nav-grid hub-nav-2col">
+            <button class="hub-nav-btn" id="toggleConsoleBtn" title="Live Console & REPL (Python/Bash)">
+              <span class="hub-nav-icon">🔴</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Live REPL</span>
+                <span class="hub-nav-desc">Console</span>
+              </div>
+            </button>
+            <button class="hub-nav-btn" id="navDb" title="Database & SQL Knowledge Studio">
+              <span class="hub-nav-icon">🗄️</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">DB Studio</span>
+                <span class="hub-nav-desc">SQL Explorer</span>
+              </div>
+            </button>
+            <button class="hub-nav-btn" id="toggleExplorerBtn" title="IDE Project File Explorer">
+              <span class="hub-nav-icon">📁</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Explorer</span>
+                <span class="hub-nav-desc">Files</span>
+              </div>
+            </button>
+            <button class="hub-nav-btn" id="toggleThemeBtn" title="Theme & Appearance Customizer">
+              <span class="hub-nav-icon">🎨</span>
+              <div class="hub-nav-info">
+                <span class="hub-nav-title">Appearance</span>
+                <span class="hub-nav-desc">Theme</span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -308,23 +377,32 @@
 
         <!-- Floating Input Deck -->
         <div class="input-deck">
-          <!-- Intent Selector & Auto-Generator Filter Bar -->
-          <div class="quick-intent-bar" id="quickIntentBar">
-            <button class="intent-chip active" data-intent="auto" title="Auto-detect intent (Image, Video, App, Diagram, Text)">
-              <span class="intent-icon">✨</span> Auto-Pilot
-            </button>
-            <button class="intent-chip" data-intent="image" title="Generate 1024x1024 High-Res Image (Flux/SD)">
-              <span class="intent-icon">🎨</span> Image
-            </button>
-            <button class="intent-chip" data-intent="video" title="Generate 30 FPS Neural Motion Video (WebM)">
-              <span class="intent-icon">🎬</span> Video
-            </button>
-            <button class="intent-chip" data-intent="app" title="Build Interactive Web App with Live Sandbox">
-              <span class="intent-icon">⚡</span> Web App
-            </button>
-            <button class="intent-chip" data-intent="diagram" title="Render Interactive Architecture Flowchart / Diagram">
-              <span class="intent-icon">📊</span> Diagram
-            </button>
+          <!-- Live Web Search Active Indicator Banner -->
+          <div id="webSearchActiveBanner" class="web-search-banner hidden">
+            <span class="web-search-banner-icon">🌐</span>
+            <span class="web-search-banner-text">Live Web Search Grounding <strong>Active</strong> &bull; Factual real-time web results will be synthesized</span>
+            <button type="button" id="closeWebSearchBanner" class="web-banner-close-btn" title="Disable Web Search">&times;</button>
+          </div>
+
+          <!-- Multi-Role RAG Vector Knowledge Active Indicator & Role Selector Bar -->
+          <div id="ragActiveBanner" class="rag-knowledge-banner">
+            <div class="rag-banner-top">
+              <span class="rag-banner-icon">🧠</span>
+              <span class="rag-banner-title">Multi-Role Vector Knowledge <strong>Active</strong></span>
+              <span class="rag-banner-sub">&bull; Agentic AI multi-role vector routing</span>
+              <button type="button" id="closeRagBanner" class="rag-banner-close-btn" title="Toggle Knowledge Base Off">&times;</button>
+            </div>
+            <div class="rag-role-chips-bar" id="ragRoleChipsBar">
+              <button type="button" class="rag-role-chip active" data-role="all" title="Query across all databases with intelligent agentic routing">🌐 All Roles</button>
+              <button type="button" class="rag-role-chip" data-role="devops" title="DevOps Specialist DB (823 chunks)">🚀 DevOps</button>
+              <button type="button" class="rag-role-chip" data-role="kubernetes" title="Kubernetes Architect DB (123 chunks)">☸️ K8s</button>
+              <button type="button" class="rag-role-chip" data-role="genai" title="GenAI Architect DB (46 chunks)">🤖 GenAI</button>
+              <button type="button" class="rag-role-chip" data-role="agentic_ai" title="Agentic AI Specialist DB (216 chunks)">🧠 Agentic AI</button>
+              <button type="button" class="rag-role-chip" data-role="mlops" title="MLOps Engineer DB (178 chunks)">⚙️ MLOps</button>
+              <button type="button" class="rag-role-chip" data-role="aws_cloud" title="AWS Cloud DB">☁️ AWS</button>
+              <button type="button" class="rag-role-chip" data-role="python" title="Python Specialist DB (59 chunks)">🐍 Python</button>
+              <button type="button" class="rag-role-chip" data-role="linux" title="Linux Admin DB (3 chunks)">🐧 Linux</button>
+            </div>
           </div>
 
           <!-- Attachment Previews Strip -->
@@ -345,10 +423,25 @@
             </div>
 
             <!-- Dynamic Textarea -->
-            <textarea id="promptInput" rows="1" placeholder="Ask anything..."></textarea>
+            <textarea id="promptInput" rows="1" placeholder="Ask anything or search the web..."></textarea>
 
-            <!-- Voice Input & Output Controls -->
+            <!-- Voice & Tool Input Controls -->
             <div class="voice-actions">
+              <!-- Vector Knowledge Base RAG Toggle Button -->
+              <button type="button" id="ragToggleBtn" class="rag-toggle-btn active" title="Toggle Multi-Role Vector Knowledge Grounding">
+                <span style="font-size: 1.05rem; line-height: 1;">🧠</span>
+                <span class="rag-active-dot"></span>
+              </button>
+
+              <!-- Web Search Grounding Toggle Button -->
+              <button type="button" id="webSearchToggleBtn" class="web-search-toggle-btn" title="Toggle Real-Time Web Search Grounding (Live Internet Data)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <span class="web-search-dot"></span>
+              </button>
               <button type="button" id="voiceMicBtn" class="voice-action-btn" title="Speak to AI (Speech-to-Text Voice Dictation)">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                 <span class="voice-dot"></span>
@@ -368,29 +461,217 @@
         </div>
       </main>
 
-      <!-- Right Sandbox Drawer (Live HTML/CSS/JS/SVG Artifact Preview) -->
-      <aside class="sandbox-drawer hidden" id="sandboxDrawer">
-        <div class="sandbox-header">
-          <div class="sandbox-title">
+      <!-- Studio Right Workspace Drawer (Split-Screen Tool Panels alongside Chat) -->
+      <aside class="studio-right-drawer hidden" id="studioRightDrawer">
+        <div class="right-drawer-header">
+          <div class="right-drawer-title-box">
             <span class="pulse-indicator"></span>
-            <span>Live Artifact Sandbox</span>
+            <span id="rightDrawerTitleIcon" style="font-size: 1.15rem;">🧠</span>
+            <span id="rightDrawerTitleText" class="right-drawer-title">Vector Knowledge Engine</span>
+            <span class="badge" id="rightDrawerBadge" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">Live</span>
           </div>
-          <div class="sandbox-actions">
-            <button id="reloadSandboxBtn" class="icon-btn" title="Reload Sandbox">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+
+          <!-- Quick Switcher Tabs Strip -->
+          <div class="right-drawer-tabs">
+            <button class="drawer-tab-btn active" data-drawer-tab="rag" title="Vector RAG Search">🧠 Vector RAG</button>
+            <button class="drawer-tab-btn" data-drawer-tab="books" title="32+ Ingested Textbooks Reader">📖 Textbooks</button>
+            <button class="drawer-tab-btn" data-drawer-tab="db" title="Database & SQL Explorer">🗄️ DB Studio</button>
+            <button class="drawer-tab-btn" data-drawer-tab="memory" title="On-Device Edge Memory">⚡ Memory</button>
+            <button class="drawer-tab-btn" data-drawer-tab="console" title="Live REPL Console">🔴 Console</button>
+            <button class="drawer-tab-btn" data-drawer-tab="roadmaps" title="Career Roadmaps">🗺️ Roadmaps</button>
+            <button class="drawer-tab-btn" data-drawer-tab="sandbox" title="Live Artifact Sandbox">🏗️ Sandbox</button>
+          </div>
+
+          <div class="right-drawer-actions">
+            <button id="rightDrawerPopoutBtn" class="icon-btn" title="Open in Full Page / Tab">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </button>
-            <button id="popoutSandboxBtn" class="icon-btn" title="Open in New Window">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            </button>
-            <button id="closeSandboxBtn" class="icon-btn" title="Close Sandbox">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <button id="closeRightDrawerBtn" class="icon-btn" title="Close Panel (Return to Full Chat)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
         </div>
-        <div class="sandbox-viewport">
-          <iframe id="sandboxIframe" sandbox="allow-scripts allow-modals allow-same-origin" title="Live Artifact Sandbox Preview"></iframe>
+
+        <div class="right-drawer-body">
+          <!-- 1. Vector RAG Panel -->
+          <div class="drawer-tab-panel active" id="drawerPanelRag">
+            <!-- Telemetry Strip -->
+            <div class="rag-telemetry-strip" style="margin-bottom: 0.85rem;">
+              <div class="rag-stat-card">
+                <span class="rag-stat-val" id="drawerRagBooksCount">32</span>
+                <span class="rag-stat-lbl">Ingested Textbooks</span>
+              </div>
+              <div class="rag-stat-card">
+                <span class="rag-stat-val" id="drawerRagChunksCount">2,265</span>
+                <span class="rag-stat-lbl">Vector Chunks (768-D)</span>
+              </div>
+              <div class="rag-stat-card">
+                <span class="rag-stat-val">11 Roles</span>
+                <span class="rag-stat-lbl">Domain Stores</span>
+              </div>
+              <div class="rag-stat-card">
+                <span class="rag-stat-val">&lt; 15ms</span>
+                <span class="rag-stat-lbl">Retrieval Latency</span>
+              </div>
+            </div>
+
+            <!-- Search Controls -->
+            <div class="rag-search-box" style="margin-bottom: 0.85rem;">
+              <div class="rag-input-wrapper">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="drawerRagSearchInput" placeholder="Search 11 role vector stores (e.g. Kubernetes ingress, PyTorch gradient, Docker volumes)...">
+                <button id="drawerRunRagSearchBtn" class="pill-btn primary-pill">Search Vectors</button>
+              </div>
+              <div class="rag-filters-row" style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                <select id="drawerRagRoleFilterSelect" class="pill-select" style="padding: 4px 8px; font-size: 0.75rem;">
+                  <option value="">🌐 All 11 Role Vector Databases</option>
+                  <option value="devops">🚀 DevOps Specialist (823 chunks)</option>
+                  <option value="mle">🧠 Machine Learning Engineer (549 chunks)</option>
+                  <option value="agentic_ai">🤖 Agentic AI Specialist (216 chunks)</option>
+                  <option value="mlops">⚙️ MLOps Architect (178 chunks)</option>
+                  <option value="kubernetes">☸️ Kubernetes Architect (140 chunks)</option>
+                  <option value="python">🐍 Python Specialist (134 chunks)</option>
+                  <option value="genai">✨ GenAI Architect (128 chunks)</option>
+                  <option value="aws_cloud">☁️ AWS Cloud Architect (5 chunks)</option>
+                  <option value="data_science">📊 Data Scientist (5 chunks)</option>
+                  <option value="linux">🐧 Linux Administrator (3 chunks)</option>
+                  <option value="general">📚 General Catalog (84 chunks)</option>
+                </select>
+                <div class="rag-filter-chips">
+                  <span class="filter-chip-lbl">Top-K:</span>
+                  <button class="drawer-topk-chip active" data-k="4">4</button>
+                  <button class="drawer-topk-chip" data-k="8">8</button>
+                  <button class="drawer-topk-chip" data-k="12">12</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Search Results Area -->
+            <div class="drawer-results-scrollable" id="drawerRagResultsContainer">
+              <div class="rag-empty-state">
+                <span style="font-size: 1.8rem;">📚</span>
+                <p>Type a query to search indexed books and vector chunks. Select any text to ask the AI Chatbot directly.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Textbooks Reader Panel -->
+          <div class="drawer-tab-panel hidden" id="drawerPanelBooks">
+            <div class="drawer-books-header" style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+              <select id="drawerBookSelect" class="pill-select" style="flex:1; min-width:240px; font-weight:700;">
+                <option value="">Loading 32+ indexed textbooks...</option>
+              </select>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <button id="drawerPrevPageBtn" class="tiny-btn" title="Previous Page">◀ Prev</button>
+                <span style="font-size:0.75rem; font-weight:700; color:var(--text-dim);">Page</span>
+                <input type="number" id="drawerPageNumberInput" value="1" min="1" max="500" style="width:50px; text-align:center; padding:2px 4px; border-radius:4px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-main); font-weight:700;">
+                <span id="drawerTotalPagesSpan" style="font-size:0.75rem; color:var(--text-dim);">/ --</span>
+                <button id="drawerNextPageBtn" class="tiny-btn" title="Next Page">Next ▶</button>
+              </div>
+            </div>
+            <div class="drawer-book-reader-card">
+              <div class="drawer-book-meta-strip" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.75rem;">
+                <span id="drawerBookChapterTitle" style="font-weight:750; color:var(--accent-cyan);">Chapter 1</span>
+                <button id="drawerAskPageBtn" class="tiny-btn highlight-pill" title="Send this entire page as reference context to AI Chatbot">💬 Ask AI about Page</button>
+              </div>
+              <div class="drawer-book-text-viewport" id="drawerBookTextContent">
+                <p style="color:var(--text-dim);">Select a textbook above to begin reading and asking questions directly to the AI tutor.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. DB Studio Panel -->
+          <div class="drawer-tab-panel hidden" id="drawerPanelDb">
+            <div style="margin-bottom: 8px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+              <span style="font-size:0.72rem; font-weight:750; color:var(--text-dim);">SQL Presets:</span>
+              <button class="tiny-btn drawer-sql-preset" data-sql="SELECT operation_id, timestamp, operation_type, role, filename, status FROM operations ORDER BY timestamp DESC LIMIT 5;">pipeline operations</button>
+              <button class="tiny-btn drawer-sql-preset" data-sql="SELECT name, type FROM sqlite_master WHERE type='table';">tables schema</button>
+              <button class="tiny-btn drawer-sql-preset" data-sql="SELECT id, book_id, file_path, status FROM staging_data LIMIT 5;">staging data</button>
+            </div>
+            <div style="position:relative; margin-bottom: 8px;">
+              <textarea id="drawerDbSqlInput" style="width:100%; height:75px; font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:8px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-main); resize:vertical;" placeholder="SELECT operation_id, timestamp, operation_type, role, filename, status FROM operations ORDER BY timestamp DESC LIMIT 5;"></textarea>
+              <button id="drawerBtnExecuteSql" class="pill-btn primary-pill" style="position:absolute; bottom:8px; right:8px; padding:3px 12px; font-size:0.75rem; font-weight:750;">
+                ⚡ Run SQL
+              </button>
+            </div>
+            <div id="drawerDbSqlResultContainer" style="max-height: 380px; overflow:auto; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-card); padding:6px; font-size:11.5px;">
+              <div style="text-align:center; padding: 15px; color:var(--text-dim);">Click ⚡ Run SQL to execute queries across SQLite role vector tables.</div>
+            </div>
+          </div>
+
+          <!-- 4. Edge Memory Panel -->
+          <div class="drawer-tab-panel hidden" id="drawerPanelMemory">
+            <div class="mem-search-bar" style="display:flex; gap:6px; margin-bottom:8px;">
+              <input type="text" id="drawerMemQuery" placeholder="Recall instant edge memories (e.g. Kubernetes CIDR, Docker tips)..." style="flex:1; padding:6px 10px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-main); font-size:0.8rem;">
+              <button id="drawerBtnRecall" class="pill-btn primary-pill" style="padding:5px 14px; font-size:0.75rem;">⚡ Recall</button>
+            </div>
+            <div id="drawerMemRecallOutput" style="margin-bottom:10px;"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:0.75rem; font-weight:750; color:var(--text-dim);">Stored Fact Library</span>
+              <button id="drawerBtnRefreshMem" class="tiny-btn">🔄 Refresh</button>
+            </div>
+            <div class="drawer-mem-cards-grid" id="drawerMemCardsGrid" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+          </div>
+
+          <!-- 5. REPL Console Panel -->
+          <div class="drawer-tab-panel hidden" id="drawerPanelConsole">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="display:flex; gap:6px; align-items:center;">
+                <select id="drawerConsoleLang" class="pill-select" style="padding:4px 8px; font-size:0.75rem; font-weight:700;">
+                  <option value="python">🐍 Python 3.12</option>
+                  <option value="bash">💻 Bash / Shell</option>
+                  <option value="javascript">⚡ Node.js</option>
+                </select>
+              </div>
+              <button id="drawerBtnRunConsole" class="pill-btn primary-pill" style="padding:4px 14px; font-size:0.75rem; font-weight:750;">▶ Run Code</button>
+            </div>
+            <textarea id="drawerConsoleInput" style="width:100%; height:110px; font-family:'JetBrains Mono', monospace; font-size:12px; padding:10px; border-radius:6px; border:1px solid var(--border-subtle); background:#020617; color:#38bdf8; resize:vertical;" placeholder="# Write Python, Bash, or Node code here...&#10;import math&#10;print('Hello from Omni Agent Studio:', [math.sqrt(x) for x in [4, 9, 16, 25]])"></textarea>
+            <div style="margin-top:8px;">
+              <div style="font-size:0.72rem; font-weight:750; color:var(--text-dim); margin-bottom:4px;">Execution Output (stdout / stderr):</div>
+              <pre id="drawerConsoleOutput" style="background:#020617; color:#10b981; padding:10px; border-radius:6px; border:1px solid var(--border-subtle); min-height:80px; max-height:260px; overflow:auto; font-size:11.5px; margin:0; font-family:'JetBrains Mono', monospace; white-space:pre-wrap;">Ready to execute.</pre>
+            </div>
+          </div>
+
+          <!-- 6. Roadmaps Panel -->
+          <div class="drawer-tab-panel hidden" id="drawerPanelRoadmaps">
+            <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.75rem; font-weight:750; color:var(--text-main);">10 Career Roadmaps &amp; Skill Trees</span>
+              <a href="/academy/#roadmaps" target="_blank" class="tiny-btn highlight-pill" style="text-decoration:none;">Open in Academy ↗</a>
+            </div>
+            <div class="drawer-roadmaps-grid" id="drawerRoadmapsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px; max-height:480px; overflow-y:auto;">
+              <!-- Roadmaps populated dynamically -->
+            </div>
+          </div>
+
+          <!-- 7. Live Artifact Sandbox Panel -->
+          <div class="drawer-tab-panel hidden" id="drawerPanelSandbox">
+            <div class="sandbox-toolbar-strip" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <button type="button" id="reloadSandboxBtn" class="tiny-btn" title="Reload Canvas">🔄 Reload</button>
+                <button type="button" id="clearSandboxBtn" class="tiny-btn" title="Reset Demo">🧹 Reset</button>
+                <button type="button" id="popoutSandboxBtn" class="tiny-btn" title="Open Fullscreen in New Tab">↗️ Popout</button>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:0.75rem; color:var(--text-dim); font-weight:700;">Presets:</span>
+                <button type="button" class="tiny-btn sandbox-template-btn" data-tmpl="dashboard" title="Load Analytics Dashboard Demo">📊 Analytics</button>
+                <button type="button" class="tiny-btn sandbox-template-btn" data-tmpl="kanban" title="Load Kanban Board Demo">📋 Kanban</button>
+                <button type="button" class="tiny-btn sandbox-template-btn" data-tmpl="neural" title="Load Neural Net Demo">🧠 Neural</button>
+              </div>
+            </div>
+            <div class="sandbox-viewport" style="height:calc(100vh - 185px); min-height:420px; background:#fff; border-radius:8px; border:1px solid var(--border-subtle); overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+              <iframe id="sandboxIframe" sandbox="allow-scripts allow-modals allow-same-origin" style="width:100%; height:100%; border:none; background:#ffffff;" title="Live Artifact Sandbox Preview"></iframe>
+            </div>
+          </div>
         </div>
       </aside>
+
+      <!-- Floating Selection "Ask AI" Tooltip -->
+      <div id="selectionAskAiTooltip" class="selection-ask-ai-tooltip hidden">
+        <button id="btnAskAiSelection" class="selection-ask-btn">
+          <span>⚡</span>
+          <span>Ask AI about selection</span>
+        </button>
+      </div>
 
       <!-- Tools & MCP Arsenal Drawer -->
       <aside class="arsenal-drawer hidden" id="arsenalDrawer">
@@ -1190,6 +1471,92 @@
     </div>
   </div>
 
-  <script src="app.js?v=theme_studio"></script>
+  <!-- Career Roadmaps & Cognitive Skill Trees Studio Modal -->
+  <div class="dialog-overlay hidden" id="roadmapsModal">
+    <div class="dialog-container roadmaps-dialog">
+      <div class="dialog-header">
+        <div class="dialog-title">
+          <span style="font-size: 1.4rem;">🗺️</span>
+          <div>
+            <h3>Career Roadmaps &amp; Skill Trees</h3>
+            <span class="dialog-subtitle">Cognitive 5-Phase Roadmaps &bull; 6 Core Competencies &bull; In-Browser Interactive Labs &bull; Production Blueprints</span>
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button class="icon-btn" id="closeRoadmapsModalBtn" title="Close Roadmaps Studio">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="roadmaps-modal-body">
+        <!-- Telemetry / Scope Stats Banner -->
+        <div class="memory-telemetry-banner" style="margin-bottom: 1rem;">
+          <div class="mem-stat-card">
+            <span class="mem-stat-val" id="roadmapsCountVal">10</span>
+            <span class="mem-stat-lbl">Production Roadmaps</span>
+          </div>
+          <div class="mem-stat-card">
+            <span class="mem-stat-val">50</span>
+            <span class="mem-stat-lbl">Cognitive Phases</span>
+          </div>
+          <div class="mem-stat-card">
+            <span class="mem-stat-val">60+</span>
+            <span class="mem-stat-lbl">Core Competencies</span>
+          </div>
+          <div class="mem-stat-card">
+            <span class="mem-stat-val">Highest Demand</span>
+            <span class="mem-stat-lbl">2026 Standards</span>
+          </div>
+          <div class="mem-stat-card">
+            <span class="mem-stat-val">Zero-Key</span>
+            <span class="mem-stat-lbl">Local AI &amp; Labs</span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="roadmaps-toolbar">
+          <div class="roadmaps-search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="roadmapsSearchInput" placeholder="Filter roadmaps by role, competency, or skill (e.g. LangGraph, LoRA, Kubernetes, FDE)...">
+          </div>
+          <div class="roadmaps-category-pills">
+            <button class="roadmap-cat-pill active" data-cat="all">All Tracks</button>
+            <button class="roadmap-cat-pill" data-cat="agentic">Agentic AI</button>
+            <button class="roadmap-cat-pill" data-cat="genai">GenAI &amp; LLM</button>
+            <button class="roadmap-cat-pill" data-cat="devops">DevOps &amp; Cloud</button>
+            <button class="roadmap-cat-pill" data-cat="systems">System Design</button>
+          </div>
+        </div>
+
+        <!-- View 1: Main Roadmaps Grid View -->
+        <div id="roadmapsListView" class="roadmaps-list-view">
+          <div class="main-roadmaps-grid" id="mainRoadmapsGrid"></div>
+        </div>
+
+        <!-- View 2: Drill-down Track Detail Inspector (In-Modal) -->
+        <div id="roadmapDetailView" class="roadmap-detail-view hidden">
+          <div class="roadmap-detail-topbar">
+            <button id="btnBackToRoadmapsList" class="pill-btn secondary-pill" style="display:inline-flex; align-items:center; gap:6px; font-weight:700;">
+              <span>←</span> Back to All Tracks
+            </button>
+            <div id="detailRoadmapHeaderBadge" style="display:flex; align-items:center; gap:8px;"></div>
+          </div>
+          <div id="roadmapDetailContent" class="roadmap-detail-content"></div>
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <div class="rag-db-info">
+          <span>Catalog: <code>OmniTech Academy Verified Curriculums 2026</code></span>
+          <span>Engine: <code>In-Browser Live Cognitive Track Studio</code></span>
+        </div>
+        <button id="closeRoadmapsModalBottomBtn" class="pill-btn secondary-pill">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/academy/data.js"></script>
+  <script src="app.js?v=20261002_v4"></script>
 </body>
 </html>

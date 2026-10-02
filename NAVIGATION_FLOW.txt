@@ -1,0 +1,198 @@
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                    🚀 NAVIGATION FLOW DIAGRAM                               │
+│                    One Page, All Features                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+                              START HERE
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │                             │
+                    │   ./start_all.sh            │
+                    │   (One Command)             │
+                    │                             │
+                    └──────────────┬──────────────┘
+                                   │
+                                   ▼
+                    ┌─────────────────────────────┐
+                    │                             │
+                    │   Open Browser:             │
+                    │   http://localhost:3300     │
+                    │                             │
+                    └──────────────┬──────────────┘
+                                   │
+                                   ▼
+        ┌──────────────────────────────────────────────────────────┐
+        │                                                          │
+        │         OMNITECH ACADEMY - MAIN PAGE                     │
+        │                                                          │
+        │  ┌────────────────────────────────────────────────────┐ │
+        │  │  ⚡ OmniTech Academy [PRO]              [Buttons] │ │
+        │  └────────────────────────────────────────────────────┘ │
+        │                                                          │
+        │  ┌────────────────────────────────────────────────────┐ │
+        │  │         HERO SECTION                               │ │
+        │  │  Master Modern Engineering & Agentic Intelligence  │ │
+        │  │  [10+ Roadmaps] [8 Masterclasses] [3 Simulators]  │ │
+        │  └────────────────────────────────────────────────────┘ │
+        │                                                          │
+        └────────────────────┬─────────────────────────────────────┘
+                             │
+                             ▼
+        ┌────────────────────────────────────────────────────────────┐
+        │                                                            │
+        │         ⭐ THREE PROMINENT NAVIGATION CARDS ⭐              │
+        │                                                            │
+        │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
+        │  │   PURPLE    │  │    GREEN    │  │   ORANGE    │       │
+        │  │   GRADIENT  │  │   GRADIENT  │  │  GRADIENT   │       │
+        │  │             │  │             │  │             │       │
+        │  │     🎯      │  │     🗺️      │  │     📊      │       │
+        │  │   [NEW]     │  │   [LIVE]    │  │ [PORT 5000] │       │
+        │  │             │  │             │  │             │       │
+        │  │  Unified    │  │   System    │  │  Original   │       │
+        │  │  Multi-Role │  │ Architecture│  │     RAG     │       │
+        │  │  Dashboard  │  │  Overview   │  │  Dashboard  │       │
+        │  │             │  │             │  │             │       │
+        │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
+        │         │                │                │               │
+        └─────────┼────────────────┼────────────────┼───────────────┘
+                  │                │                │
+                  │                │                │
+        ┌─────────▼────────┐  ┌────▼─────────┐  ┌──▼───────────────┐
+        │                  │  │              │  │                  │
+        │ CLICK PURPLE 🎯  │  │CLICK GREEN🗺️│  │ CLICK ORANGE 📊  │
+        │                  │  │              │  │                  │
+        └─────────┬────────┘  └────┬─────────┘  └──┬───────────────┘
+                  │                │                │
+                  ▼                ▼                ▼
+     ┌────────────────────┐  ┌───────────┐  ┌────────────────────┐
+     │                    │  │           │  │                    │
+     │ Unified Dashboard  │  │  System   │  │  Original Dashboard│
+     │ (Port 3300)        │  │ Overview  │  │   (Port 5000)      │
+     │                    │  │(Port 3300)│  │                    │
+     │ unified-           │  │  system-  │  │ localhost:5000     │
+     │ dashboard.html     │  │ overview- │  │                    │
+     │                    │  │  .html    │  │                    │
+     └─────────┬──────────┘  └─────┬─────┘  └──────┬─────────────┘
+               │                   │                │
+               ▼                   ▼                ▼
+     ┌─────────────────┐  ┌────────────────┐  ┌────────────────────┐
+     │                 │  │                │  │                    │
+     │ SELECT ROLES    │  │ VIEW 11 DBs    │  │ INSPECT DATABASES  │
+     │                 │  │ VIEW 7 AGENTS  │  │                    │
+     │ ✓ DevOps        │  │ VIEW TOPOLOGY  │  │ • Choose DB        │
+     │ ✓ AWS Cloud     │  │ LIVE STATS     │  │ • Run SQL Queries  │
+     │ ✓ Kubernetes    │  │ SCHEMAS        │  │ • View Schemas     │
+     │ ✓ GenAI         │  │                │  │ • Export Data      │
+     │ ✓ MLE           │  │                │  │                    │
+     │ ✓ MLOps         │  │                │  │                    │
+     │ ✓ Python        │  │                │  │                    │
+     │ ... etc         │  │                │  │                    │
+     │                 │  │                │  │                    │
+     └────────┬────────┘  └────────────────┘  └────────────────────┘
+              │
+              ▼
+     ┌─────────────────┐
+     │                 │
+     │ TYPE QUESTION   │
+     │                 │
+     │ "How to deploy  │
+     │ containers to   │
+     │ AWS ECS?"       │
+     │                 │
+     └────────┬────────┘
+              │
+              ▼
+     ┌─────────────────┐
+     │                 │
+     │ QUERY ALL       │
+     │ SELECTED ROLES  │
+     │ (Parallel)      │
+     │                 │
+     └────────┬────────┘
+              │
+              ▼
+     ┌─────────────────────────────────────────┐
+     │                                         │
+     │        AGGREGATED RESULTS               │
+     │                                         │
+     │  From DevOps:    [3 results]           │
+     │  From AWS Cloud: [3 results]           │
+     │  From Kubernetes:[3 results]           │
+     │                                         │
+     │  Merged, sorted by relevance            │
+     │  With source attribution                │
+     │  Hybrid RAG (Dense + BM25)              │
+     │  Cross-encoder reranked                 │
+     │                                         │
+     └─────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                          KEY FEATURES                                       │
+│                                                                             │
+│  ⚡ ONE COMMAND STARTUP      ./start_all.sh                                │
+│  🖱️  ONE-CLICK NAVIGATION    Click colorful cards                          │
+│  🎯 MULTI-ROLE QUERIES       Query 11 databases at once                    │
+│  🗺️  COMPLETE VISIBILITY     See all agents and databases                  │
+│  📊 DEEP INSPECTION          SQL console + schema viewer                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                     11 ROLE-BASED DATABASES                                 │
+│                                                                             │
+│  1. 🚀 DevOps           2. ☸️  Kubernetes      3. 🐍 Python                 │
+│  4. 🤖 GenAI            5. 🎯 Agentic AI       6. 🧠 MLE                    │
+│  7. ⚙️  MLOps           8. 📊 Data Science     9. ☁️  AWS Cloud             │
+│  10. 🐧 Linux           11. 📚 General                                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                     7 LANGGRAPH AGENTS                                      │
+│                                                                             │
+│  1. 🧭 Router           - Route queries to appropriate databases           │
+│  2. 🔀 Decomposer       - Break complex queries into sub-queries           │
+│  3. 🔍 Retriever        - Hybrid retrieval (Dense + BM25)                  │
+│  4. 🎯 Reranker         - Cross-encoder reranking                          │
+│  5. ⚖️  Grader          - Quality assessment                               │
+│  6. ✍️  Generator       - Response synthesis                               │
+│  7. 🎓 Evaluator        - Self-evaluation                                  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                     SERVICES RUNNING                                        │
+│                                                                             │
+│  • Academy Server:         Port 3300   (Main interface)                    │
+│  • Multi-DB Dashboard:     Port 5000   (Database inspector)                │
+│  • Ollama:                 Port 11434  (Embeddings)                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                     STOP ALL SERVICES                                       │
+│                                                                             │
+│                     ./stop_all.sh                                           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+                              ╔═══════════════════╗
+                              ║   THAT'S IT!      ║
+                              ║   Simple & Fast   ║
+                              ╚═══════════════════╝

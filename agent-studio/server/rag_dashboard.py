@@ -61,7 +61,7 @@ class RAGDashboardHandler(BaseHTTPRequestHandler):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 RAG System Dashboard</title>
+    <title>📊 RAG Multi-Database System Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -70,187 +70,251 @@ class RAGDashboardHandler(BaseHTTPRequestHandler):
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #020617;
             min-height: 100vh;
-            padding: 20px;
+            padding: 24px;
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1500px;
             margin: 0 auto;
         }
         
         .header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
         
         .header h1 {
-            font-size: 36px;
-            color: #333;
-            margin-bottom: 10px;
+            font-size: 32px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 8px;
         }
         
         .header p {
-            color: #666;
-            font-size: 16px;
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .top-links {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            color: #1e293b;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 650;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link-btn:hover {
+            background: #f8fafc;
+            border-color: #0d9488;
+            color: #0d9488;
         }
         
         .refresh-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
+            background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+            color: #ffffff;
+            border: 1px solid rgba(13, 148, 136, 0.4);
+            padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 650;
             margin-top: 15px;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.22);
         }
         
         .refresh-btn:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.32);
+        }
+        
+        .refresh-btn:active {
+            transform: scale(0.97);
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
         
         .stat-card {
-            background: white;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
             border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            transition: transform 0.3s;
+            padding: 20px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
         }
         
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.04);
         }
         
         .stat-icon {
-            font-size: 36px;
-            margin-bottom: 10px;
+            font-size: 30px;
+            margin-bottom: 8px;
         }
         
         .stat-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
+            font-size: 28px;
+            font-weight: 800;
+            color: #0d9488;
+            margin-bottom: 4px;
         }
         
         .stat-label {
-            color: #666;
-            font-size: 14px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 650;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         
         .databases-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 24px;
         }
         
         .databases-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 24px;
+            color: #0f172a;
+            margin-bottom: 18px;
+            font-size: 22px;
+            font-weight: 750;
         }
         
         .database-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
         }
         
         .database-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 10px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            color: #0f172a;
+            border-radius: 12px;
             padding: 20px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
         
         .database-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+            border-color: #0d9488;
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.1);
+        }
+        
+        .database-card:active {
+            transform: scale(0.98);
+            background: #f0fdf4;
+            border-color: #0d9488;
         }
         
         .database-card.empty {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            opacity: 0.6;
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            opacity: 0.7;
         }
         
         .database-name {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 750;
             margin-bottom: 10px;
             text-transform: uppercase;
+            color: #0d9488;
+            letter-spacing: 0.5px;
         }
         
         .database-stats {
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 13.5px;
+            color: #334155;
+            line-height: 1.5;
         }
         
         .database-stats div {
-            margin: 5px 0;
+            margin: 4px 0;
         }
         
         .tables-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 24px;
         }
         
         .table-schema {
-            background: #f8f9fa;
-            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
             padding: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
         
         .table-schema h3 {
-            color: #667eea;
-            margin-bottom: 15px;
+            color: #0d9488;
+            margin-bottom: 12px;
+            font-size: 16px;
         }
         
         .schema-table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
+            background: #ffffff;
             border-radius: 8px;
             overflow: hidden;
+            border: 1px solid #e2e8f0;
+            margin-top: 10px;
         }
         
         .schema-table th {
-            background: #667eea;
-            color: white;
-            padding: 12px;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 12px 14px;
             text-align: left;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 13px;
+            border-bottom: 2px solid #e2e8f0;
         }
         
         .schema-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            color: #1e293b;
         }
         
         .schema-table tr:last-child td {
@@ -259,33 +323,36 @@ class RAGDashboardHandler(BaseHTTPRequestHandler):
         
         .badge {
             display: inline-block;
-            padding: 4px 8px;
+            padding: 3px 8px;
             border-radius: 4px;
             font-size: 11px;
-            font-weight: bold;
+            font-weight: 750;
             margin-left: 5px;
         }
         
         .badge-pk {
-            background: #e74c3c;
-            color: white;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
         }
         
         .badge-nn {
-            background: #f39c12;
-            color: white;
+            background: #fefce8;
+            color: #854d0e;
+            border: 1px solid #fef08a;
         }
         
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: #64748b;
         }
         
         .error {
-            background: #fee;
-            color: #c33;
-            padding: 20px;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 16px 20px;
             border-radius: 8px;
             margin: 20px 0;
         }
@@ -294,10 +361,16 @@ class RAGDashboardHandler(BaseHTTPRequestHandler):
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 RAG System Dashboard</h1>
-            <p>Real-time monitoring of vector databases, schemas, and statistics</p>
+            <div class="top-links">
+                <a href="http://localhost:3300/academy/" class="nav-link-btn">🏠 Academy Main (Port 3300)</a>
+                <a href="http://localhost:3300/academy/unified-dashboard.html" class="nav-link-btn">🎯 Unified Dashboard</a>
+                <a href="http://localhost:3300/academy/rag-management.html" class="nav-link-btn">⚙️ RAG Pipeline</a>
+                <a href="http://localhost:3300/academy/system-overview.html" class="nav-link-btn">🗺️ System Overview</a>
+            </div>
+            <h1>📊 RAG Multi-Database System Dashboard</h1>
+            <p>Real-time monitoring of 11 vector databases, schemas, indexes, and storage telemetry.</p>
             <button class="refresh-btn" onclick="loadAllData()">🔄 Refresh Data</button>
-            <span id="last-update" style="margin-left: 15px; color: #999;"></span>
+            <span id="last-update" style="margin-left: 15px; color: #64748b; font-size: 13px;"></span>
         </div>
         
         <div id="stats-container" class="stats-grid">

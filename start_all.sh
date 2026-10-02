@@ -44,10 +44,19 @@ kill_port() {
     fi
 }
 
+# Path to workspace virtual environment Python
+VENV_PYTHON="$SCRIPT_DIR/.venv/bin/python"
+if [ ! -f "$VENV_PYTHON" ]; then
+    echo -e "${YELLOW}⚠️  .venv not found at $VENV_PYTHON, falling back to python3${NC}"
+    VENV_PYTHON="python3"
+else
+    echo -e "${GREEN}✅ Using workspace virtual environment: $VENV_PYTHON${NC}"
+fi
+
 # Check Python dependencies
 echo -e "\n${BLUE}📦 Checking dependencies...${NC}"
-python3 -c "import sqlite3, sys" 2>/dev/null || {
-    echo -e "${RED}❌ Python3 not found${NC}"
+$VENV_PYTHON -c "import sqlite3, sys" 2>/dev/null || {
+    echo -e "${RED}❌ Python not found in $VENV_PYTHON${NC}"
     exit 1
 }
 
@@ -61,7 +70,7 @@ echo -e "${GREEN}✅ Dependencies OK${NC}"
 echo -e "\n${BLUE}🌐 Starting Academy Server (port 3300)...${NC}"
 kill_port 3300
 cd "$SCRIPT_DIR/agent-studio/server"
-nohup python3 serve.py > "$LOG_DIR/academy.log" 2>&1 &
+nohup "$VENV_PYTHON" serve.py > "$LOG_DIR/academy.log" 2>&1 &
 ACADEMY_PID=$!
 echo -e "${GREEN}✅ Academy Server started (PID: $ACADEMY_PID)${NC}"
 echo "   URL: http://localhost:3300"
@@ -74,7 +83,7 @@ sleep 3
 echo -e "\n${BLUE}📊 Starting Multi-DB Dashboard (port 5000)...${NC}"
 kill_port 5000
 cd "$SCRIPT_DIR/agent-studio/server"
-nohup python3 rag_dashboard.py --port 5000 > "$LOG_DIR/dashboard.log" 2>&1 &
+nohup "$VENV_PYTHON" rag_dashboard.py --port 5000 > "$LOG_DIR/dashboard.log" 2>&1 &
 DASHBOARD_PID=$!
 echo -e "${GREEN}✅ Dashboard started (PID: $DASHBOARD_PID)${NC}"
 echo "   URL: http://localhost:5000"
@@ -118,7 +127,7 @@ echo "  • Ollama API:         http://localhost:11434"
 
 echo -e "\n${BLUE}📊 Quick Stats:${NC}"
 cd "$SCRIPT_DIR/agent-studio/server"
-python3 -c "
+"$VENV_PYTHON" -c "
 try:
     from rag_engine_enhanced import get_all_statistics
     stats = get_all_statistics()

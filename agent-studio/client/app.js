@@ -15,7 +15,10 @@ const state = {
   attachments: [], // { type: 'image'|'video'|'audio', dataUrl, name, base64 }
   isGenerating: false,
   abortController: null,
-  activeSandboxCode: ''
+  activeSandboxCode: '',
+  webSearchActive: false,
+  ragActive: true,
+  selectedRagRole: 'all'
 };
 
 // Endpoints Base
@@ -203,7 +206,7 @@ const resetPromptBtn = document.getElementById('resetPromptBtn');
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const sidebar = document.getElementById('sidebar');
 const toggleSandboxBtn = document.getElementById('toggleSandboxBtn');
-const sandboxDrawer = document.getElementById('sandboxDrawer');
+const studioRightDrawer = document.getElementById('studioRightDrawer');
 const sandboxIframe = document.getElementById('sandboxIframe');
 const reloadSandboxBtn = document.getElementById('reloadSandboxBtn');
 const popoutSandboxBtn = document.getElementById('popoutSandboxBtn');
@@ -348,6 +351,12 @@ function setupEventListeners() {
   // Voice STT & TTS Handlers
   setupVoiceAssistant();
 
+  // Web Search Grounding Handlers
+  setupWebSearchAssistant();
+
+  // Multi-Role Vector Knowledge RAG Handlers
+  setupRagAssistant();
+
   // RAG Knowledge Engine Modal Handlers
   setupRagEngineModal();
 
@@ -381,15 +390,25 @@ function setupModuleHubNav() {
 
   const navRag = document.getElementById('navRag');
   if (navRag) {
-    navRag.addEventListener('click', () => {
-      openRagEngineModal();
+    navRag.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof window.openRightDrawerTab === 'function') {
+        window.openRightDrawerTab('rag');
+      } else {
+        openRagEngineModal();
+      }
     });
   }
 
   const navMemory = document.getElementById('navMemory');
   if (navMemory) {
-    navMemory.addEventListener('click', () => {
-      openMemoryStudioModal();
+    navMemory.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof window.openRightDrawerTab === 'function') {
+        window.openRightDrawerTab('memory');
+      } else {
+        openMemoryStudioModal();
+      }
     });
   }
 
@@ -397,15 +416,24 @@ function setupModuleHubNav() {
   if (navDb) {
     navDb.addEventListener('click', (e) => {
       e.preventDefault();
-      openDbStudioModal();
+      if (typeof window.openRightDrawerTab === 'function') {
+        window.openRightDrawerTab('db');
+      } else {
+        openDbStudioModal();
+      }
     });
   }
 
   const navDeepResearch = document.getElementById('navDeepResearch');
   if (navDeepResearch) {
-    navDeepResearch.addEventListener('click', () => {
+    navDeepResearch.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleWebSearchState(true, true);
       selectPresetPrompt('perplexity');
-      promptInput.focus();
+      if (promptInput) {
+        promptInput.focus();
+        promptInput.select();
+      }
     });
   }
 
@@ -425,10 +453,8 @@ function setupModuleHubNav() {
       document.querySelectorAll('.intent-chip').forEach(b => b.classList.toggle('active', b.dataset.intent === 'app'));
       state.activeIntent = 'app';
       selectPresetPrompt('lovable');
-      const sandboxPanel = document.getElementById('sandboxPanel');
-      if (sandboxPanel && sandboxPanel.classList.contains('hidden')) {
-        const toggleSandboxBtn = document.getElementById('toggleSandboxBtn');
-        if (toggleSandboxBtn) toggleSandboxBtn.click();
+      if (typeof window.openRightDrawerTab === 'function') {
+        window.openRightDrawerTab('sandbox');
       }
       promptInput.focus();
     });
@@ -461,6 +487,18 @@ function setupModuleHubNav() {
       state.activeIntent = 'video';
       selectPresetPrompt('videogen');
       promptInput.focus();
+    });
+  }
+
+  const navWebSearch = document.getElementById('navWebSearch');
+  if (navWebSearch) {
+    navWebSearch.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleWebSearchState(true, false);
+      if (promptInput) {
+        promptInput.value = 'Search live technical documentation and release notes for: ';
+        promptInput.focus();
+      }
     });
   }
 
@@ -565,6 +603,109 @@ function speakVoiceText(text) {
   utterance.rate = 1.05;
   utterance.pitch = 1.0;
   window.speechSynthesis.speak(utterance);
+}
+
+// ==========================================================================
+// Web Search Assistant Toggle & State Management
+// ==========================================================================
+
+function toggleWebSearchState(forceState, isDeep) {
+  const next = forceState !== undefined ? forceState : !state.webSearchActive;
+  state.webSearchActive = next;
+  state.isDeepSearch = next ? !!isDeep : false;
+
+  if (next) {
+    state.activeIntent = 'web_search';
+  } else if (state.activeIntent === 'web_search') {
+    state.activeIntent = 'auto';
+  }
+
+  const btn = document.getElementById('webSearchToggleBtn');
+  const banner = document.getElementById('webSearchActiveBanner');
+  const navBtn = document.getElementById('navWebSearch');
+  const navDeep = document.getElementById('navDeepResearch');
+
+  if (btn) btn.classList.toggle('active', next);
+  if (banner) {
+    banner.classList.toggle('hidden', !next);
+    const textSpan = banner.querySelector('.web-search-banner-text');
+    if (textSpan) {
+      textSpan.innerHTML = isDeep 
+        ? '🔍 Deep Web Research <strong>Active</strong> &bull; Exhaustive academic research with live citations [1][2]'
+        : 'Live Web Search Grounding <strong>Active</strong> &bull; Factual real-time web results will be synthesized';
+    }
+  }
+  if (navBtn) navBtn.classList.toggle('active', next && !isDeep);
+  if (navDeep) navDeep.classList.toggle('active', next && !!isDeep);
+
+  if (promptInput) {
+    promptInput.placeholder = next 
+      ? (isDeep ? 'Ask anything for Deep Research with live academic citations...' : 'Ask anything with live web search...') 
+      : 'Ask anything or search the web...';
+  }
+}
+
+function setupWebSearchAssistant() {
+  const btn = document.getElementById('webSearchToggleBtn');
+  const bannerClose = document.getElementById('closeWebSearchBanner');
+
+  if (btn) {
+    btn.addEventListener('click', () => toggleWebSearchState());
+  }
+
+  if (bannerClose) {
+    bannerClose.addEventListener('click', () => toggleWebSearchState(false));
+  }
+}
+
+// ==========================================================================
+// Multi-Role Vector Knowledge & Agentic RAG Toggle & State Management
+// ==========================================================================
+
+function toggleRagState(forceState) {
+  const next = forceState !== undefined ? forceState : !state.ragActive;
+  state.ragActive = next;
+
+  const btn = document.getElementById('ragToggleBtn');
+  const banner = document.getElementById('ragActiveBanner');
+
+  if (btn) btn.classList.toggle('active', next);
+  if (banner) banner.classList.toggle('hidden', !next);
+
+  if (promptInput) {
+    if (next) {
+      promptInput.placeholder = 'Ask anything (Multi-Role Vector Knowledge Grounding Active)...';
+    } else if (state.webSearchActive) {
+      promptInput.placeholder = 'Ask anything with live web search...';
+    } else {
+      promptInput.placeholder = 'Ask anything or search the web...';
+    }
+  }
+}
+
+function setupRagAssistant() {
+  const btn = document.getElementById('ragToggleBtn');
+  const bannerClose = document.getElementById('closeRagBanner');
+  const roleChipsBar = document.getElementById('ragRoleChipsBar');
+
+  if (btn) {
+    btn.addEventListener('click', () => toggleRagState());
+  }
+
+  if (bannerClose) {
+    bannerClose.addEventListener('click', () => toggleRagState(false));
+  }
+
+  if (roleChipsBar) {
+    roleChipsBar.addEventListener('click', (e) => {
+      const chip = e.target.closest('.rag-role-chip');
+      if (!chip) return;
+      const role = chip.dataset.role || 'all';
+      state.selectedRagRole = role;
+      roleChipsBar.querySelectorAll('.rag-role-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  }
 }
 
 // RAG Knowledge Engine Modal Logic
@@ -1341,10 +1482,29 @@ function detectIntent(rawText) {
     let clean = t;
     if (t.startsWith('/image ')) clean = t.slice(7).trim();
     if (t.startsWith('/video ')) clean = t.slice(7).trim();
+    if (t.startsWith('/search ')) clean = t.slice(8).trim();
+    if (t.startsWith('/web ')) clean = t.slice(5).trim();
     return { type: state.activeIntent, prompt: clean, original: t };
   }
 
+  // 0. Active Web Search Toggle
+  if (state.webSearchActive) {
+    let clean = t;
+    if (t.startsWith('/search ')) clean = t.slice(8).trim();
+    if (t.startsWith('/web ')) clean = t.slice(5).trim();
+    return { type: 'web_search', prompt: clean || t, original: t };
+  }
+
   // 1. Direct Slash Commands
+  if (t.startsWith('/rag ')) {
+    return { type: 'rag', prompt: t.slice(5).trim(), original: t };
+  }
+  if (t.startsWith('/search ')) {
+    return { type: 'web_search', prompt: t.slice(8).trim(), original: t };
+  }
+  if (t.startsWith('/web ')) {
+    return { type: 'web_search', prompt: t.slice(5).trim(), original: t };
+  }
   if (t.startsWith('/image ')) {
     return { type: 'image', prompt: t.slice(7).trim(), original: t };
   }
@@ -1416,7 +1576,653 @@ function detectIntent(rawText) {
     return { type: 'memory_recall', prompt: rawQuery || t, original: t };
   }
 
+  // 7. Natural Language Web Search Intents
+  const webSearchLeadRegex = /^(?:search\s+for|search\s+the\s+web\s+for|look\s+up\s+online|find\s+online|browse\s+the\s+web\s+for)\s*[:]?\s*(.*)/i;
+  const webSearchInlineRegex = /(?:search the web for|look up online for|search online for|latest updates on|latest 2026 updates)\s+(.*)/i;
+  if (webSearchLeadRegex.test(t)) {
+    const match = t.match(webSearchLeadRegex);
+    return { type: 'web_search', prompt: match[1] ? match[1].trim() : t, original: t };
+  }
+  if (webSearchInlineRegex.test(t)) {
+    const match = t.match(webSearchInlineRegex);
+    return { type: 'web_search', prompt: match[1] ? match[1].trim() : t, original: t };
+  }
+
+  // 8. Multi-Role Vector Knowledge Base (RAG) Auto-Intent
+  // If RAG toggle is active, OR if query mentions technical concepts, route to RAG automatically without /rag!
+  if (state.ragActive) {
+    return { type: 'rag', prompt: t, original: t };
+  }
+
+  const technicalKeywordsRegex = /\b(?:docker|container|kubernetes|k8s|devops|aws|s3|ec2|iam|lambda|python|fastapi|asyncio|rag|llm|llms|agent|agents|agentic|autogen|crewai|langgraph|mlops|mlflow|pipeline|jenkins|terraform|ansible|prometheus|grafana|linux|bash|shell|systemd|gitops|ci\/cd|helm|pod|ingress|cluster|neural|embedding|vector|fine-tuning|transformer)\b/i;
+  if (technicalKeywordsRegex.test(t)) {
+    return { type: 'rag', prompt: t, original: t };
+  }
+
   return { type: 'text', prompt: t, original: t };
+}
+
+// ==========================================================================
+// RAG Query Integration Engine
+// ==========================================================================
+async function executeRagQuery(searchQuery, assistantBubble, startTime) {
+  state.abortController = new AbortController();
+  
+  const roleLabel = (!state.selectedRagRole || state.selectedRagRole === 'all') 
+    ? 'All 11 Role Vector Databases (Agentic Routing)' 
+    : `${state.selectedRagRole.toUpperCase()} Vector Store`;
+
+  // Timer helper
+  let timerInterval = null;
+  const getElapsed = () => ((performance.now() - startTime) / 1000).toFixed(1) + 's';
+
+  assistantBubble.innerHTML = `
+    <div class="web-search-searching-state">
+      <div class="web-search-searching-header">
+        <span class="dot live"></span>
+        <span>Agentic Multi-Role Router querying <strong>${escapeHtml(roleLabel)}</strong> for: <em>"${escapeHtml(searchQuery)}"</em>...</span>
+        <span class="rag-status-timer" id="ragInitialTimer">0.0s</span>
+      </div>
+    </div>`;
+
+  const initTimerEl = assistantBubble.querySelector('#ragInitialTimer');
+  timerInterval = setInterval(() => {
+    if (initTimerEl) initTimerEl.textContent = getElapsed();
+  }, 100);
+
+  try {
+    const requestedRoles = (!state.selectedRagRole || state.selectedRagRole === 'all') ? [] : [state.selectedRagRole];
+    const searchRes = await fetch('/api/multi_role_query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: searchQuery, roles: requestedRoles, top_k_per_role: 3 }),
+      signal: state.abortController.signal
+    });
+
+    if (!searchRes.ok) throw new Error(`HTTP RAG vector error: ${searchRes.status}`);
+    const searchData = await searchRes.json();
+    clearInterval(timerInterval);
+
+    let badgesHtml = '';
+    (searchData.roles_consulted || []).forEach(rc => {
+      badgesHtml += `
+        <span class="rag-agent-badge" title="Retrieved from books/vectors/${escapeHtml(rc.role)}/rag_catalog.db">
+          <span>${rc.icon || '📚'}</span>
+          <strong>${escapeHtml(rc.name || rc.role)}</strong>
+          <span class="hit-pill">${rc.hit_count} hits</span>
+        </span>`;
+    });
+
+    let sourcesListHtml = '';
+    (searchData.results || []).forEach((r, idx) => {
+      const scorePercent = ((r.similarity || r.score || 0) * 100).toFixed(1);
+      sourcesListHtml += `
+        <div class="rag-source-item">
+          <div><strong>[#${idx + 1}] ${r.role_icon || '📚'} ${escapeHtml(r.role_name || r.role)}:</strong> <em>${escapeHtml(r.book_title || 'Technical Manual')}</em> &bull; Page ${r.page_number || 1} &bull; Match: ${scorePercent}%</div>
+          <div style="font-size:0.68rem; color:var(--text-dim); margin-top:2px; font-family:monospace;">${escapeHtml((r.content || r.text || '').slice(0, 160))}...</div>
+        </div>`;
+    });
+
+    const totalPassages = searchData.total_results || (searchData.results ? searchData.results.length : 0);
+
+    assistantBubble.innerHTML = `
+      <div class="rag-telemetry-header">
+        <div class="rag-telemetry-title">
+          <span>🧠 Multi-Role Vector Knowledge Grounding</span>
+          <span style="font-size:0.7rem; font-weight:normal; color:var(--text-dim);">(${totalPassages} verified textbook passages)</span>
+        </div>
+        <div class="rag-agents-consulted-strip">
+          ${badgesHtml || '<span style="font-size:0.75rem; color:var(--text-dim);">Vector Knowledge Base</span>'}
+        </div>
+        ${totalPassages > 0 ? `
+          <button type="button" class="rag-sources-toggle-btn" onclick="const d = this.nextElementSibling; d.classList.toggle('hidden'); this.textContent = d.classList.contains('hidden') ? '📖 Inspect ${totalPassages} Retrieved Source Passages ▼' : '📖 Hide Source Passages ▲';">
+            📖 Inspect ${totalPassages} Retrieved Source Passages ▼
+          </button>
+          <div class="rag-sources-drawer hidden">
+            ${sourcesListHtml}
+          </div>
+        ` : ''}
+      </div>
+      
+      <!-- Live Synthesis Status Bar -->
+      <div class="rag-synthesis-status-bar" id="ragSynthesisStatusBar">
+        <div class="rag-status-left">
+          <span class="rag-status-dot pulsing"></span>
+          <span class="rag-status-text" id="ragStatusText">Synthesizing grounded response with verified citations...</span>
+        </div>
+        <span class="rag-status-timer" id="ragSynthesisTimer">${getElapsed()}</span>
+      </div>
+
+      <!-- LLM Stream Viewport with Shimmer Skeleton -->
+      <div class="llm-stream-box" id="ragStreamBox" style="margin-top: 10px;">
+        <div class="rag-shimmer-loader" id="ragShimmerLoader">
+          <div class="shimmer-line" style="width: 92%;"></div>
+          <div class="shimmer-line" style="width: 78%;"></div>
+          <div class="shimmer-line" style="width: 55%;"></div>
+        </div>
+      </div>`;
+
+    const streamBox = assistantBubble.querySelector('#ragStreamBox');
+    const statusText = assistantBubble.querySelector('#ragStatusText');
+    const statusBar = assistantBubble.querySelector('#ragSynthesisStatusBar');
+    const synthTimer = assistantBubble.querySelector('#ragSynthesisTimer');
+
+    timerInterval = setInterval(() => {
+      if (synthTimer) synthTimer.textContent = getElapsed();
+    }, 100);
+
+    // Construct context
+    let prompt;
+    if (searchData.results && searchData.results.length > 0) {
+      const ctx = searchData.results.map(r => `[${r.role_icon || ''} ${r.role_name || r.role} | Book: ${r.book_title} | Page ${r.page_number}]\n${r.content || r.text || ''}`).join('\n\n---\n\n');
+      prompt = `You are OmniStudio Academy's Principal AI Technical Specialist. Answer the user's question with authority, precision, and detailed production-ready code examples where relevant.
+Strictly ground your answer in the following retrieved textbook passages from our specialized role vector databases. Cite the specific role, textbook title, and page numbers when stating key facts or architectural rules.
+
+Retrieved Passages:
+${ctx}
+
+User Question:
+${searchQuery}`;
+    } else {
+      prompt = `You are OmniStudio Academy's Principal AI Technical Specialist. Answer the user's question with deep technical rigor, production-grade code, and clear architectural explanations:\n\n${searchQuery}`;
+    }
+
+    const systemPrompt = searchData.agent_system_prompt || state.systemPrompt || "You are a Principal AI Technical Specialist.";
+    let targetGateway = gatewaySelect ? gatewaySelect.value : (state.gateway || 'webfree');
+    let targetModel = modelSelect ? modelSelect.value : (state.model || 'openai-fast');
+
+    if (targetGateway === 'webfree' && !['openai', 'openai-fast', 'openai-large', 'qwen-coder', 'mistral', 'deepseek', 'claude-hybrid'].includes(targetModel)) {
+      targetModel = 'openai-fast';
+    }
+
+    const generatePayload = {
+      model: targetModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      stream: true,
+      temperature: 0.2
+    };
+
+    let fullText = '';
+    let tokenCount = 0;
+    let firstTokenReceived = false;
+
+    if (targetGateway === 'ollama') {
+      const ollamaPayload = {
+        model: targetModel || 'bolt-local',
+        system: systemPrompt,
+        prompt: prompt,
+        stream: true,
+        options: { temperature: 0.2 }
+      };
+      const response = await fetch(`${GATEWAYS.ollama.base}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ollamaPayload),
+        signal: state.abortController.signal
+      });
+      if (!response.ok) throw new Error(`Ollama synthesis error: ${response.status}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter(l => l.trim() !== '');
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            if (data.response) {
+              if (!firstTokenReceived) {
+                firstTokenReceived = true;
+                const latency = Math.round(performance.now() - startTime);
+                if (latencyVal) latencyVal.textContent = latency;
+                if (statusText) statusText.textContent = `Streaming grounded response (${totalPassages} verified passages)...`;
+              }
+              fullText += data.response;
+              tokenCount++;
+              updateSpeedCounter(tokenCount, startTime);
+              streamBox.innerHTML = renderMarkdown(fullText);
+              chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+          } catch(e) {}
+        }
+      }
+    } else {
+      const isWebFree = targetGateway === 'webfree';
+      const endpoint = isWebFree 
+        ? `${GATEWAYS.webfree.base}/chat/completions` 
+        : `${GATEWAYS[targetGateway]?.base || GATEWAYS.webfree.base}/v1/chat/completions`;
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (!isWebFree) headers['Authorization'] = 'Bearer sk-omniroute-local';
+
+      let response;
+      try {
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(generatePayload),
+          signal: state.abortController.signal
+        });
+      } catch (networkErr) {
+        if (!isWebFree) {
+          generatePayload.model = 'openai-fast';
+          response = await fetch(`${GATEWAYS.webfree.base}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(generatePayload),
+            signal: state.abortController.signal
+          });
+        } else {
+          throw networkErr;
+        }
+      }
+
+      // If local gateway returned 404/500, fallback to webfree
+      if (!response.ok && !isWebFree) {
+        generatePayload.model = 'openai-fast';
+        response = await fetch(`${GATEWAYS.webfree.base}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(generatePayload),
+          signal: state.abortController.signal
+        });
+      }
+
+      if (!response.ok) throw new Error(`Synthesis API error: ${response.status}`);
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed === 'data: [DONE]') continue;
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              const delta = data.choices?.[0]?.delta?.content || '';
+              if (delta) {
+                if (!firstTokenReceived) {
+                  firstTokenReceived = true;
+                  const latency = Math.round(performance.now() - startTime);
+                  if (latencyVal) latencyVal.textContent = latency;
+                  if (statusText) statusText.textContent = `Streaming grounded response (${totalPassages} verified passages)...`;
+                }
+                fullText += delta;
+                tokenCount++;
+                updateSpeedCounter(tokenCount, startTime);
+                streamBox.innerHTML = renderMarkdown(fullText);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+            } catch(e) {}
+          }
+        }
+      }
+    }
+
+    clearInterval(timerInterval);
+    if (statusBar) {
+      statusBar.className = 'rag-synthesis-status-bar completed';
+      const dot = statusBar.querySelector('.rag-status-dot');
+      if (dot) dot.className = 'rag-status-dot';
+      if (statusText) {
+        statusText.innerHTML = `✅ Grounded Synthesis Complete (<strong>${tokenCount} tokens</strong> &bull; ${getElapsed()} &bull; <strong>${totalPassages} passages</strong>)`;
+      }
+    }
+
+    if (window.attachOmniActionBar) {
+      attachOmniActionBar(assistantBubble, fullText);
+    }
+
+    if (window.speakVoiceResponse) {
+      window.speakVoiceResponse(fullText);
+    }
+  } catch (err) {
+    clearInterval(timerInterval);
+    const statusBar = assistantBubble.querySelector('#ragSynthesisStatusBar');
+    const statusText = assistantBubble.querySelector('#ragStatusText');
+    const streamBox = assistantBubble.querySelector('#ragStreamBox');
+    
+    if (statusBar) {
+      statusBar.className = 'rag-synthesis-status-bar error';
+      if (statusText) {
+        statusText.innerHTML = err.name === 'AbortError' 
+          ? '⏹️ RAG Query Cancelled by User' 
+          : `⚠️ Synthesis Error: ${escapeHtml(err.message)}`;
+      }
+    }
+
+    if (err.name !== 'AbortError' && streamBox) {
+      streamBox.innerHTML = `
+        <div style="padding: 10px; background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.25); border-radius: 6px; color: var(--accent-rose); font-size: 0.8rem;">
+          <p><strong>RAG Synthesis Pipeline Error:</strong> ${escapeHtml(err.message)}</p>
+          <button type="button" class="tiny-btn" style="margin-top: 6px;" onclick="selectPresetPrompt('rag'); sendMessage();">
+            🔄 Retry Grounded Query
+          </button>
+        </div>`;
+    }
+  } finally {
+    clearInterval(timerInterval);
+    setGeneratingState(false);
+  }
+}
+
+// ==========================================================================
+// Real-Time Web Search Grounding Engine (DuckDuckGo & Online Docs)
+// ==========================================================================
+
+async function executeWebSearchChat(searchQuery, assistantBubble, startTime) {
+  state.abortController = new AbortController();
+
+  assistantBubble.innerHTML = `
+    <div class="web-search-searching-state">
+      <div class="web-search-searching-header">
+        <span class="dot checking"></span>
+        <span>Searching live web sources for: <strong>"${escapeHtml(searchQuery)}"</strong>...</span>
+      </div>
+    </div>`;
+
+  try {
+    const searchRes = await fetch('/api/tools/web_search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: searchQuery, max_results: 5 }),
+      signal: state.abortController.signal
+    });
+
+    if (!searchRes.ok) throw new Error(`HTTP search error: ${searchRes.status}`);
+    const searchData = await searchRes.json();
+
+    if (!searchData.results || searchData.results.length === 0) {
+      assistantBubble.innerHTML = `
+        <p>No real-time web results found for <em>"${escapeHtml(searchQuery)}"</em>. Synthesizing from model knowledge base...</p>`;
+      return;
+    }
+
+    assistantBubble.innerHTML = `
+      <div class="web-search-searching-state">
+        <div class="web-search-searching-header">
+          <span class="dot live"></span>
+          <span>Retrieved <strong>${searchData.results.length} live web sources</strong>. Synthesizing answer...</span>
+        </div>
+      </div>`;
+
+    let targetGateway = state.gateway;
+    let targetModel = state.model;
+    if (state.gateway === 'auto' || state.gateway === 'webfree') {
+      targetGateway = 'webfree';
+      targetModel = (state.model === 'openai-fast' || state.model === 'flux' || state.model === 'video') ? 'openai' : state.model;
+    }
+
+    if (targetGateway === 'ollama') {
+      const ollamaChip = document.getElementById('ollamaStatus');
+      const isLive = ollamaChip && ollamaChip.querySelector('.dot.live');
+      if (!isLive) {
+        targetGateway = 'webfree';
+        targetModel = 'openai-fast';
+      }
+    }
+
+    const systemPrompt = `You are OmniStudio, an expert AI engineer equipped with live web search capabilities.
+Answer the user's question accurately, directly, and comprehensively using the following live web search results as factual ground truth:
+
+=== LIVE WEB SEARCH SOURCES ===
+${searchData.context_text}
+===============================
+
+User Question: ${searchQuery}
+
+Instructions:
+1. Provide a direct, well-structured answer using markdown headings, bullet points, and code blocks where applicable.
+2. Cite key points using bracket notation (e.g. [1], [2]) that match the sources above.
+3. Ensure the technical details reflect current 2026 standards.
+4. Avoid generic filler like "Based on the search results" in the first line; jump straight into the answer.`;
+
+    let fullResponse = '';
+    let tokenCount = 0;
+    let firstTokenReceived = false;
+
+    if (targetGateway === 'ollama') {
+      const payload = {
+        model: targetModel,
+        prompt: systemPrompt,
+        stream: true,
+        options: {
+          temperature: state.temperature,
+          num_ctx: state.contextSize
+        }
+      };
+
+      const response = await fetch(`${GATEWAYS.ollama.base}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: state.abortController.signal
+      });
+
+      if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let streamBuffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamBuffer += decoder.decode(value, { stream: true });
+        const lines = streamBuffer.split('\n');
+        streamBuffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (!firstTokenReceived) {
+              firstTokenReceived = true;
+              const latency = Math.round(performance.now() - startTime);
+              if (latencyVal) latencyVal.textContent = latency;
+            }
+            if (data.response) {
+              fullResponse += data.response;
+              tokenCount++;
+              updateSpeedCounter(tokenCount, startTime);
+              assistantBubble.innerHTML = renderMarkdown(fullResponse);
+              chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+          } catch (e) {}
+        }
+      }
+    } else {
+      // OpenAI-compatible Chat Completions (WebFree / OmniRoute / Spark)
+      const messages = [
+        { role: 'system', content: 'You are OmniStudio, an expert AI engineer grounded by real-time web search results.' },
+        { role: 'user', content: systemPrompt }
+      ];
+
+      const payload = {
+        model: targetModel,
+        messages,
+        temperature: state.temperature,
+        stream: true
+      };
+
+      const isWebFree = targetGateway === 'webfree';
+      const endpoint = isWebFree 
+        ? `${GATEWAYS.webfree.base}/chat/completions` 
+        : `${GATEWAYS[targetGateway]?.base || GATEWAYS.webfree.base}/v1/chat/completions`;
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (!isWebFree) headers['Authorization'] = 'Bearer sk-omniroute-local';
+
+      let response;
+      try {
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+          signal: state.abortController.signal
+        });
+      } catch (networkErr) {
+        if (!isWebFree) {
+          payload.model = 'openai-fast';
+          response = await fetch(`${GATEWAYS.webfree.base}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: state.abortController.signal
+          });
+        } else {
+          throw networkErr;
+        }
+      }
+
+      // If primary gateway returned 404/500, fallback to webfree
+      if (!response.ok && !isWebFree) {
+        payload.model = 'openai-fast';
+        response = await fetch(`${GATEWAYS.webfree.base}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: state.abortController.signal
+        });
+      }
+
+      if (!response.ok) throw new Error(`Gateway HTTP ${response.status}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed === 'data: [DONE]') continue;
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const parsed = JSON.parse(trimmed.slice(6));
+              const delta = parsed.choices?.[0]?.delta?.content || '';
+              if (delta) {
+                if (!firstTokenReceived) {
+                  firstTokenReceived = true;
+                  const latency = Math.round(performance.now() - startTime);
+                  if (latencyVal) latencyVal.textContent = latency;
+                }
+                fullResponse += delta;
+                tokenCount++;
+                updateSpeedCounter(tokenCount, startTime);
+                assistantBubble.innerHTML = renderMarkdown(fullResponse);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
+    // Attach Citation Cards Deck below the synthesized response
+    const citationDeck = document.createElement('div');
+    citationDeck.className = 'web-citation-deck';
+    citationDeck.innerHTML = `
+      <div class="web-citation-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>Live Web Sources (${searchData.results.length})</span>
+      </div>
+      <div class="web-citation-grid">
+        ${searchData.results.map((r, i) => `
+          <a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="web-citation-card" title="${escapeHtml(r.title)}">
+            <span class="citation-num">[${i + 1}]</span>
+            <div class="citation-body">
+              <div class="citation-domain">${escapeHtml(r.domain || 'web')}</div>
+              <div class="citation-title">${escapeHtml(r.title)}</div>
+              <div class="citation-snippet">${escapeHtml(r.snippet)}</div>
+            </div>
+            <svg class="external-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </a>
+        `).join('')}
+      </div>`;
+    assistantBubble.appendChild(citationDeck);
+
+    if (window.attachOmniActionBar) {
+      attachOmniActionBar(assistantBubble, fullResponse);
+    }
+
+    if (window.speakVoiceResponse) {
+      window.speakVoiceResponse(fullResponse);
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      assistantBubble.innerHTML += '<p style="color:var(--text-muted);font-style:italic;">[Web Search Stopped]</p>';
+    } else {
+      assistantBubble.innerHTML = `<div class="error-msg">Web search grounding error: ${escapeHtml(err.message)}</div>`;
+    }
+  } finally {
+    setGeneratingState(false);
+  }
+}
+
+async function executeWebSearchToolSimulation(query) {
+  const bubble = appendAssistantPlaceholder('WebSearch Tool', '⚡ TOOL CALL: web_search');
+  bubble.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;color:var(--accent-cyan);padding:6px 0;">
+      <span class="dot checking"></span> Executing live web search simulation for: "<strong>${escapeHtml(query)}</strong>"...
+    </div>`;
+
+  const startTime = performance.now();
+  try {
+    const res = await fetch('/api/tools/web_search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, max_results: 5 })
+    });
+    const data = await res.json();
+    const elapsed = Math.round(performance.now() - startTime);
+
+    bubble.innerHTML = `
+      <div class="tool-call-card">
+        <div class="tool-header">
+          <span class="tool-name-tag">⚡ Tool Execution: web_search</span>
+          <span class="tool-status-badge">✅ Fetched ${data.results?.length || 0} Results (${elapsed}ms)</span>
+        </div>
+        <p style="margin: 0.5rem 0 0.2rem; font-size: 0.8rem; color: var(--text-dim);">Live Results Preview:</p>
+        <div class="web-citation-grid" style="margin-top:0.4rem;">
+          ${(data.results || []).map((r, i) => `
+            <a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="web-citation-card">
+              <span class="citation-num">[${i + 1}]</span>
+              <div class="citation-body">
+                <div class="citation-domain">${escapeHtml(r.domain)}</div>
+                <div class="citation-title">${escapeHtml(r.title)}</div>
+                <div class="citation-snippet">${escapeHtml(r.snippet)}</div>
+              </div>
+            </a>
+          `).join('')}
+        </div>
+      </div>`;
+  } catch (e) {
+    bubble.innerHTML = `<div class="error-msg">Tool simulation failed: ${e.message}</div>`;
+  }
 }
 
 // Neural Image Synthesis Engine (Zero Key via Flux/Pollinations)
@@ -1864,6 +2670,18 @@ async function handleSend() {
 
   // Auto-Pilot or Dedicated Intent Routing
   if (state.gateway === 'auto' || state.gateway === 'webfree' || state.activeIntent !== 'auto' || text.startsWith('/') || intent.type !== 'text') {
+    if (intent.type === 'rag') {
+      const assistantBubble = appendAssistantPlaceholder(targetModel, '📚 Multi-Role RAG Search');
+      setGeneratingState(true);
+      executeRagQuery(intent.prompt, assistantBubble, performance.now());
+      return;
+    }
+    if (intent.type === 'web_search') {
+      const assistantBubble = appendAssistantPlaceholder(targetModel, '🌐 Live Web Search');
+      setGeneratingState(true);
+      executeWebSearchChat(intent.prompt, assistantBubble, performance.now());
+      return;
+    }
     if (intent.type === 'memory_teach') {
       const assistantBubble = appendAssistantPlaceholder('Edge Memory', '⚡ On-Device Memory');
       setGeneratingState(true);
@@ -2321,8 +3139,10 @@ function finalizeAssistantMessage(bubble, fullResponse, autoMountApp) {
     const htmlMatch = fullResponse.match(/```html\n([\s\S]*?)```/i) || fullResponse.match(/```xml\n([\s\S]*?)```/i);
     if (htmlMatch && htmlMatch[1]) {
       injectSandboxCode(htmlMatch[1]);
-      sandboxDrawer.classList.remove('hidden');
-      toggleSandboxBtn.classList.add('active');
+      if (typeof window.openRightDrawerTab === 'function') {
+        window.openRightDrawerTab('sandbox');
+      }
+      if (toggleSandboxBtn) toggleSandboxBtn.classList.add('active');
     }
   }
 
@@ -2716,73 +3536,300 @@ function attachOmniBusActionsToExistingBubbles() {
   });
 }
 
-// Live Sandbox Controller
-function setupSandboxDrawer() {
-  toggleSandboxBtn.addEventListener('click', () => {
-    sandboxDrawer.classList.toggle('hidden');
-    toggleSandboxBtn.classList.toggle('active');
-  });
+// Live Sandbox Controller & Preset Templates
+function getSandboxDemoHtml() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omni Live Analytics Sandbox</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans antialiased">
+  <div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-teal-300 to-purple-500 bg-clip-text text-transparent">🏗️ Live Artifact Sandbox</h1>
+        <p class="text-xs text-slate-400 mt-1">Interactive HTML5, Tailwind & React Component Canvas</p>
+      </div>
+      <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full border border-emerald-500/30">● Live Canvas Active</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-4 bg-slate-800/60 rounded-xl border border-slate-700/60 backdrop-blur">
+        <div class="text-xs text-slate-400 font-medium">REAL-TIME LATENCY</div>
+        <div class="text-2xl font-extrabold text-cyan-400 mt-1">12ms</div>
+        <div class="text-xs text-emerald-400 mt-1">⚡ Instant hot-reload</div>
+      </div>
+      <div class="p-4 bg-slate-800/60 rounded-xl border border-slate-700/60 backdrop-blur">
+        <div class="text-xs text-slate-400 font-medium">ISOLATED IFRAME</div>
+        <div class="text-2xl font-extrabold text-purple-400 mt-1">Sandboxed</div>
+        <div class="text-xs text-purple-300 mt-1">🔒 Safe script execution</div>
+      </div>
+      <div class="p-4 bg-slate-800/60 rounded-xl border border-slate-700/60 backdrop-blur">
+        <div class="text-xs text-slate-400 font-medium">COMPONENTS</div>
+        <div class="text-2xl font-extrabold text-amber-400 mt-1">Zero-Config</div>
+        <div class="text-xs text-amber-300 mt-1">✨ Tailwind + CSS</div>
+      </div>
+    </div>
+    <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/50">
+      <h3 class="text-sm font-semibold text-slate-200">Interactive Component Demo</h3>
+      <p class="text-xs text-slate-400 mt-1 mb-4">Click below to test live JavaScript state within this sandboxed viewport:</p>
+      <div class="flex flex-wrap gap-3">
+        <button onclick="let c = document.getElementById('count'); c.innerText = parseInt(c.innerText) + 1;" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold rounded-lg shadow hover:opacity-90 active:scale-95 transition">
+          Click Counter: <span id="count" class="font-mono text-sm ml-1">0</span>
+        </button>
+        <button onclick="alert('Hello from OmniStudio Sandbox!')" class="px-4 py-2 bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-600 transition">
+          Trigger Alert
+        </button>
+        <button onclick="document.getElementById('timeEl').innerText = new Date().toLocaleTimeString();" class="px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-500 transition">
+          Clock: <span id="timeEl" class="font-mono ml-1">Live</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
 
-  closeSandboxBtn.addEventListener('click', () => {
-    sandboxDrawer.classList.add('hidden');
-    toggleSandboxBtn.classList.remove('active');
-  });
-
-  reloadSandboxBtn.addEventListener('click', () => {
-    if (state.activeSandboxCode) {
-      injectSandboxCode(state.activeSandboxCode);
+function getKanbanDemoHtml() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kanban Task Board</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 font-sans">
+  <div class="max-w-4xl mx-auto space-y-4">
+    <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+      <h2 class="text-xl font-bold text-cyan-400">📋 Glassmorphic Task Board</h2>
+      <button onclick="addTask()" class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-lg transition">+ New Task</button>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
+          <span>To Do</span>
+          <span class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">2</span>
+        </div>
+        <div id="colTodo" class="space-y-2">
+          <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700/60 shadow-sm">
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-rose-500/20 text-rose-400 rounded">HIGH</span>
+            <p class="text-xs text-slate-200 mt-1 font-medium">Design Vector RAG Architecture</p>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700/60 shadow-sm">
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded">MED</span>
+            <p class="text-xs text-slate-200 mt-1 font-medium">Configure Edge Memory Cache</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
+          <span>In Progress</span>
+          <span class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">1</span>
+        </div>
+        <div class="space-y-2">
+          <div class="p-3 bg-slate-800/80 rounded-lg border border-cyan-500/40 shadow-sm">
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded">ACTIVE</span>
+            <p class="text-xs text-slate-200 mt-1 font-medium">Deep Search & Sandbox Engine</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
+          <span>Completed</span>
+          <span class="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400">1</span>
+        </div>
+        <div class="space-y-2">
+          <div class="p-3 bg-slate-800/80 rounded-lg border border-emerald-500/30 shadow-sm">
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded">DONE</span>
+            <p class="text-xs text-slate-200 mt-1 font-medium">Right-Side Workspace Drawer UI</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function addTask() {
+      const task = prompt('Enter new task:');
+      if (task) {
+        const item = document.createElement('div');
+        item.className = 'p-3 bg-slate-800/80 rounded-lg border border-slate-700/60 shadow-sm animate-fade-in';
+        item.innerHTML = '<span class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">NEW</span><p class="text-xs text-slate-200 mt-1 font-medium">' + task + '</p>';
+        document.getElementById('colTodo').prepend(item);
+      }
     }
-  });
+  </script>
+</body>
+</html>`;
+}
 
-  popoutSandboxBtn.addEventListener('click', () => {
-    if (!state.activeSandboxCode) return;
-    const win = window.open('', '_blank');
-    win.document.open();
-    win.document.write(state.activeSandboxCode);
-    win.document.close();
+function getNeuralDemoHtml() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Neural Network Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulseWeight { 0% { stroke-opacity: 0.2; } 50% { stroke-opacity: 1; stroke: #06b6d4; } 100% { stroke-opacity: 0.2; } }
+    .synapse-active { animation: pulseWeight 1.2s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 font-sans flex flex-col items-center justify-center">
+  <div class="max-w-2xl w-full text-center space-y-4">
+    <h2 class="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">🧠 Interactive Neural Architecture</h2>
+    <p class="text-xs text-slate-400">Click any neuron node to fire a forward propagation signal</p>
+    <div class="relative bg-slate-900/90 p-6 rounded-2xl border border-slate-800 shadow-2xl flex items-center justify-around h-64">
+      <svg class="absolute inset-0 w-full h-full pointer-events-none" id="synapseSvg">
+        <line x1="20%" y1="30%" x2="50%" y2="25%" stroke="#6366f1" stroke-width="2" class="synapse-active" />
+        <line x1="20%" y1="70%" x2="50%" y2="50%" stroke="#06b6d4" stroke-width="2" class="synapse-active" style="animation-delay:0.3s;" />
+        <line x1="50%" y1="25%" x2="80%" y2="50%" stroke="#a855f7" stroke-width="2" class="synapse-active" style="animation-delay:0.6s;" />
+        <line x1="50%" y1="75%" x2="80%" y2="50%" stroke="#ec4899" stroke-width="2" class="synapse-active" style="animation-delay:0.9s;" />
+      </svg>
+      <div class="space-y-6 z-10">
+        <div class="text-[10px] text-slate-500 font-bold uppercase">Input Layer</div>
+        <button onclick="fireNeuron(this)" class="w-12 h-12 rounded-full bg-indigo-600/30 border-2 border-indigo-500 flex items-center justify-center font-bold text-xs hover:scale-110 active:bg-indigo-500 transition shadow-lg shadow-indigo-500/20">X₁</button>
+        <button onclick="fireNeuron(this)" class="w-12 h-12 rounded-full bg-indigo-600/30 border-2 border-indigo-500 flex items-center justify-center font-bold text-xs hover:scale-110 active:bg-indigo-500 transition shadow-lg shadow-indigo-500/20">X₂</button>
+      </div>
+      <div class="space-y-4 z-10">
+        <div class="text-[10px] text-slate-500 font-bold uppercase">Hidden Layer</div>
+        <button onclick="fireNeuron(this)" class="w-12 h-12 rounded-full bg-cyan-600/30 border-2 border-cyan-400 flex items-center justify-center font-bold text-xs hover:scale-110 active:bg-cyan-500 transition shadow-lg shadow-cyan-500/20">H₁</button>
+        <button onclick="fireNeuron(this)" class="w-12 h-12 rounded-full bg-cyan-600/30 border-2 border-cyan-400 flex items-center justify-center font-bold text-xs hover:scale-110 active:bg-cyan-500 transition shadow-lg shadow-cyan-500/20">H₂</button>
+        <button onclick="fireNeuron(this)" class="w-12 h-12 rounded-full bg-cyan-600/30 border-2 border-cyan-400 flex items-center justify-center font-bold text-xs hover:scale-110 active:bg-cyan-500 transition shadow-lg shadow-cyan-500/20">H₃</button>
+      </div>
+      <div class="space-y-6 z-10">
+        <div class="text-[10px] text-slate-500 font-bold uppercase">Output Layer</div>
+        <button onclick="fireNeuron(this)" class="w-14 h-14 rounded-full bg-purple-600/40 border-2 border-purple-400 flex items-center justify-center font-bold text-sm hover:scale-110 active:bg-purple-500 transition shadow-lg shadow-purple-500/30">Ŷ</button>
+      </div>
+    </div>
+    <div id="statusLog" class="text-xs text-cyan-400 font-mono">Activation State: Sigmoid(Wx + b) Ready</div>
+  </div>
+  <script>
+    function fireNeuron(el) {
+      el.classList.add('scale-125', 'bg-cyan-400', 'text-slate-950');
+      document.getElementById('statusLog').innerText = '🔥 Fired neuron ' + el.innerText + ' at ' + new Date().toLocaleTimeString();
+      setTimeout(() => el.classList.remove('scale-125', 'bg-cyan-400', 'text-slate-950'), 400);
+    }
+  </script>
+</body>
+</html>`;
+}
+
+function setupSandboxDrawer() {
+  const toggleBtn = document.getElementById('toggleSandboxBtn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof window.openRightDrawerTab === 'function') {
+        window.openRightDrawerTab('sandbox');
+      }
+    });
+  }
+
+  const closeBtn = document.getElementById('closeRightDrawerBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      const drawer = document.getElementById('studioRightDrawer');
+      if (drawer) drawer.classList.add('hidden');
+    });
+  }
+
+  const reloadBtn = document.getElementById('reloadSandboxBtn');
+  if (reloadBtn) {
+    reloadBtn.addEventListener('click', () => {
+      injectSandboxCode(state.activeSandboxCode || getSandboxDemoHtml());
+      window.showOmniToast('Sandbox reloaded successfully', '🔄');
+    });
+  }
+
+  const clearBtn = document.getElementById('clearSandboxBtn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      state.activeSandboxCode = '';
+      injectSandboxCode(getSandboxDemoHtml());
+      window.showOmniToast('Sandbox reset to interactive demo', '🧹');
+    });
+  }
+
+  const popoutBtn = document.getElementById('popoutSandboxBtn');
+  if (popoutBtn) {
+    popoutBtn.addEventListener('click', () => {
+      const code = state.activeSandboxCode || getSandboxDemoHtml();
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.open();
+        win.document.write(code);
+        win.document.close();
+      }
+    });
+  }
+
+  // Template quick-launch buttons
+  document.querySelectorAll('.sandbox-template-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tmpl = btn.dataset.tmpl;
+      if (tmpl === 'dashboard') {
+        injectSandboxCode(getSandboxDemoHtml());
+      } else if (tmpl === 'kanban') {
+        injectSandboxCode(getKanbanDemoHtml());
+      } else if (tmpl === 'neural') {
+        injectSandboxCode(getNeuralDemoHtml());
+      }
+      if (typeof window.openRightDrawerTab === 'function') {
+        window.openRightDrawerTab('sandbox');
+      }
+    });
   });
 }
 
 window.loadIntoSandbox = function(btn) {
   const wrapper = btn.closest('.code-block-wrapper');
-  const codeEl = wrapper.querySelector('code');
+  const codeEl = wrapper ? wrapper.querySelector('code') : null;
   if (!codeEl) return;
 
   const rawCode = codeEl.textContent;
   injectSandboxCode(rawCode);
 
-  // Open drawer
-  sandboxDrawer.classList.remove('hidden');
-  toggleSandboxBtn.classList.add('active');
+  // Open right drawer with sandbox tab
+  if (typeof window.openRightDrawerTab === 'function') {
+    window.openRightDrawerTab('sandbox');
+  }
 };
 
 function injectSandboxCode(rawCode) {
   let docContent = rawCode;
 
-  // If snippet isn't a full HTML document, wrap it nicely with Tailwind CDN
-  if (!rawCode.includes('<!DOCTYPE') && !rawCode.includes('<html')) {
-    docContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <style>
-          body { font-family: system-ui, sans-serif; padding: 1.5rem; background: #fafafa; }
-        </style>
-      </head>
-      <body>
-        ${rawCode}
-      </body>
-      </html>`;
+  if (!docContent || !docContent.trim()) {
+    docContent = getSandboxDemoHtml();
+  } else if (!docContent.includes('<!DOCTYPE') && !docContent.includes('<html')) {
+    // If snippet isn't a full HTML document, wrap it nicely with Tailwind CDN
+    docContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 1.5rem; background: #0f172a; color: #f8fafc; }
+  </style>
+</head>
+<body>
+  ${docContent}
+</body>
+</html>`;
   }
 
   state.activeSandboxCode = docContent;
-  const doc = sandboxIframe.contentDocument || sandboxIframe.contentWindow.document;
-  doc.open();
-  doc.write(docContent);
-  doc.close();
+  const iframe = document.getElementById('sandboxIframe');
+  if (iframe) {
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(docContent);
+      doc.close();
+    }
+  }
 }
 
 // Utility Helpers
@@ -2984,6 +4031,13 @@ window.injectSingleTool = function(name) {
 };
 
 window.simulateSpecificTool = function(name) {
+  if (name === 'web_search') {
+    const q = prompt("Enter search query to test live web search tool:", "LangGraph multi agent patterns 2026");
+    if (!q) return;
+    executeWebSearchToolSimulation(q);
+    if (arsenalDrawer) arsenalDrawer.classList.add('hidden');
+    return;
+  }
   simulateToolExecution(name, { sample_param: "test_value", timestamp: new Date().toISOString() });
 };
 
@@ -3376,8 +4430,27 @@ function getFileIcon(filename) {
 window.openWorkspaceFile = async function(filePath) {
   currentActiveFilePath = filePath;
   if (editorActiveFilePath) editorActiveFilePath.textContent = filePath;
-  if (fileEditorTextarea) fileEditorTextarea.value = 'Loading file content...';
   if (fileEditorContainer) fileEditorContainer.classList.remove('hidden');
+
+  const ext = filePath.split('.').pop().toLowerCase();
+  if (ext === 'pdf') {
+    if (fileEditorTextarea) {
+      fileEditorTextarea.value = `[📄 PDF Textbook: ${filePath}]\n\nThis is a compiled PDF document. You can read its full indexed chapters, vector chunks, and ask questions about specific pages using the "32+ Textbooks" reader in the Right Workspace Drawer or Academy Hub.`;
+    }
+    return;
+  }
+
+  if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'webp'].includes(ext)) {
+    if (fileEditorTextarea) fileEditorTextarea.value = `[🖼️ Image Asset: ${filePath}]`;
+    return;
+  }
+
+  if (['db', 'sqlite', 'sqlite3', 'bin', 'pyc'].includes(ext)) {
+    if (fileEditorTextarea) fileEditorTextarea.value = `[🗄️ Database / Binary File: ${filePath}]\n\nTo query this database, use the DB Studio in the Right Workspace Drawer.`;
+    return;
+  }
+
+  if (fileEditorTextarea) fileEditorTextarea.value = 'Loading file content...';
 
   try {
     const res = await fetch(`/api/fs/read?path=${encodeURIComponent(filePath)}`);
@@ -3917,10 +4990,12 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     initThemeSystem();
     setupDbStudioModalEvents();
+    setupRoadmapsStudioEvents();
   });
 } else {
   initThemeSystem();
   setupDbStudioModalEvents();
+  setupRoadmapsStudioEvents();
 }
 
 /* =========================================================================
@@ -4211,6 +5286,1512 @@ function renderDbSqlResults(data, container) {
       </table>
     </div>
   `;
+}
+
+/* =========================================================================
+   CAREER ROADMAPS & COGNITIVE SKILL TREES STUDIO (Main Window Modal)
+   ========================================================================= */
+
+let currentRoadmapCategory = 'all';
+let currentRoadmapSearch = '';
+let currentActiveStudioRoadmap = null;
+let currentStudioDlTab = 'curriculum';
+let activeStudioCompetencyKey = '';
+
+function setupRoadmapsStudioEvents() {
+  const navTop = document.getElementById('navRoadmapsTop');
+  const navBottom = document.getElementById('navRoadmaps');
+  const closeBtn = document.getElementById('closeRoadmapsModalBtn');
+  const closeBtnBottom = document.getElementById('closeRoadmapsModalBottomBtn');
+  const backBtn = document.getElementById('btnBackToRoadmapsList');
+  const modal = document.getElementById('roadmapsModal');
+  const searchInput = document.getElementById('roadmapsSearchInput');
+  const pills = document.querySelectorAll('.roadmap-cat-pill');
+
+  if (navTop) navTop.addEventListener('click', () => openRoadmapsStudioModal());
+  if (navBottom) navBottom.addEventListener('click', () => openRoadmapsStudioModal());
+  if (closeBtn) closeBtn.addEventListener('click', closeRoadmapsStudioModal);
+  if (closeBtnBottom) closeBtnBottom.addEventListener('click', closeRoadmapsStudioModal);
+  if (backBtn) backBtn.addEventListener('click', showRoadmapsListView);
+
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeRoadmapsStudioModal();
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeRoadmapsStudioModal();
+    }
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentRoadmapSearch = e.target.value.trim().toLowerCase();
+      renderMainRoadmapsList();
+    });
+  }
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      pills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentRoadmapCategory = pill.getAttribute('data-cat') || 'all';
+      renderMainRoadmapsList();
+    });
+  });
+}
+
+function openRoadmapsStudioModal(targetRoadmapId = null) {
+  const modal = document.getElementById('roadmapsModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  const countVal = document.getElementById('roadmapsCountVal');
+  const allRoadmaps = window.ACADEMY_DATA?.roadmaps || [];
+  if (countVal) countVal.textContent = allRoadmaps.length || '10';
+
+  if (targetRoadmapId) {
+    openRoadmapDetail(targetRoadmapId);
+  } else {
+    showRoadmapsListView();
+    renderMainRoadmapsList();
+  }
+}
+
+function closeRoadmapsStudioModal() {
+  const modal = document.getElementById('roadmapsModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function showRoadmapsListView() {
+  const listView = document.getElementById('roadmapsListView');
+  const detailView = document.getElementById('roadmapDetailView');
+  const searchToolbar = document.querySelector('.roadmaps-toolbar');
+  
+  if (listView) listView.classList.remove('hidden');
+  if (detailView) detailView.classList.add('hidden');
+  if (searchToolbar) searchToolbar.style.display = 'flex';
+}
+
+function matchesRoadmapCategory(r, cat) {
+  if (cat === 'all') return true;
+  const id = (r.id || '').toLowerCase();
+  const c = (r.category || '').toLowerCase();
+  if (cat === 'agentic') {
+    return id.includes('agent') || c.includes('agent');
+  }
+  if (cat === 'genai') {
+    return id.includes('genai') || id.includes('transformer') || id.includes('mle') || c.includes('genai');
+  }
+  if (cat === 'devops') {
+    return id.includes('devops') || id.includes('cloud') || id.includes('mlops') || c.includes('devops') || c.includes('mlops');
+  }
+  if (cat === 'systems') {
+    return id.includes('system') || id.includes('sql') || id.includes('linux') || id.includes('python') || id.includes('fde') || c.includes('system') || c.includes('sql') || c.includes('core');
+  }
+  return c === cat;
+}
+
+function renderMainRoadmapsList() {
+  const container = document.getElementById('mainRoadmapsGrid');
+  if (!container) return;
+  const allRoadmaps = window.ACADEMY_DATA?.roadmaps || [];
+
+  const filtered = allRoadmaps.filter(r => {
+    const matchesCat = matchesRoadmapCategory(r, currentRoadmapCategory);
+    const matchesSearch = !currentRoadmapSearch ||
+      (r.title && r.title.toLowerCase().includes(currentRoadmapSearch)) ||
+      (r.summary && r.summary.toLowerCase().includes(currentRoadmapSearch)) ||
+      (r.skills && r.skills.some(s => s.toLowerCase().includes(currentRoadmapSearch))) ||
+      (r.milestones && r.milestones.some(m => 
+        (m.title && m.title.toLowerCase().includes(currentRoadmapSearch)) ||
+        (m.description && m.description.toLowerCase().includes(currentRoadmapSearch)) ||
+        (m.keyConcepts && m.keyConcepts.some(k => k.toLowerCase().includes(currentRoadmapSearch)))
+      ));
+    return matchesCat && matchesSearch;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 3rem 1rem; text-align: center; color: var(--text-muted);">
+        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔍</div>
+        <h4 style="font-size: 1rem; color: var(--text-main); margin-bottom: 0.25rem;">No Career Roadmaps Found</h4>
+        <p style="font-size: 0.82rem;">No engineering tracks match "${escapeHtml(currentRoadmapSearch)}". Try selecting another category or clearing search.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(r => `
+    <div class="roadmap-studio-card" onclick="openRoadmapDetail('${escapeHtml(r.id)}')">
+      <div>
+        <div class="roadmap-studio-card-header">
+          <div class="roadmap-icon-badge">${r.icon || '🗺️'}</div>
+          <span class="roadmap-badge ${r.badgeType === 'hot' ? 'hot' : ''}">${escapeHtml(r.badge || 'Verified 2026')}</span>
+        </div>
+        <h4>${escapeHtml(r.title)}</h4>
+        <p class="summary">${escapeHtml(r.summary || '')}</p>
+        <div class="roadmap-skills-tags">
+          ${(r.skills || []).slice(0, 5).map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}
+          ${(r.skills && r.skills.length > 5) ? `<span class="skill-tag">+${r.skills.length - 5} more</span>` : ''}
+        </div>
+      </div>
+      <div class="roadmap-studio-card-footer">
+        <span class="roadmap-duration">⏱️ ${escapeHtml(r.duration || '12 Weeks')} &bull; ${escapeHtml(r.level || 'Intermediate')}</span>
+        <button class="btn-view-roadmap" onclick="event.stopPropagation(); openRoadmapDetail('${escapeHtml(r.id)}')">Explore Track &rarr;</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openRoadmapDetail(roadmapId) {
+  const allRoadmaps = window.ACADEMY_DATA?.roadmaps || [];
+  const roadmap = allRoadmaps.find(r => r.id === roadmapId);
+  if (!roadmap) return;
+  currentActiveStudioRoadmap = roadmap;
+
+  const listView = document.getElementById('roadmapsListView');
+  const detailView = document.getElementById('roadmapDetailView');
+  const searchToolbar = document.querySelector('.roadmaps-toolbar');
+  
+  if (listView) listView.classList.add('hidden');
+  if (detailView) detailView.classList.remove('hidden');
+  if (searchToolbar) searchToolbar.style.display = 'none';
+
+  const headerBadge = document.getElementById('detailRoadmapHeaderBadge');
+  if (headerBadge) {
+    headerBadge.innerHTML = `
+      <span class="roadmap-badge ${roadmap.badgeType === 'hot' ? 'hot' : ''}">${escapeHtml(roadmap.badge || 'Verified')}</span>
+      <span style="font-size: 0.74rem; color: var(--text-dim); font-weight: 600;">⏱️ ${escapeHtml(roadmap.duration || '')} &bull; ${escapeHtml(roadmap.level || '')}</span>
+    `;
+  }
+
+  currentStudioDlTab = 'curriculum';
+  activeStudioCompetencyKey = Object.keys(roadmap.skillsDetails || {})[0] || (roadmap.skills && roadmap.skills[0]) || '';
+
+  renderRoadmapDetailContent(roadmap);
+}
+
+function renderRoadmapDetailContent(roadmap) {
+  const contentEl = document.getElementById('roadmapDetailContent');
+  if (!contentEl) return;
+
+  const isDynamic = Boolean(roadmap.milestones && roadmap.milestones.length > 0);
+  if (!isDynamic) {
+    contentEl.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--text-muted);">Detailed curriculum not available for this track yet.</div>`;
+    return;
+  }
+
+  contentEl.innerHTML = `
+    <div style="margin-bottom: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+        <span style="font-size: 2rem;">${roadmap.icon || '🗺️'}</span>
+        <h3 style="margin: 0; font-size: 1.3rem; color: var(--text-main);">${escapeHtml(roadmap.title)}</h3>
+      </div>
+      <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.55; margin: 0 0 0.5rem 0;">${escapeHtml(roadmap.summary)}</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="dl-tab-bar">
+      <button class="dl-tab-btn active" data-dltab="curriculum" onclick="switchStudioDlTab('curriculum')">
+        🗺️ 5-Phase Curriculum & Labs
+      </button>
+      <button class="dl-tab-btn" data-dltab="competencies" onclick="switchStudioDlTab('competencies')">
+        🎯 6 Core Competencies Inspector
+      </button>
+    </div>
+
+    <!-- Panel 1: Curriculum & Labs -->
+    <div id="dl-panel-curriculum" class="dl-tab-panel" style="display: block;">
+      <div class="dl-phases-list">
+        ${roadmap.milestones.map((m, idx) => `
+          <div class="dl-phase-card">
+            <div class="dl-phase-header" onclick="toggleStudioPhase(${idx})">
+              <div>
+                <span class="dl-phase-badge">${escapeHtml(m.phase || `Phase ${idx+1}`)}</span>
+                <h4 class="dl-phase-title">${escapeHtml(m.title)}</h4>
+                <p class="dl-phase-desc">${escapeHtml(m.description || '')}</p>
+              </div>
+              <button class="dl-phase-toggle" id="dl-phase-toggle-${idx}">
+                ${idx === 0 ? '▲ Collapse' : '▼ Expand Details'}
+              </button>
+            </div>
+
+            <div class="dl-phase-body" id="dl-phase-body-${idx}" style="display: ${idx === 0 ? 'flex' : 'none'};">
+              <!-- Key Concepts -->
+              ${m.keyConcepts ? `
+                <div>
+                  <h5 style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; color: #0d9488; margin-bottom: 0.5rem;">📌 Key Concepts</h5>
+                  <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem;">
+                    ${m.keyConcepts.map(kc => `
+                      <li style="display: flex; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); line-height: 1.5;">
+                        <span style="color: #0d9488; font-weight: bold;">•</span>
+                        <span>${escapeHtml(kc)}</span>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+
+              <!-- Architecture Flow Diagram -->
+              ${m.architectureDiagram ? `
+                <div>
+                  <h5 style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; color: #0284c7; margin-bottom: 0.4rem;">📐 System Architecture Flow</h5>
+                  <div class="dl-architecture-box">${escapeHtml(m.architectureDiagram)}</div>
+                </div>
+              ` : ''}
+
+              <!-- Code Blueprint -->
+              ${m.codeSnippet ? `
+                <div>
+                  <div class="dl-code-box">
+                    <div class="dl-code-header">
+                      <span>💻 ${escapeHtml(m.codeTitle || 'Production Implementation Blueprint')}</span>
+                      <div style="display: flex; gap: 0.4rem;">
+                        <button class="icon-btn" style="height: 24px; font-size: 0.72rem; padding: 0 0.5rem; border: 1px solid var(--border-subtle); border-radius: 4px;" onclick="event.stopPropagation(); copyStudioCode(this, ${JSON.stringify(m.codeSnippet)})">📋 Copy</button>
+                        <button class="icon-btn" style="height: 24px; font-size: 0.72rem; padding: 0 0.5rem; background: rgba(99,102,241,0.1); color: #6366f1; border-radius: 4px; border: 1px solid rgba(99,102,241,0.2);" onclick="event.stopPropagation(); askChatbotFromRoadmap('Explain the implementation of ' + ${JSON.stringify(m.codeTitle || m.title)} + ' with this code: \\n\\n\`\`\`\\n' + ${JSON.stringify(m.codeSnippet)} + '\\n\`\`\`')">💬 Ask Chatbot</button>
+                      </div>
+                    </div>
+                    <pre class="dl-code-pre"><code>${escapeHtml(m.codeSnippet)}</code></pre>
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Hands-on Lab -->
+              ${m.handsOnLab ? `
+                <div>
+                  <div style="background: rgba(13,148,136,0.05); border: 1px solid rgba(13,148,136,0.2); border-radius: 6px; padding: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                      <div>
+                        <h5 style="font-size: 0.82rem; font-weight: 800; color: #0d9488; margin: 0 0 0.2rem 0;">🧪 ${escapeHtml(m.handsOnLab.title)}</h5>
+                        <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 0;">${escapeHtml(m.handsOnLab.goal)}</p>
+                      </div>
+                    </div>
+                    ${m.handsOnLab.command ? `
+                      <div style="display: flex; gap: 0.4rem; align-items: center; background: var(--bg-input); border: 1px solid var(--border-subtle); padding: 0.4rem 0.6rem; border-radius: 4px;">
+                        <code style="font-family: monospace; font-size: 0.75rem; color: var(--text-main); flex: 1; overflow-x: auto; white-space: nowrap;">${escapeHtml(m.handsOnLab.command)}</code>
+                        <button class="icon-btn" style="height: 24px; font-size: 0.7rem; padding: 0 0.4rem;" onclick="copyStudioCode(this, ${JSON.stringify(m.handsOnLab.command)})">Copy</button>
+                        <button class="icon-btn" style="height: 24px; font-size: 0.7rem; padding: 0 0.4rem; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2);" onclick="executeLabCommand(${idx}, ${JSON.stringify(m.handsOnLab.command)})">Run Lab</button>
+                      </div>
+                      <div id="lab-output-${idx}" style="display: none; margin-top: 0.5rem; background: #000; color: #0f0; padding: 0.6rem; font-family: monospace; font-size: 0.7rem; border-radius: 4px; max-height: 150px; overflow-y: auto; white-space: pre-wrap;"></div>
+                    ` : ''}
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Interactive Quiz -->
+              ${m.quiz ? `
+                <div class="dl-quiz-container">
+                  <h5 style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; color: #7c3aed; margin: 0 0 0.5rem 0;">🎯 Phase Knowledge Check</h5>
+                  <p style="font-size: 0.82rem; color: var(--text-main); margin-bottom: 0.6rem;"><strong>Q:</strong> ${escapeHtml(m.quiz.question)}</p>
+                  <div>
+                    ${m.quiz.options.map((opt, oIdx) => `
+                      <button class="dl-quiz-option" id="quiz-opt-${idx}-${oIdx}" onclick="checkStudioQuiz(this, ${idx}, ${oIdx}, ${m.quiz.answer}, ${JSON.stringify(m.quiz.explanation)})">
+                        <span style="font-weight: 700; width: 20px;">${String.fromCharCode(65 + oIdx)}.</span> ${escapeHtml(opt)}
+                      </button>
+                    `).join('')}
+                  </div>
+                  <div id="quiz-feedback-${idx}" class="dl-quiz-feedback" style="display: none;"></div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Panel 2: Core Competencies -->
+    <div id="dl-panel-competencies" class="dl-tab-panel" style="display: none;">
+      <div style="margin-bottom: 1.25rem;">
+        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">Select a Core Competency to inspect:</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          ${(roadmap.skills || []).map(skill => `
+            <button class="dl-comp-chip roadmap-cat-pill ${skill === activeStudioCompetencyKey ? 'active' : ''}" data-skill="${escapeHtml(skill)}" onclick="selectStudioCompetency('${escapeHtml(skill)}')">
+              ${escapeHtml(skill)}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <div id="dl-competency-display"></div>
+    </div>
+  `;
+
+  // Initialize competency tab
+  if (activeStudioCompetencyKey) {
+    selectStudioCompetency(activeStudioCompetencyKey);
+  }
+}
+
+function switchStudioDlTab(tabId) {
+  currentStudioDlTab = tabId;
+  const btns = document.querySelectorAll('.dl-tab-btn');
+  btns.forEach(b => {
+    if (b.getAttribute('data-dltab') === tabId) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+
+  const panels = document.querySelectorAll('.dl-tab-panel');
+  panels.forEach(p => p.style.display = 'none');
+  
+  const target = document.getElementById(`dl-panel-${tabId}`);
+  if (target) target.style.display = 'block';
+}
+
+function selectStudioCompetency(skillName) {
+  activeStudioCompetencyKey = skillName;
+  document.querySelectorAll(".dl-comp-chip").forEach(chip => {
+    chip.classList.toggle("active", chip.getAttribute("data-skill") === skillName);
+  });
+  
+  const detailContainer = document.getElementById("dl-competency-display");
+  if (!detailContainer || !currentActiveStudioRoadmap) return;
+  
+  const detailsMap = currentActiveStudioRoadmap.skillsDetails || {};
+  const detail = detailsMap[skillName];
+  
+  if (!detail) {
+    detailContainer.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: var(--text-muted); border: 1px solid var(--border-subtle); border-radius: 8px;">Detailed inspector data for <strong>${escapeHtml(skillName)}</strong> is not available in this view.</div>`;
+    return;
+  }
+
+  detailContainer.innerHTML = `
+    <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem;">
+        <span style="font-size: 1.6rem;">${detail.icon || '🎯'}</span>
+        <div>
+          <h4 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-main);">${escapeHtml(skillName)}</h4>
+          <span style="font-size: 0.75rem; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); padding: 2px 7px; border-radius: 4px; font-weight: 700;">${escapeHtml(detail.role || 'Competency')}</span>
+        </div>
+      </div>
+      
+      <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1rem;">
+        ${escapeHtml(detail.summary || '')}
+      </p>
+
+      ${detail.mathematics ? `
+        <div style="background: var(--bg-input); border-left: 4px solid #0d9488; padding: 0.75rem 1rem; border-radius: 0 6px 6px 0; margin-bottom: 1.15rem;">
+          <div style="font-size: 0.75rem; font-weight: 800; color: #0d9488; text-transform: uppercase; margin-bottom: 0.25rem;">📐 Mathematical & Architectural Foundation</div>
+          <code style="font-family: monospace; font-size: 0.82rem; color: var(--text-main); word-break: break-all;">${escapeHtml(detail.mathematics)}</code>
+        </div>
+      ` : ''}
+
+      ${detail.keyApis && detail.keyApis.length > 0 ? `
+        <h5 style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem;">Key APIs & Core Primitives</h5>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem;">
+          ${detail.keyApis.map(api => `
+            <code style="background: var(--bg-hover); color: var(--text-main); padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; font-family: monospace; border: 1px solid var(--border-subtle); cursor: pointer;" onclick="copyStudioCode(this, '${escapeHtml(api)}')" title="Click to copy API">
+              ${escapeHtml(api)}
+            </code>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${detail.productionGotchas ? `
+        <div style="background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-left: 4px solid #f59e0b; padding: 0.75rem 1rem; border-radius: 0 6px 6px 0; margin-bottom: 1.15rem;">
+          <div style="font-size: 0.75rem; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 0.25rem;">⚠️ Production Pitfalls & Gotchas</div>
+          <p style="font-size: 0.84rem; color: var(--text-main); margin: 0; line-height: 1.5;">${escapeHtml(detail.productionGotchas)}</p>
+        </div>
+      ` : ''}
+
+      ${renderCompetencyPracticeSession(skillName)}
+
+      ${detail.codeSnippet ? `
+        <div style="margin-top: 1.25rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+            <h5 style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #2563eb; margin: 0;">🐍 Production Blueprint</h5>
+            <div style="display: flex; gap: 0.4rem;">
+              <button class="icon-btn" style="height: 24px; font-size: 0.72rem; padding: 0 0.5rem; border: 1px solid var(--border-subtle); border-radius: 4px;" onclick="copyStudioCode(this, ${JSON.stringify(detail.codeSnippet)})">📋 Copy</button>
+              <button class="icon-btn" style="height: 24px; font-size: 0.72rem; padding: 0 0.5rem; background: rgba(99,102,241,0.1); color: #6366f1; border-radius: 4px; border: 1px solid rgba(99,102,241,0.2);" onclick="askChatbotFromRoadmap('Explain the implementation of ' + ${JSON.stringify(skillName)} + ' with this code: \\n\\n\`\`\`\\n' + ${JSON.stringify(detail.codeSnippet)} + '\\n\`\`\`')">💬 Ask Chatbot</button>
+            </div>
+          </div>
+          <div class="dl-code-box">
+            <pre class="dl-code-pre"><code>${escapeHtml(detail.codeSnippet)}</code></pre>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  // Initialize interactive calculations if present
+  if (skillName === "Transformers") updateTransformerCalc();
+  if (skillName === "Self-Attention") updateAttentionHeatmap();
+  if (skillName === "LoRA / QLoRA") updateLoraCalc();
+  if (skillName === "RAG Pipelines") updateRrfCalc();
+  if (skillName === "Vector Databases") updateVectorDistanceCalc();
+  if (skillName === "DPO / RLHF") updateDpoCalc();
+}
+
+function toggleStudioPhase(idx) {
+  const body = document.getElementById(`dl-phase-body-${idx}`);
+  const toggleBtn = document.getElementById(`dl-phase-toggle-${idx}`);
+  if (!body || !toggleBtn) return;
+  
+  if (body.style.display === 'none') {
+    body.style.display = 'flex';
+    toggleBtn.textContent = '▲ Collapse';
+  } else {
+    body.style.display = 'none';
+    toggleBtn.textContent = '▼ Expand Details';
+  }
+}
+
+function copyStudioCode(btn, codeText) {
+  navigator.clipboard.writeText(codeText).then(() => {
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied';
+    setTimeout(() => { btn.textContent = originalText; }, 2000);
+  });
+}
+
+async function executeLabCommand(idx, command) {
+  const outputDiv = document.getElementById('lab-output-' + idx);
+  outputDiv.style.display = 'block';
+  outputDiv.textContent = 'Running: ' + command + '\\n...\\n';
+  
+  try {
+    const res = await fetch('/api/repl/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: command, lang: 'bash' })
+    });
+    
+    if (!res.ok) {
+      const err = await res.text();
+      outputDiv.textContent += 'Error: ' + err;
+      return;
+    }
+    
+    const data = await res.json();
+    if (data.stdout) outputDiv.textContent += data.stdout + '\\n';
+    if (data.stderr) outputDiv.textContent += data.stderr + '\\n';
+    outputDiv.textContent += '[Exited with code ' + data.exit_code + ']';
+    
+  } catch (err) {
+    outputDiv.textContent += '\\nExecution Failed: ' + err.message;
+  }
+}
+
+function checkStudioQuiz(btn, phaseIdx, selectedIdx, correctIdx, explanation) {
+  const options = document.querySelectorAll(`[id^="quiz-opt-${phaseIdx}-"]`);
+  options.forEach(opt => opt.disabled = true);
+  
+  const isCorrect = selectedIdx === correctIdx;
+  
+  if (isCorrect) {
+    btn.classList.add('correct');
+  } else {
+    btn.classList.add('wrong');
+    const correctBtn = document.getElementById(`quiz-opt-${phaseIdx}-${correctIdx}`);
+    if (correctBtn) correctBtn.classList.add('correct');
+  }
+  
+  const feedback = document.getElementById(`quiz-feedback-${phaseIdx}`);
+  if (feedback) {
+    feedback.style.display = 'block';
+    if (isCorrect) {
+      feedback.style.background = 'rgba(16, 185, 129, 0.1)';
+      feedback.style.color = '#065f46';
+      feedback.style.border = '1px solid #a7f3d0';
+      feedback.innerHTML = `<strong>✅ Correct!</strong> ${escapeHtml(explanation)}`;
+    } else {
+      feedback.style.background = 'rgba(239, 68, 68, 0.1)';
+      feedback.style.color = '#991b1b';
+      feedback.style.border = '1px solid #fecaca';
+      feedback.innerHTML = `<strong>❌ Incorrect.</strong> ${escapeHtml(explanation)}`;
+    }
+  }
+}
+
+function askChatbotFromRoadmap(promptText) {
+  closeRoadmapsStudioModal();
+  const promptInput = document.getElementById('promptInput');
+  if (promptInput) {
+    promptInput.value = promptText;
+    promptInput.focus();
+    promptInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+}
+
+/* =========================================================================
+   INTERACTIVE COMPETENCY CALCULATORS
+   ========================================================================= */
+
+function renderCompetencyPracticeSession(skillName) {
+  if (skillName === "Transformers") {
+    return `
+      <div style="background: var(--bg-hover); border: 1.5px solid var(--border-subtle); border-radius: 8px; padding: 1.15rem; margin-top: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 800; color: #0d9488; text-transform: uppercase; margin: 0;">
+            🧪 Live Visual Session: Transformer Memory Profiler
+          </h5>
+          <span style="font-size: 0.72rem; background: rgba(3,105,161,0.1); color: #0369a1; border: 1px solid rgba(3,105,161,0.2); padding: 2px 7px; border-radius: 4px; font-weight: 700;">Simulator</span>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0 0 1rem 0;">
+          Adjust batch size, sequence length, hidden dimension, and layers to calculate VRAM footprint in real time:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Batch Size: <span id="val-batch" style="color: #0d9488;">2</span></label>
+            <input type="range" id="input-batch" min="1" max="32" step="1" value="2" style="width: 100%; accent-color: #0d9488;" oninput="updateTransformerCalc()">
+          </div>
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Seq Length: <span id="val-seq" style="color: #0d9488;">2048</span></label>
+            <input type="range" id="input-seq" min="512" max="8192" step="512" value="2048" style="width: 100%; accent-color: #0d9488;" oninput="updateTransformerCalc()">
+          </div>
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Hidden Dim:</label>
+            <select id="input-dim" style="width: 100%; height: 30px; font-size: 0.78rem; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 2px 6px; background: var(--bg-input); color: var(--text-main);" onchange="updateTransformerCalc()">
+              <option value="2048">2048 (Small)</option>
+              <option value="4096" selected>4096 (8B Class)</option>
+              <option value="8192">8192 (70B Class)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Layers: <span id="val-layers" style="color: #0d9488;">32</span></label>
+            <input type="range" id="input-layers" min="12" max="80" step="4" value="32" style="width: 100%; accent-color: #0d9488;" oninput="updateTransformerCalc()">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.6rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem;">
+          <div style="text-align: center;">
+            <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">EST. PARAMS</div>
+            <div id="res-params" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-top: 2px;">6.44 B</div>
+          </div>
+          <div style="text-align: center; border-left: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">WEIGHT VRAM</div>
+            <div id="res-weight-vram" style="font-size: 1.05rem; font-weight: 800; color: #2563eb; margin-top: 2px;">12.89 GB</div>
+          </div>
+          <div style="text-align: center; border-left: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">ACT. VRAM</div>
+            <div id="res-act-vram" style="font-size: 1.05rem; font-weight: 800; color: #d97706; margin-top: 2px;">1.07 GB</div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (skillName === "Self-Attention") {
+    return `
+      <div style="background: var(--bg-hover); border: 1.5px solid var(--border-subtle); border-radius: 8px; padding: 1.15rem; margin-top: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 800; color: #0d9488; text-transform: uppercase; margin: 0;">🧪 Attention Heatmap</h5>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; align-items: center;">
+          <div style="flex: 2; min-width: 200px;">
+            <input type="text" id="attn-tokens-input" value="The, autonomous, agent, called, tool" style="width: 100%; height: 32px; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0 0.5rem; font-size: 0.8rem; background: var(--bg-input); color: var(--text-main);" oninput="updateAttentionHeatmap()">
+          </div>
+          <div style="flex: 1; min-width: 120px;">
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Temp: <span id="val-temp" style="color: #0d9488;">1.0</span></label>
+            <input type="range" id="attn-temp" min="0.2" max="2.0" step="0.1" value="1.0" style="width: 100%; accent-color: #0d9488;" oninput="updateAttentionHeatmap()">
+          </div>
+        </div>
+        <div id="attn-heatmap-container" style="overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem;"></div>
+      </div>
+    `;
+  } else if (skillName === "LoRA / QLoRA") {
+    return `
+      <div style="background: var(--bg-hover); border: 1.5px solid var(--border-subtle); border-radius: 8px; padding: 1.15rem; margin-top: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 800; color: #0d9488; text-transform: uppercase; margin: 0;">🧪 LoRA Rank Calculator</h5>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Model:</label>
+            <select id="lora-model" style="width: 100%; height: 32px; font-size: 0.78rem; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 2px 6px; background: var(--bg-input); color: var(--text-main);" onchange="updateLoraCalc()">
+              <option value="8b" selected>8B Class</option>
+              <option value="70b">70B Class</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Rank (r):</label>
+            <select id="lora-rank" style="width: 100%; height: 32px; font-size: 0.78rem; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 2px 6px; background: var(--bg-input); color: var(--text-main);" onchange="updateLoraCalc()">
+              <option value="8">r = 8</option>
+              <option value="16" selected>r = 16</option>
+              <option value="32">r = 32</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.6rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem;">
+          <div style="text-align: center;">
+            <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">BASE PARAMS</div>
+            <div id="lora-base-p" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-top: 2px;">8.03B</div>
+          </div>
+          <div style="text-align: center; border-left: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">TRAINABLE ADAPTER</div>
+            <div id="lora-trainable-p" style="font-size: 1.05rem; font-weight: 800; color: #0d9488; margin-top: 2px;">18.8M</div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (skillName === "RAG Pipelines") {
+    return `
+      <div style="background: var(--bg-hover); border: 1.5px solid var(--border-subtle); border-radius: 8px; padding: 1.15rem; margin-top: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 800; color: #0d9488; text-transform: uppercase; margin: 0;">🧪 Reciprocal Rank Fusion Simulator</h5>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.85rem; align-items: center;">
+          <div style="flex: 2; min-width: 200px;">
+            <input type="text" id="rrf-query" value="hybrid RAG search" style="width: 100%; height: 32px; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0 0.5rem; font-size: 0.8rem; background: var(--bg-input); color: var(--text-main);" oninput="updateRrfCalc()">
+          </div>
+        </div>
+        <div id="rrf-results-display" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem;"></div>
+      </div>
+    `;
+  } else if (skillName === "Vector Databases") {
+    return `
+      <div style="background: var(--bg-hover); border: 1.5px solid var(--border-subtle); border-radius: 8px; padding: 1.15rem; margin-top: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 800; color: #0d9488; text-transform: uppercase; margin: 0;">🧪 Vector Distance Calculator</h5>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #0d9488; margin-bottom: 0.4rem;">Vector A</div>
+            <div style="display: flex; gap: 0.4rem;">
+              <input type="number" id="vecA-0" value="0.75" step="0.05" style="width: 100%; height: 28px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px;" oninput="updateVectorDistanceCalc()">
+              <input type="number" id="vecA-1" value="0.45" step="0.05" style="width: 100%; height: 28px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px;" oninput="updateVectorDistanceCalc()">
+            </div>
+          </div>
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #2563eb; margin-bottom: 0.4rem;">Vector B</div>
+            <div style="display: flex; gap: 0.4rem;">
+              <input type="number" id="vecB-0" value="0.71" step="0.05" style="width: 100%; height: 28px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px;" oninput="updateVectorDistanceCalc()">
+              <input type="number" id="vecB-1" value="0.48" step="0.05" style="width: 100%; height: 28px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px;" oninput="updateVectorDistanceCalc()">
+            </div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem;">
+          <div style="text-align: center;">
+            <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">COSINE SIMILARITY</div>
+            <div id="res-cosine" style="font-size: 1.05rem; font-weight: 800; color: #0d9488; margin-top: 2px;">0.9961</div>
+          </div>
+          <div style="text-align: center; border-left: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">EUCLIDEAN (L2)</div>
+            <div id="res-l2" style="font-size: 1.05rem; font-weight: 800; color: #d97706; margin-top: 2px;">0.0762</div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (skillName === "DPO / RLHF") {
+    return `
+      <div style="background: var(--bg-hover); border: 1.5px solid var(--border-subtle); border-radius: 8px; padding: 1.15rem; margin-top: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 800; color: #0d9488; text-transform: uppercase; margin: 0;">🧪 DPO Loss Simulator</h5>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+          <div>
+            <label style="font-size: 0.72rem; font-weight: 700; color: #059669;">Chosen logp: <span id="val-pi-c">-0.40</span></label>
+            <input type="range" id="dpo-pi-c" min="-3.0" max="-0.1" step="0.05" value="-0.40" style="width: 100%; accent-color: #059669;" oninput="updateDpoCalc()">
+          </div>
+          <div>
+            <label style="font-size: 0.72rem; font-weight: 700; color: #dc2626;">Rejected logp: <span id="val-pi-r">-1.80</span></label>
+            <input type="range" id="dpo-pi-r" min="-3.5" max="-0.2" step="0.05" value="-1.80" style="width: 100%; accent-color: #dc2626;" oninput="updateDpoCalc()">
+          </div>
+        </div>
+        <div style="text-align: center; padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px;">
+          <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;">DPO LOSS (L_DPO)</div>
+          <div id="res-dpo-loss" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-top: 2px;">0.6358</div>
+        </div>
+      </div>
+    `;
+  }
+  return '';
+}
+
+function updateTransformerCalc() {
+  const b = parseInt(document.getElementById("input-batch")?.value || "2");
+  const s = parseInt(document.getElementById("input-seq")?.value || "2048");
+  const d = parseInt(document.getElementById("input-dim")?.value || "4096");
+  const l = parseInt(document.getElementById("input-layers")?.value || "32");
+
+  if (document.getElementById("val-batch")) document.getElementById("val-batch").textContent = b;
+  if (document.getElementById("val-seq")) document.getElementById("val-seq").textContent = s;
+  if (document.getElementById("val-layers")) document.getElementById("val-layers").textContent = l;
+
+  const params = 12 * l * (d ** 2);
+  const paramsB = (params / 1e9).toFixed(2);
+  const weightVramGB = (params * 2 / (1024 ** 3)).toFixed(2);
+  const actVramGB = (b * s * d * l * 2 / (1024 ** 3)).toFixed(2);
+
+  if (document.getElementById("res-params")) document.getElementById("res-params").textContent = `${paramsB} B`;
+  if (document.getElementById("res-weight-vram")) document.getElementById("res-weight-vram").textContent = `${weightVramGB} GB`;
+  if (document.getElementById("res-act-vram")) document.getElementById("res-act-vram").textContent = `${actVramGB} GB`;
+}
+
+function updateAttentionHeatmap() {
+  const inputStr = document.getElementById("attn-tokens-input")?.value || "The, agent, executed, the, tool";
+  const temp = parseFloat(document.getElementById("attn-temp")?.value || "1.0");
+  if (document.getElementById("val-temp")) document.getElementById("val-temp").textContent = temp.toFixed(1);
+
+  const tokens = inputStr.split(/[, ]+/).filter(t => t.trim().length > 0).slice(0, 6);
+  const container = document.getElementById("attn-heatmap-container");
+  if (!container || tokens.length === 0) return;
+
+  let html = `<table style="width: 100%; border-collapse: collapse; font-size: 0.74rem;"><thead><tr><th style="padding: 4px; text-align: left; color: var(--text-dim);">Q \\ K</th>`;
+  tokens.forEach(tok => html += `<th style="padding: 4px; text-align: center; color: var(--text-main); font-family: monospace;">${escapeHtml(tok)}</th>`);
+  html += `</tr></thead><tbody>`;
+
+  for (let i = 0; i < tokens.length; i++) {
+    html += `<tr><td style="padding: 4px; font-weight: 700; color: var(--text-main); font-family: monospace;">${escapeHtml(tokens[i])}</td>`;
+    for (let j = 0; j < tokens.length; j++) {
+      let w = j > i ? 0 : Math.exp(-(Math.abs(i-j)*0.5) / temp);
+      let bg = j > i ? "var(--bg-input)" : `rgba(13, 148, 136, ${Math.max(w*0.8, 0.1)})`;
+      let tc = w > 0.5 ? "#ffffff" : "var(--text-main)";
+      html += `<td style="padding: 6px 4px; text-align: center; font-family: monospace; background: ${bg}; color: ${tc}; border: 1px solid var(--border-subtle);">${w.toFixed(2)}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function updateLoraCalc() {
+  const modelType = document.getElementById("lora-model")?.value || "8b";
+  const r = parseInt(document.getElementById("lora-rank")?.value || "16");
+  
+  let baseParams = modelType === "70b" ? 70600000000 : 8030000000;
+  let d = modelType === "70b" ? 8192 : 4096;
+  let layers = modelType === "70b" ? 80 : 32;
+
+  const loraParams = 2 * d * r * 7 * layers;
+  if (document.getElementById("lora-base-p")) document.getElementById("lora-base-p").textContent = (baseParams/1e9).toFixed(2) + 'B';
+  if (document.getElementById("lora-trainable-p")) document.getElementById("lora-trainable-p").textContent = (loraParams/1e6).toFixed(1) + 'M';
+}
+
+function updateRrfCalc() {
+  const query = (document.getElementById("rrf-query")?.value || "").toLowerCase();
+  const docs = [
+    { id: "D1", title: "FastMCP transport spec", matches: query.includes("mcp") ? 1 : 0 },
+    { id: "D2", title: "LangGraph state checkpointing", matches: query.includes("graph") ? 1 : 0 },
+    { id: "D3", title: "Hybrid RAG search", matches: query.includes("rag") || query.includes("hybrid") ? 1 : 0 }
+  ];
+  docs.forEach(d => {
+    d.denseRank = Math.floor(Math.random() * 3) + 1;
+    d.sparseRank = d.matches > 0 ? 1 : Math.floor(Math.random() * 3) + 1;
+    d.score = (1.0 / (60 + d.denseRank)) + (1.0 / (60 + d.sparseRank));
+  });
+  docs.sort((a,b) => b.score - a.score);
+  
+  const container = document.getElementById("rrf-results-display");
+  if (container) {
+    container.innerHTML = docs.map((d, i) => `
+      <div style="display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid var(--border-subtle); font-size: 0.78rem;">
+        <span style="color: var(--text-main);">#${i+1} ${d.title}</span>
+        <span style="color: #0d9488; font-weight: 700;">RRF: ${d.score.toFixed(4)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function updateVectorDistanceCalc() {
+  const q0 = parseFloat(document.getElementById("vecA-0")?.value || "0");
+  const q1 = parseFloat(document.getElementById("vecA-1")?.value || "0");
+  const d0 = parseFloat(document.getElementById("vecB-0")?.value || "0");
+  const d1 = parseFloat(document.getElementById("vecB-1")?.value || "0");
+  const dot = (q0*d0) + (q1*d1);
+  const cos = dot / (Math.sqrt(q0*q0 + q1*q1) * Math.sqrt(d0*d0 + d1*d1)) || 0;
+  const l2 = Math.sqrt(Math.pow(q0-d0, 2) + Math.pow(q1-d1, 2));
+  if (document.getElementById("res-cosine")) document.getElementById("res-cosine").textContent = cos.toFixed(4);
+  if (document.getElementById("res-l2")) document.getElementById("res-l2").textContent = l2.toFixed(4);
+}
+
+function updateDpoCalc() {
+  const piC = parseFloat(document.getElementById("dpo-pi-c")?.value || "-0.40");
+  const piR = parseFloat(document.getElementById("dpo-pi-r")?.value || "-1.80");
+  if (document.getElementById("val-pi-c")) document.getElementById("val-pi-c").textContent = piC.toFixed(2);
+  if (document.getElementById("val-pi-r")) document.getElementById("val-pi-r").textContent = piR.toFixed(2);
+  const margin = (0.1 * (piC - -0.90)) - (0.1 * (piR - -1.10));
+  const loss = -Math.log(1.0 / (1.0 + Math.exp(-margin)));
+  if (document.getElementById("res-dpo-loss")) document.getElementById("res-dpo-loss").textContent = loss.toFixed(4);
+}
+
+window.openRoadmapsStudioModal = openRoadmapsStudioModal;
+window.closeRoadmapsStudioModal = closeRoadmapsStudioModal;
+window.openRoadmapDetail = openRoadmapDetail;
+window.showRoadmapsListView = showRoadmapsListView;
+window.switchStudioDlTab = switchStudioDlTab;
+window.selectStudioCompetency = selectStudioCompetency;
+window.toggleStudioPhase = toggleStudioPhase;
+window.copyStudioCode = copyStudioCode;
+window.checkStudioQuiz = checkStudioQuiz;
+window.askChatbotFromRoadmap = askChatbotFromRoadmap;
+window.updateTransformerCalc = updateTransformerCalc;
+window.updateAttentionHeatmap = updateAttentionHeatmap;
+window.updateLoraCalc = updateLoraCalc;
+window.updateRrfCalc = updateRrfCalc;
+window.updateVectorDistanceCalc = updateVectorDistanceCalc;
+window.updateDpoCalc = updateDpoCalc;
+
+/* ==========================================================================
+   Studio Right Workspace Drawer & Tool Hub Integration
+   ========================================================================== */
+let activeRightDrawerTab = 'rag';
+let currentLoadedBooks = [];
+let currentActiveBookId = '';
+let currentActiveBookPage = 1;
+let currentActiveBookTotalPages = 1;
+
+window.openRightDrawerTab = function(tabName) {
+  const drawer = document.getElementById('studioRightDrawer');
+  if (!drawer) return;
+
+  activeRightDrawerTab = tabName || 'rag';
+  drawer.classList.remove('hidden');
+
+  // Update tab buttons
+  document.querySelectorAll('.drawer-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.drawerTab === activeRightDrawerTab);
+  });
+
+  // Switch panel
+  const panelMap = {
+    rag: 'drawerPanelRag',
+    books: 'drawerPanelBooks',
+    db: 'drawerPanelDb',
+    memory: 'drawerPanelMemory',
+    console: 'drawerPanelConsole',
+    roadmaps: 'drawerPanelRoadmaps',
+    sandbox: 'drawerPanelSandbox'
+  };
+
+  Object.entries(panelMap).forEach(([key, panelId]) => {
+    const p = document.getElementById(panelId);
+    if (p) p.classList.toggle('hidden', key !== activeRightDrawerTab);
+  });
+
+  // Update header info
+  const titleMap = {
+    rag: { icon: '🧠', text: 'Vector Knowledge Engine', badge: '11 Role DBs' },
+    books: { icon: '📖', text: '32+ Indexed Textbooks Reader', badge: 'Live Text' },
+    db: { icon: '🗄️', text: 'Database & SQL Explorer', badge: 'SQLite' },
+    memory: { icon: '⚡', text: 'On-Device Edge Memory', badge: '< 50ms' },
+    console: { icon: '🔴', text: 'Live REPL Console', badge: 'Subprocess' },
+    roadmaps: { icon: '🗺️', text: 'Career Roadmaps & Skill Trees', badge: '10 Tracks' },
+    sandbox: { icon: '🏗️', text: 'Live Artifact Sandbox Preview', badge: 'Live DOM' }
+  };
+
+  const meta = titleMap[activeRightDrawerTab] || titleMap.rag;
+  const iconEl = document.getElementById('rightDrawerTitleIcon');
+  const textEl = document.getElementById('rightDrawerTitleText');
+  const badgeEl = document.getElementById('rightDrawerBadge');
+  if (iconEl) iconEl.textContent = meta.icon;
+  if (textEl) textEl.textContent = meta.text;
+  if (badgeEl) badgeEl.textContent = meta.badge;
+
+  // Trigger tab-specific loader
+  if (activeRightDrawerTab === 'rag') {
+    loadDrawerRagTelemetry();
+    const input = document.getElementById('drawerRagSearchInput');
+    if (input && !input.value.trim()) {
+      input.value = 'Kubernetes ingress controller and service mesh security';
+      executeDrawerRagSearch();
+    }
+  } else if (activeRightDrawerTab === 'books') {
+    loadDrawerBooksList();
+  } else if (activeRightDrawerTab === 'db') {
+    loadDrawerDbPreview();
+  } else if (activeRightDrawerTab === 'memory') {
+    loadDrawerMemoryCards();
+  } else if (activeRightDrawerTab === 'roadmaps') {
+    loadDrawerRoadmaps();
+  } else if (activeRightDrawerTab === 'sandbox') {
+    injectSandboxCode(state.activeSandboxCode || getSandboxDemoHtml());
+  }
+};
+
+function initStudioRightDrawer() {
+  const drawer = document.getElementById('studioRightDrawer');
+  if (!drawer) return;
+
+  // Tab buttons click
+  document.querySelectorAll('.drawer-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openRightDrawerTab(btn.dataset.drawerTab);
+    });
+  });
+
+  // Close button
+  const closeBtn = document.getElementById('closeRightDrawerBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      drawer.classList.add('hidden');
+    });
+  }
+
+  // Popout button
+  const popoutBtn = document.getElementById('rightDrawerPopoutBtn');
+  if (popoutBtn) {
+    popoutBtn.addEventListener('click', () => {
+      const urlMap = {
+        rag: '/academy/index.html#rag',
+        books: '/academy/index.html#books',
+        db: '/academy/db-dashboard.html',
+        memory: '/academy/unified-dashboard.html',
+        console: '/academy/unified-dashboard.html',
+        roadmaps: '/academy/#roadmaps'
+      };
+
+      if (activeRightDrawerTab === 'sandbox') {
+        if (!state.activeSandboxCode) return;
+        const win = window.open('', '_blank');
+        win.document.open();
+        win.document.write(state.activeSandboxCode);
+        win.document.close();
+        return;
+      }
+
+      const targetUrl = urlMap[activeRightDrawerTab] || '/academy/index.html';
+      window.open(targetUrl, '_blank');
+    });
+  }
+
+  // 1. Vector RAG Controls
+  const searchInput = document.getElementById('drawerRagSearchInput');
+  const searchBtn = document.getElementById('drawerRunRagSearchBtn');
+  const roleSelect = document.getElementById('drawerRagRoleFilterSelect');
+
+  if (searchBtn) searchBtn.addEventListener('click', () => executeDrawerRagSearch());
+  if (searchInput) {
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') executeDrawerRagSearch();
+    });
+  }
+  if (roleSelect) roleSelect.addEventListener('change', () => executeDrawerRagSearch());
+
+  document.querySelectorAll('.drawer-topk-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.drawer-topk-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      executeDrawerRagSearch();
+    });
+  });
+
+  // 2. Textbooks Reader Controls
+  const bookSelect = document.getElementById('drawerBookSelect');
+  const prevPageBtn = document.getElementById('drawerPrevPageBtn');
+  const nextPageBtn = document.getElementById('drawerNextPageBtn');
+  const pageInput = document.getElementById('drawerPageNumberInput');
+  const askPageBtn = document.getElementById('drawerAskPageBtn');
+
+  if (bookSelect) {
+    bookSelect.addEventListener('change', () => {
+      currentActiveBookId = bookSelect.value;
+      currentActiveBookPage = 1;
+      loadDrawerBookPage(currentActiveBookId, 1);
+    });
+  }
+
+  if (prevPageBtn) {
+    prevPageBtn.addEventListener('click', () => {
+      if (currentActiveBookPage > 1) {
+        currentActiveBookPage--;
+        loadDrawerBookPage(currentActiveBookId, currentActiveBookPage);
+      }
+    });
+  }
+
+  if (nextPageBtn) {
+    nextPageBtn.addEventListener('click', () => {
+      if (currentActiveBookPage < currentActiveBookTotalPages) {
+        currentActiveBookPage++;
+        loadDrawerBookPage(currentActiveBookId, currentActiveBookPage);
+      }
+    });
+  }
+
+  if (pageInput) {
+    pageInput.addEventListener('change', () => {
+      let p = parseInt(pageInput.value) || 1;
+      p = Math.max(1, Math.min(currentActiveBookTotalPages, p));
+      currentActiveBookPage = p;
+      loadDrawerBookPage(currentActiveBookId, currentActiveBookPage);
+    });
+  }
+
+  if (askPageBtn) {
+    askPageBtn.addEventListener('click', () => {
+      const textEl = document.getElementById('drawerBookTextContent');
+      const text = textEl ? textEl.innerText.trim() : '';
+      if (!promptInput) return;
+      if (!text) {
+        alert('No textbook page text available to ask about.');
+        return;
+      }
+
+      const bookTitle = bookSelect?.options[bookSelect.selectedIndex]?.text || 'Textbook';
+      const chapterTitle = document.getElementById('drawerBookChapterTitle')?.textContent || 'Chapter';
+      const excerpt = text.length > 900 ? text.slice(0, 900) + '...' : text;
+
+      promptInput.value = `Based on Page ${currentActiveBookPage} of "${bookTitle}" (${chapterTitle}):\n\n> "${excerpt}"\n\nCan you explain the key concepts here in detail, highlight practical architectural takeaways, and give production-ready code examples?`;
+      promptInput.dispatchEvent(new Event('input'));
+      promptInput.focus();
+      promptInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (window.showOmniToast) window.showOmniToast('Textbook page quoted into AI Chatbot!', '📖');
+    });
+  }
+
+  // 3. DB Studio Controls
+  const sqlInput = document.getElementById('drawerDbSqlInput');
+  const sqlBtn = document.getElementById('drawerBtnExecuteSql');
+
+  if (sqlBtn) {
+    sqlBtn.addEventListener('click', () => executeDrawerDbSql());
+  }
+
+  document.querySelectorAll('.drawer-sql-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (sqlInput) sqlInput.value = btn.dataset.sql;
+      executeDrawerDbSql();
+    });
+  });
+
+  // 4. Memory Controls
+  const memQuery = document.getElementById('drawerMemQuery');
+  const memRecallBtn = document.getElementById('drawerBtnRecall');
+  const memRefreshBtn = document.getElementById('drawerBtnRefreshMem');
+
+  if (memRecallBtn) memRecallBtn.addEventListener('click', () => executeDrawerMemRecall());
+  if (memQuery) {
+    memQuery.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') executeDrawerMemRecall();
+    });
+  }
+  if (memRefreshBtn) memRefreshBtn.addEventListener('click', () => loadDrawerMemoryCards());
+
+  // 5. Console Controls
+  const consoleRunBtn = document.getElementById('drawerBtnRunConsole');
+  if (consoleRunBtn) {
+    consoleRunBtn.addEventListener('click', () => executeDrawerConsoleRun());
+  }
+
+  // 6. Setup Text Selection Tooltip Bridge
+  setupSelectionAskAi();
+}
+
+async function loadDrawerRagTelemetry() {
+  try {
+    const res = await fetch('/api/rag/pipeline/stats');
+    if (!res.ok) return;
+    const data = await res.json();
+    const stats = data.stats || {};
+    const bCount = document.getElementById('drawerRagBooksCount');
+    const cCount = document.getElementById('drawerRagChunksCount');
+    if (bCount && stats.total_books) bCount.textContent = stats.total_books;
+    if (cCount && stats.total_chunks) cCount.textContent = stats.total_chunks.toLocaleString();
+  } catch (e) {
+    console.warn('[Drawer RAG Telemetry]', e);
+  }
+}
+
+async function executeDrawerRagSearch() {
+  const container = document.getElementById('drawerRagResultsContainer');
+  const input = document.getElementById('drawerRagSearchInput');
+  const roleSelect = document.getElementById('drawerRagRoleFilterSelect');
+  const activeChip = document.querySelector('.drawer-topk-chip.active');
+
+  const query = input?.value.trim() || 'Kubernetes Docker Python Microservices';
+  const role = roleSelect?.value || '';
+  const top_k = parseInt(activeChip?.dataset.k || '4');
+
+  if (!container) return;
+  container.innerHTML = '<div class="loading-spinner-box">Searching across 11 role vector databases...</div>';
+
+  try {
+    const res = await fetch('/api/rag/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, role: role || undefined, top_k })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    renderDrawerRagResults(data, container);
+  } catch (err) {
+    container.innerHTML = `<div class="error-msg">Search failed: ${err.message}</div>`;
+  }
+}
+
+function renderDrawerRagResults(data, container) {
+  const hits = data.citations || data.hits || data.matches || [];
+  if (hits.length === 0) {
+    container.innerHTML = '<div class="rag-empty-state"><p>No relevant vector chunks found. Broaden your search query.</p></div>';
+    return;
+  }
+
+  let html = `<div style="display:flex; flex-direction:column; gap:8px;">`;
+  hits.forEach((h, idx) => {
+    const scorePct = Math.round((h.similarity_score || h.similarity || h.score || 0.88) * 100);
+    const chunkId = `ragChunk_${idx}`;
+    const chunkText = h.chunk_text || h.text || '';
+    const bookTitle = h.book_title || h.book_id || 'Technical Manual';
+
+    html += `
+      <div class="rag-hit-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:6px; padding:8px 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:0.75rem;">
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span style="background:rgba(6,182,212,0.15); color:var(--accent-cyan); padding:1px 5px; border-radius:3px; font-weight:700;">#${idx + 1}</span>
+            <span style="font-weight:700; color:var(--text-main);">${escapeHtml(bookTitle)}</span>
+            ${h.page_number ? `<span style="color:var(--text-dim);">P.${h.page_number}</span>` : ''}
+          </div>
+          <span style="color:#10b981; font-weight:700; font-size:0.7rem;">${scorePct}% Match</span>
+        </div>
+        <div id="${chunkId}" style="font-size:0.78rem; line-height:1.5; color:var(--text-main); margin-bottom:6px; user-select:text;">
+          ${escapeHtml(chunkText)}
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7rem; border-top:1px solid var(--border-subtle); padding-top:4px;">
+          <span style="color:var(--text-dim);">${h.role ? `Role: ${h.role}` : 'General DB'}</span>
+          <button class="tiny-btn highlight-pill" onclick="window.askAiAboutChunk('${chunkId}', '${escapeHtml(bookTitle)}')">💬 Ask AI</button>
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+window.askAiAboutChunk = function(chunkId, bookTitle) {
+  const el = document.getElementById(chunkId);
+  const text = el ? el.innerText.trim() : '';
+  if (!promptInput || !text) return;
+
+  promptInput.value = `> [Vector Reference from ${bookTitle}]:\n> "${text}"\n\nCan you explain this concept in detail, break down any technical terms, and demonstrate how to implement it?`;
+  promptInput.dispatchEvent(new Event('input'));
+  promptInput.focus();
+  promptInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (window.showOmniToast) window.showOmniToast('Vector chunk quoted into AI Chatbot!', '⚡');
+};
+
+async function loadDrawerBooksList() {
+  const select = document.getElementById('drawerBookSelect');
+  if (!select) return;
+
+  if (currentLoadedBooks.length > 0 && select.options.length > 1) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/rag/books');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    currentLoadedBooks = data.books || [];
+
+    if (currentLoadedBooks.length === 0) {
+      select.innerHTML = '<option value="">No textbooks found</option>';
+      return;
+    }
+
+    select.innerHTML = currentLoadedBooks.map(b => `
+      <option value="${b.book_id}">📖 ${escapeHtml(b.title)} (${b.role || 'general'})</option>
+    `).join('');
+
+    currentActiveBookId = currentLoadedBooks[0].book_id;
+    currentActiveBookPage = 1;
+    loadDrawerBookPage(currentActiveBookId, 1);
+  } catch (err) {
+    select.innerHTML = `<option value="">Error loading books: ${err.message}</option>`;
+  }
+}
+
+async function loadDrawerBookPage(bookId, pageNum) {
+  const textContainer = document.getElementById('drawerBookTextContent');
+  const pageInput = document.getElementById('drawerPageNumberInput');
+  const totalSpan = document.getElementById('drawerTotalPagesSpan');
+  const chapterTitle = document.getElementById('drawerBookChapterTitle');
+
+  if (!textContainer || !bookId) return;
+  textContainer.innerHTML = '<p style="color:var(--text-dim);">Loading textbook page contents...</p>';
+
+  try {
+    const res = await fetch(`/api/rag/page?book_id=${encodeURIComponent(bookId)}&page=${pageNum}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    currentActiveBookPage = data.page || pageNum;
+    currentActiveBookTotalPages = data.total_pages || 1;
+
+    if (pageInput) pageInput.value = currentActiveBookPage;
+    if (totalSpan) totalSpan.textContent = `/ ${currentActiveBookTotalPages}`;
+    if (chapterTitle) chapterTitle.textContent = data.chapter_title || `Page ${currentActiveBookPage} of ${currentActiveBookTotalPages}`;
+
+    textContainer.innerText = data.text || '(This page contains diagrams or no extractable text)';
+  } catch (err) {
+    textContainer.innerHTML = `<p style="color:#ef4444;">Failed to load page: ${err.message}</p>`;
+  }
+}
+
+async function loadDrawerDbPreview() {
+  const container = document.getElementById('drawerDbSqlResultContainer');
+  const input = document.getElementById('drawerDbSqlInput');
+  if (!container) return;
+
+  if (input && !input.value.trim()) {
+    input.value = 'SELECT operation_id, timestamp, operation_type, role, filename, status FROM operations ORDER BY timestamp DESC LIMIT 5;';
+  }
+  executeDrawerDbSql();
+}
+
+async function executeDrawerDbSql() {
+  const container = document.getElementById('drawerDbSqlResultContainer');
+  const input = document.getElementById('drawerDbSqlInput');
+  const sql = input?.value.trim() || 'SELECT operation_id, timestamp, operation_type, role, filename, status FROM operations ORDER BY timestamp DESC LIMIT 5;';
+
+  if (!container) return;
+  container.innerHTML = '<div class="loading-spinner-box">Executing SQL query across SQLite...</div>';
+
+  try {
+    const res = await fetch('/api/rag/pipeline/sql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sql })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    const rows = data.rows || [];
+    const columns = data.columns || (rows.length > 0 ? Object.keys(rows[0]) : []);
+
+    if (rows.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:12px; color:var(--text-dim);">Query returned 0 rows.</div>';
+      return;
+    }
+
+    let html = `<table style="width:100%; border-collapse:collapse; font-size:11px; font-family:'JetBrains Mono', monospace;"><thead><tr>`;
+    columns.forEach(col => {
+      html += `<th style="text-align:left; padding:4px 6px; border-bottom:1px solid var(--border-subtle); color:var(--accent-cyan); background:rgba(255,255,255,0.03);">${escapeHtml(col)}</th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    rows.forEach(r => {
+      html += `<tr>`;
+      columns.forEach(col => {
+        const val = r[col] !== undefined ? String(r[col]) : '';
+        html += `<td style="padding:4px 6px; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">${escapeHtml(val)}</td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div style="color:#ef4444; padding:8px;">SQL Error: ${err.message}</div>`;
+  }
+}
+
+async function loadDrawerMemoryCards() {
+  const grid = document.getElementById('drawerMemCardsGrid');
+  if (!grid) return;
+  grid.innerHTML = '<div class="loading-spinner-box">Loading Edge Memory...</div>';
+
+  try {
+    const res = await fetch('/api/memory/list?limit=10');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const facts = data.memories || data.facts || [];
+
+    if (facts.length === 0) {
+      grid.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:15px;">No stored memories yet. Distill facts from textbooks or REPL!</div>';
+      return;
+    }
+
+    grid.innerHTML = facts.map(f => `
+      <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:6px; padding:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--accent-purple); font-weight:700; margin-bottom:3px;">
+          <span>⚡ ${escapeHtml(f.category || 'General Fact')}</span>
+          <span style="color:var(--text-dim);">${escapeHtml(f.source || 'Studio')}</span>
+        </div>
+        <div style="font-size:0.78rem; color:var(--text-main); line-height:1.4;">${escapeHtml(f.text || f.fact || '')}</div>
+      </div>
+    `).join('');
+  } catch (err) {
+    grid.innerHTML = `<div style="color:#ef4444; padding:8px;">Memory Error: ${err.message}</div>`;
+  }
+}
+
+async function executeDrawerMemRecall() {
+  const query = document.getElementById('drawerMemQuery')?.value.trim() || '';
+  const out = document.getElementById('drawerMemRecallOutput');
+  if (!out) return;
+  if (!query) {
+    loadDrawerMemoryCards();
+    return;
+  }
+
+  out.innerHTML = '<div class="loading-spinner-box">Recalling from on-device vector memory...</div>';
+  try {
+    const res = await fetch(`/api/memory/recall?q=${encodeURIComponent(query)}&top_k=3`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const hits = data.matches || data.memories || [];
+
+    if (hits.length === 0) {
+      out.innerHTML = '<div style="color:var(--text-dim); font-size:0.75rem;">No matching memories found.</div>';
+      return;
+    }
+
+    out.innerHTML = hits.map(h => `
+      <div style="background:rgba(139,92,246,0.1); border:1px solid var(--accent-purple); border-radius:6px; padding:8px; margin-bottom:6px;">
+        <div style="font-size:0.7rem; color:var(--accent-cyan); font-weight:700; display:flex; justify-content:space-between;">
+          <span>⚡ ${escapeHtml(h.category || 'Memory Match')}</span>
+          <span>${Math.round((h.similarity || 0.85)*100)}% Match</span>
+        </div>
+        <div style="font-size:0.78rem; color:var(--text-main); margin-top:3px;">${escapeHtml(h.text || '')}</div>
+      </div>
+    `).join('');
+  } catch (err) {
+    out.innerHTML = `<div style="color:#ef4444; font-size:0.75rem;">Recall failed: ${err.message}</div>`;
+  }
+}
+
+async function executeDrawerConsoleRun() {
+  const code = document.getElementById('drawerConsoleInput')?.value.trim() || '';
+  const lang = document.getElementById('drawerConsoleLang')?.value || 'python';
+  const out = document.getElementById('drawerConsoleOutput');
+  const btn = document.getElementById('drawerBtnRunConsole');
+
+  if (!code) {
+    alert('Please enter code to execute.');
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  if (out) out.textContent = `Executing ${lang} in subprocess...`;
+
+  try {
+    const res = await fetch('/api/session/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: lang, code })
+    });
+    const data = await res.json();
+    if (btn) btn.disabled = false;
+    if (out) {
+      out.textContent = `[Exit ${data.exit_code} in ${data.elapsed_ms}ms]\n` + (data.stdout || data.stderr || '(No output)');
+    }
+  } catch (err) {
+    if (btn) btn.disabled = false;
+    if (out) out.textContent = `Execution error: ${err.message}`;
+  }
+}
+
+function loadDrawerRoadmaps() {
+  const grid = document.getElementById('drawerRoadmapsGrid');
+  if (!grid) return;
+
+  const tracks = [
+    { title: 'DevOps & SRE Specialist', badge: '823 Chunks', color: '#06b6d4', desc: 'Kubernetes, Terraform, CI/CD, Helm & Prometheus' },
+    { title: 'Machine Learning Engineer', badge: '549 Chunks', color: '#8b5cf6', desc: 'PyTorch, CUDA, Transformers, Distributed Training' },
+    { title: 'Agentic AI & Multi-Agent', badge: '216 Chunks', color: '#ec4899', desc: 'LangGraph, AutoGen, FastMCP & Autonomous Loops' },
+    { title: 'MLOps Architect', badge: '178 Chunks', color: '#10b981', desc: 'Kubeflow, MLflow, Feature Stores & Triton Server' },
+    { title: 'Kubernetes Platform Architect', badge: '140 Chunks', color: '#3b82f6', desc: 'CRDs, Operators, Service Mesh & eBPF' },
+    { title: 'GenAI & LLM Architect', badge: '128 Chunks', color: '#f59e0b', desc: 'Fine-tuning, LoRA, DPO, Quantization & RAG' },
+    { title: 'Python Backend Systems', badge: '134 Chunks', color: '#34d399', desc: 'AsyncIO, FastAPI, Pydantic & Distributed Queues' },
+    { title: 'Data Scientist & Analytics', badge: '84 Chunks', color: '#a855f7', desc: 'Polars, Pandas, Statistical Testing & DuckDB' },
+    { title: 'Cloud Security Architect', badge: '45 Chunks', color: '#ef4444', desc: 'Zero Trust, Vault, IAM Policies & Attestation' },
+    { title: 'Linux Kernel & Systems', badge: '30 Chunks', color: '#eab308', desc: 'Systemd, eBPF, Networking & Kernel Tuning' }
+  ];
+
+  grid.innerHTML = tracks.map(t => `
+    <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between; gap:6px;">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+          <span style="font-weight:750; font-size:0.78rem; color:${t.color};">${escapeHtml(t.title)}</span>
+          <span style="font-size:0.65rem; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:3px; color:var(--text-dim);">${t.badge}</span>
+        </div>
+        <div style="font-size:0.72rem; color:var(--text-dim); line-height:1.35;">${escapeHtml(t.desc)}</div>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:4px;">
+        <button class="tiny-btn highlight-pill" onclick="window.askAiAboutTrack('${escapeHtml(t.title)}', '${escapeHtml(t.desc)}')">💬 Ask AI</button>
+        <a href="/academy/#roadmaps" target="_blank" class="tiny-btn" style="text-decoration:none;">Explore ↗</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.askAiAboutTrack = function(title, desc) {
+  if (!promptInput) return;
+  promptInput.value = `I am pursuing the **${title}** track covering ${desc}.\n\nWhat are the top 5 essential competencies I must master, and what practical project can I build right now to prove production mastery?`;
+  promptInput.dispatchEvent(new Event('input'));
+  promptInput.focus();
+  promptInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (window.showOmniToast) window.showOmniToast(`Prompt created for ${title}! 🗺️`, '⚡');
+};
+
+/* ==========================================================================
+   Selection -> "Ask AI" Instant Floating Tooltip Integration
+   ========================================================================== */
+window._selectedTextForAi = '';
+
+function setupSelectionAskAi() {
+  const tooltip = document.getElementById('selectionAskAiTooltip');
+  const askBtn = document.getElementById('btnAskAiSelection');
+  if (!tooltip || !askBtn) return;
+
+  function handleSelection() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+      tooltip.classList.add('hidden');
+      window._selectedTextForAi = '';
+      return;
+    }
+
+    const text = sel.toString().trim();
+    if (text.length < 5) {
+      tooltip.classList.add('hidden');
+      window._selectedTextForAi = '';
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    if (rect.width > 0 && rect.height > 0) {
+      window._selectedTextForAi = text;
+      tooltip.style.left = `${Math.round(rect.left + rect.width / 2)}px`;
+      tooltip.style.top = `${Math.round(rect.top + window.scrollY - 6)}px`;
+      tooltip.classList.remove('hidden');
+    } else {
+      tooltip.classList.add('hidden');
+    }
+  }
+
+  document.addEventListener('mouseup', (e) => {
+    if (e.target && (e.target.closest('#selectionAskAiTooltip') || e.target.closest('#btnAskAiSelection'))) {
+      return;
+    }
+    setTimeout(handleSelection, 50);
+  });
+
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift' || e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      setTimeout(handleSelection, 50);
+    }
+  });
+
+  askBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const text = window._selectedTextForAi || window.getSelection()?.toString()?.trim() || '';
+    if (!text || !promptInput) return;
+
+    const excerpt = text.length > 850 ? text.slice(0, 850) + '...' : text;
+    promptInput.value = `> [Selected Reference]:\n> "${excerpt}"\n\nCan you explain this in detail, clarify why this approach is used, and show practical code or implementation examples?`;
+    promptInput.dispatchEvent(new Event('input'));
+
+    tooltip.classList.add('hidden');
+    window._selectedTextForAi = '';
+    promptInput.focus();
+    promptInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    if (window.showOmniToast) {
+      window.showOmniToast('Selected text quoted directly into AI Chatbot! ⚡', '💬');
+    }
+  });
+}
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initStudioRightDrawer();
+  });
+} else {
+  initStudioRightDrawer();
 }
 
 

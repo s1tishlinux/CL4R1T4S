@@ -768,7 +768,18 @@ def query_multiple_roles(
         Dict mapping role -> list of results
     """
     results = {}
-    for role in roles:
+    role_aliases = {
+        "agentic": "agentic_ai",
+        "datascience": "data_science",
+        "aws": "aws_cloud"
+    }
+    
+    # If no roles specified, query all available roles
+    if not roles:
+        roles = list(ROLE_DATABASES.keys())
+        
+    for r in roles:
+        role = role_aliases.get(r, r)
         if role in ROLE_DATABASES:
             results[role] = query_role_database(query_text, role, top_k=top_k_per_role)
     return results

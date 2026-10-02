@@ -1,0 +1,120 @@
+chunk_id,text,char_count,word_count,embedding_dim,embedding_preview
+0,"# Agentic AI Systems Architect: Comprehensive Engineering Handbook
+
+## Overview & Core Competencies
+An Agentic AI Systems Architect designs, builds, evaluates, and operates autonomous multi-agent networks, state machines, protocol-driven tool integrations, and persistent cognitive architectures.
+
+Core Competency Areas:
+1. LangGraph: Cyclic graph orchestrations, TypedDict state graphs, conditional routing edges, persistent checkpointing (SqliteSaver/PostgresSaver), time-travel debugging, and huma",900,105,768,"[-0.3779, 0.9835, -2.6855, -0.3131, 0.6475...]"
+1,"onomous collaborative teams, task delegation, hierarchical processes, and structured agent execution pipelines.
+4. Memory Systems: Tri-tier memory architecture incorporating short-term scratchpad working memory, episodic vector memory, and semantic knowledge graph memory stores.
+5. Autonomous Tool Use: Deterministic function schema definitions, parallel tool calling, self-correcting error recovery, schema validation (Pydantic / Zod), and Sandboxed Execution.
+6. Agent Evaluation & Observability: ",900,111,768,"[-0.1527, 0.5664, -2.7165, -0.7066, 1.6537...]"
+2,"paradigm interleaves deliberate thought generation with environment actions:
+1. Thought: Agent models the current environmental state and plans the immediate sub-step.
+2. Action: Agent dispatches a structured tool call with typed parameters.
+3. Observation: Environment executes the tool and returns the outcome payload.
+4. Reflection: Agent incorporates observation into working memory and decides whether to continue or terminate.
+
+### Structured Outputs with Pydantic & Zod
+Modern autonomous workf",900,110,768,"[-0.5807, 0.2567, -2.7201, -1.7480, 1.7729...]"
+3,"hell"", ""read_file"", ""write_file"", ""search_docs""]
+    tool_args: dict
+    expected_outcome: str
+
+class AgentDecisionPlan(BaseModel):
+    reasoning: str = Field(description=""Step-by-step chain of thought"")
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    steps: List[StepPlan]
+    fallback_strategy: Optional[str] = None
+```
+
+### Chain-of-Thought (CoT) & Self-Consistency
+Zero-shot and few-shot Chain-of-Thought prompt scaffolding guides LLMs to allocate reasoning tokens before committing to an",900,105,768,"[0.1790, 0.5178, -2.9579, -1.0651, 1.4364...]"
+4,"s (Directed Acyclic Graphs) fail in autonomous agent design because agents require iterative loops: planning, executing, evaluating, refining, and retrying. LangGraph models multi-agent workflows as stateful cyclic graphs.
+
+```python
+from typing import TypedDict, Annotated, List
+import operator
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+class AgentState(TypedDict):
+    task: str
+    messages: Annotated[List[str], operator.add]
+    current_ste",900,77,768,"[-0.2478, 0.4408, -3.0361, -0.6832, 1.0756...]"
+5,"flow.add_edge(""planner"", ""executor"")
+workflow.add_edge(""executor"", ""evaluator"")
+workflow.add_conditional_edges(
+    ""evaluator"",
+    should_continue,
+    {
+        ""retry"": ""executor"",
+        ""human_approval"": ""human_gate"",
+        ""done"": END
+    }
+)
+```
+
+### Persistent Checkpointing & Time-Travel Debugging
+Checkpointers (such as `SqliteSaver` or `PostgresSaver`) serialize state snapshots after every node execution. This provides:
+- Durability: Resilience against crash failures and network dro",900,99,768,"[0.9592, 0.4625, -2.8450, -1.2251, 1.1097...]"
+6,"-branching execution.
+
+---
+
+## Phase 3: Protocols & Tools — Model Context Protocol (MCP)
+
+### Architecture of MCP
+The Model Context Protocol (MCP) decouples LLM applications (Hosts like Claude Desktop, Cursor, Omni Studio) from external data sources and tools (Servers):
+- Transport Layer: Stdio (standard input/output for local processes) and SSE (Server-Sent Events over HTTP for remote services).
+- Protocol Primitives:
+  1. Tools: Functions the LLM can call to cause side-effects or query live da",900,122,768,"[0.4147, 0.8032, -2.9107, -1.8625, 0.4786...]"
+7,"rocess
+
+mcp = FastMCP(""Production-Ops-Server"")
+
+@mcp.tool()
+def execute_system_diagnostic(subsystem: str) -> str:
+    """"""Run diagnostics on local infrastructure subsystem: disk, memory, network.""""""
+    if subsystem == ""disk"":
+        res = subprocess.run([""df"", ""-h""], capture_output=True, text=True)
+        return res.stdout
+    elif subsystem == ""memory"":
+        res = subprocess.run([""vm_stat""], capture_output=True, text=True)
+        return res.stdout
+    return f""Unknown subsystem {subsystem",900,96,768,"[0.8878, 0.6603, -3.3341, -0.6005, 0.9364...]"
+8,"ically routes subtasks to specialized worker agents:
+- Code Synthesizer Agent: Generates modular implementation code.
+- Test Architect Agent: Creates and executes unit & integration test suites.
+- Security Auditor Agent: Scans for vulnerabilities, OWASP Top 10, and privilege escalation.
+- Reviewer Agent: Grades the quality and provides feedback loops.
+
+### Swarm & Decentralized Consensus
+In decentralized swarms, agents interact peer-to-peer using negotiation protocols. Agents maintain distinct s",900,113,768,"[-0.6678, 0.9639, -2.7671, -0.8884, 1.8332...]"
+9,"ls & Evaluation
+
+### Multi-Tier Memory Systems
+- Working / Short-Term Memory: In-context sliding window and scratchpad tokens.
+- Episodic Memory: Vector-indexed past conversation sessions and execution histories enabling contextual recall of previous user choices.
+- Semantic Knowledge Memory: Property graph (entities and relationships) combined with dense vector indexes for grounded fact retrieval.
+
+### Security Guardrails & Prompt Injection Defense
+- Input Shielding: Semantic classification of ",900,120,768,"[0.1400, 0.3258, -3.1138, -1.4960, 1.2487...]"
+10,"ricted disk and network capabilities.
+
+### Telemetry & Automated Evaluation
+Monitoring the RAG Triad and Agent Trajectory:
+- Context Relevance: Are the retrieved vector chunks relevant to the user query?
+- Groundedness / Faithfulness: Is the generated answer strictly backed by retrieved facts?
+- Answer Relevance: Does the final response address the user's prompt directly?
+- Trajectory Efficiency: Evaluating total token spend, cycle iterations, and tool call accuracy.
+
+---
+
+## Capstone Project: A",900,128,768,"[0.2082, 0.1371, -3.1191, -1.1378, 1.7181...]"
+11,"rites code into the workspace files.
+4. Execution & Self-Correction: Runs unit tests via terminal execution; catches stack traces and applies self-correcting patches in an iterative LangGraph loop.
+5. Verification: Generates end-to-end browser tests and verifies visual rendering.
+6. Pull Request: Creates a Git branch, commits changes, and opens a Pull Request with a comprehensive summary.
+",392,56,768,"[-0.0900, 0.0994, -3.7372, -1.8471, 0.7571...]"

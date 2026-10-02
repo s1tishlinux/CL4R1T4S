@@ -1,0 +1,657 @@
+chunk_id,text,char_count,word_count,embedding_dim,embedding_preview
+0,"Generative AI With 
+Agentic AI Masters 
+Program Certification
+Our Program
+An investment in
+knowledge pays
+the best interest.
+An investment in
+knowledge pays
+the best interest.
+Academic Excellence from IIT Patna
+Learn by Building
+Career-Focused Learning Experience
+Industry-relevant curriculum delivered in association with
+Vishlesan I-Hub Foundation, IIT Patna.
+Hands-on cloud labs, enterprise case studies, and real-
+world capstone projects that prepare you for modern
+DevOps and AI roles.
+Industry ",1000,131,768,"[-0.8093, 0.5518, -2.6191, -0.2274, 1.6242...]"
+1,"Gen AI and Machine Learning
+Python Programming Fundamentals
+Data Structures, Control Flow, and File Operations
+Functions, Object-Oriented Programming, and Exception Handling
+Data Analysis and Visualization
+Applied Machine Learning
+Data Pre-processing and Feature Engineering
+Supervised Learning – Regression 
+Supervised Learning –Sessionification
+Unsupervised Learning
+Clustering Algorithms & Dimensionality Reduction
+Ensemble Learning
+Time Series Analysis & Reinforcement Learning
+Recommender System",1000,123,768,"[-0.3864, 0.7880, -2.3930, -1.3537, 1.3175...]"
+2,"neering
+Named Entity Recognition (NER) & Parsing
+Tokenization & Text Encoding
+Sentiment Analysis Essentials
+Advanced Sentiment Analysis
+Neural Language Models
+Machine Translation
+Speech & Multimodal NLP
+Technology Innovation Hub
+Vishlesan I-Hub Foundation
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+I
+N
+D
+E
+X
+Generative AI Essentials & Prompt Engineering
+Introduction to Generative AI
+Autoencoders & GANs
+Transformers & Attention Mechanism
+Small Language Models
+Prompt",1000,131,768,"[-0.4339, 0.5508, -2.9157, -1.2027, 0.8585...]"
+3,"es
+Evaluation, Metrics, and Responsible AI for LLMs
+Technology Innovation Hub
+Vishlesan I-Hub Foundation
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+I
+N
+D
+E
+X
+Agentic AI & LLMOps for Scalable AI Systems
+Agentic AI Essentials
+Architectures & Design Patterns
+Working with LangChain & LCEL
+Building AI Agents with LangGraph
+Implementing Agentic RAG
+Developing AI Agents with Phidata
+Multi-Agent Systems with LangGraph & CrewAI
+Advanced Agent Development with Autogen
+AI Ag",1000,140,768,"[-0.4942, 1.1758, -2.4823, -1.3430, 1.1960...]"
+4,"hon: simplicity, readability, and ecosystem.
+Installing Python & IDE setup (Jupyter/VS Code).
+Running Python scripts vs interactive shell.
+Basic Syntax & Data Types
+Variables, constants, and naming conventions.
+Primitive types: integers, floats, strings, booleans.
+Type casting and type checking.
+Operators & Expressions
+Arithmetic, comparison, logical, and assignment operators.
+String operations and f-strings.
+Hands-On Activity
+Write a script that takes user input and performs arithmetic operatio",1000,133,768,"[-0.3939, 0.6194, -2.6583, -1.1669, 1.2098...]"
+5,"pdate.
+Control Flow
+Conditional statements (if, elif, else).
+Loops: for, while, and break/continue/pass.
+List comprehensions for concise loops.
+File Handling
+Opening, reading, writing, and closing files.
+File modes: text vs binary.
+Using with for safe file operations.
+Hands-On Activity
+Parse a log file and count word frequencies.
+Write results into a new file.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Python & Statistics Essentials for Gen AI and Machine Learning",1000,132,768,"[0.0937, 0.3081, -2.2224, -1.6953, 0.8740...]"
+6,"es.
+Object-Oriented Programming (OOP)
+Sessiones and objects in Python.
+Attributes, methods, and __init__.
+Inheritance, polymorphism, and encapsulation.
+Exception Handling
+Common Python errors and exceptions.
+Using try, except, finally, and raise.
+Custom exceptions.
+Hands-On Activity
+Create a BankAccount Session with deposit/withdraw methods.
+Handle errors such as insufficient balance using exceptions.
+Session 4: Data Analysis and Visualization
+Goal: Analyze datasets and visualize insights using ",1000,122,768,"[0.0148, 1.1567, -2.5366, -1.8624, 0.7468...]"
+7,"ts.
+Styling and customization.
+Seaborn for statistical visualization (heatmaps, pairplots).
+Hands-On Activity
+Load a dataset (e.g., Titanic or Iris).
+Perform exploratory data analysis (EDA).
+Create 2–3 meaningful plots to summarize findings.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Python & Statistics Essentials for Gen AI and Machine Learning
+Page - 5
+Technology Innovation Hub
+Vishlesan I-Hub Foundation
+
+
+Session 1: Data Pre-processing and Feature Engineering
+G",1000,125,768,"[-0.4802, 0.3114, -2.7253, -1.3265, 0.7393...]"
+8,"on, log transforms.
+Feature Engineering
+Encoding categorical variables: one-hot, label encoding, target encoding.
+Feature creation: domain-driven features, interaction terms, polynomial features.
+Feature selection: filter (correlation), wrapper (RFE), embedded (Lasso, tree-based).
+Hands-On Activity
+Pre-process a dataset (e.g., Titanic).
+Create new engineered features and evaluate their impact.
+Session 2: Supervised Learning – Regression
+Goal: Learn regression techniques for prediction and foreca",1000,114,768,"[0.0812, -0.0289, -3.0435, -0.9991, 0.9938...]"
+9,"Interaction Terms
+When linear models underfit
+Tradeoff with overfitting
+Tree-based Regression Models
+Decision Tree regression basics
+Overfitting control (max_depth, min_samples_leaf)
+Use case: predicting response time of a server
+Hands-On Activity
+Predict server response time from CPU utilization & memory usage (Ops dataset).
+Compare Linear Regression vs Ridge vs Lasso vs Decision Tree.
+Visualize feature importance.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Appli",1000,126,768,"[0.6467, 0.4810, -3.3421, -1.1110, 0.6102...]"
+10,"ors
+Distance metrics (Euclidean, Manhattan, cosine)
+Effect of K on bias/variance
+Decision Trees for Sessionification
+Gini impurity vs entropy
+Tree depth & pruning
+Interpretability advantage
+Random Forests & Gradient Boosted Trees (XGBoost, LightGBM)
+Ensemble basics (bagging vs boosting)
+Why boosting dominates in Kaggle competitions
+Evaluation Metrics
+Accuracy, Precision, Recall, F1, ROC-AUC
+Confusion Matrix deep dive
+Hands-On Activity
+PBuild a server anomaly Sessionifier (normal vs abnormal logs",1000,124,768,"[0.0619, 0.8678, -3.3007, -1.0802, 0.6335...]"
+11,"ivisive clustering
+Dendrogram interpretation
+Density-based Clustering
+DBSCAN for arbitrary shapes & noise handling
+Application in anomaly detection
+Dimensionality Reduction Intro
+Why high dimensions hurt (curse of dimensionality)
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Applied Machine Learning
+Page - 7
+Technology Innovation Hub
+Vishlesan I-Hub Foundation
+
+
+PCA basics (variance explained)
+Hands-On Activity
+Cluster server usage patterns (group servers by utilizat",1000,126,768,"[0.7172, 1.1397, -3.0666, -1.0058, 0.3119...]"
+12,"ring in High Dimensions
+Gaussian Mixture Models (soft clustering)
+Applications: customer segmentation, anomaly detection
+Feature Importance with DR
+Interpreting reduced dimensions
+Tradeoff: interpretability vs performance
+Hands-On Activity
+Apply PCA to high-dimensional e-commerce features products, categories, transactions).
+Visualize with t-SNE/UMAP.
+Perform GMM clustering and interpret results.
+Session 6: Ensemble Learning
+Goal: Understand ensemble methods and their power in real ML systems.
+T",1000,119,768,"[-0.7329, 1.4826, -3.8519, -0.8886, 0.5598...]"
+13,"g
+Page - 8
+Technology Innovation Hub
+Vishlesan I-Hub Foundation
+
+
+Stacking
+Combining multiple base learners
+Meta-learning strategies
+Real-world Usage
+Kaggle solutions (why ensembles dominate)
+Industry examples (fraud detection, predictive maintenance)
+Hands-On Activity
+Use e-commerce order dataset for predicting customer churn.
+Train Random Forest, XGBoost, CatBoost.
+Build a stacking ensemble → compare performance.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Applie",1000,127,768,"[-0.3957, 1.3264, -3.0002, -0.6888, 1.1351...]"
+14,"ward propagation mechanics: weighted sums & activations.
+Activation functions: sigmoid, tanh, ReLU, GELU, Softmax.
+Loss functions for Sessionification & regression (MSE, Cross-Entropy).
+Backpropagation & gradient descent explained.
+Optimizers: SGD, Adam, RMSProp.
+Vanishing & exploding gradients problem.
+Hands-On Activity:
+Implement a single-layer perceptron in Python from scratch.
+Train a feedforward NN using PyTorch/TensorFlow on MNIST
+dataset.
+Visualize decision boundaries of simple Sessionifi",1000,121,768,"[0.1529, 0.7584, -3.0191, -1.2817, 1.2014...]"
+15,"Normalization & Layer Normalization.
+Data augmentation to prevent overfitting.
+Advanced optimizers: AdamW, Nadam, Lookahead.
+Learning rate schedules & warm restarts (OneCycle, Cosine decay).
+Debugging underperforming models (loss not converging, overfitting).
+Hands-On Activity:
+Tune hyperparameters using Optuna on a neural network.
+Compare different optimizers on CIFAR-10 dataset.
+Apply data augmentation and measure impact on test accuracy.
+Session 3: Convolutional Neural Networks – I
+Goal: Unde",1000,125,768,"[0.5969, 0.9124, -2.4386, -1.0355, 0.8961...]"
+16,"ure extraction through low-level and high-level filters.
+Pooling layers (max, average, global).
+CNN architecture components (Conv → Pool → Dense).
+Receptive field concept and hierarchical representation.
+Weight sharing & translation invariance in CNNs.
+Popular CNN models overview (LeNet, AlexNet).
+Comparison of CNN vs fully connected networks on image data.
+Hands-On Activity:
+Build a CNN from scratch for MNIST digit Sessionification.
+Visualize feature maps and convolution filters.
+Compare CNN vs",1000,130,768,"[-0.2357, 0.9277, -2.9612, -0.9406, 0.8800...]"
+17,"Advanced layers: Depthwise Separable Convolutions (MobileNet).
+Regularization in CNNs: DropBlock, CutMix, Mixup.
+Object detection (YOLO, Faster R-CNN) introduction.
+CNNs in real-world applications (medical imaging, autonomous driving).
+Hands-On Activity:
+Fine-tune ResNet on CIFAR-100 dataset.
+Visualize Grad-CAM for explainability in CNN predictions.
+Train and evaluate MobileNet for edge deployment.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Deep Learning & Neural ",1000,124,768,"[0.2778, 0.2542, -2.6441, -0.9206, 0.5811...]"
+18,"& hidden state dynamics.
+GRU vs LSTM trade-offs.
+Stacked LSTMs & sequence-to-sequence models.
+Attention mechanism introduction with LSTM.
+LSTMs for NLP tasks: text generation, machine translation.
+LSTMs for time series: anomaly detection, forecasting.
+Hands-On Activity:
+Build an LSTM for next-word prediction.
+Train an LSTM for stock price prediction.
+Implement Seq2Seq LSTM for language translation.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Deep Learning & Neural ",1000,131,768,"[0.1261, 0.8798, -2.6790, -1.4946, 0.9898...]"
+19,", summarization.
+Text as unstructured data: challenges in processing.
+Bag-of-Words and TF-IDF basics.
+Language ambiguity: polysemy, synonyms, context.
+Evaluation metrics in NLP (BLEU, ROUGE, perplexity).
+Role of corpora & datasets (Wikipedia, IMDB, CoNLL).
+Limitations of Sessionical NLP vs neural approaches.
+Hands-On Activity:
+Load and preprocess a text dataset using NLTK/spaCy.
+Build a simple Bag-of-Words model for document Sessionification.
+Compare word frequency distributions in different cor",1000,129,768,"[0.3194, 0.5972, -3.0481, -2.0126, 0.1983...]"
+20,"rse vs dense text representations.
+Handling out-of-vocabulary (OOV) words.
+Feature scaling & dimensionality reduction for text.
+Hands-On Activity:
+Preprocess text dataset (IMDB reviews) using NLTK & spaCy.
+Extract TF-IDF features with scikit-learn.
+Train a logistic regression Sessionifier on processed text.
+Session 3: Named Entity Recognition (NER) & Parsing
+Goal: Extract entities and understand syntactic/semantic structures of text.
+Topics:
+Introduction to Named Entity Recognition (NER).
+Common",1000,125,768,"[-0.1500, 0.5479, -2.7689, -1.3339, 0.6439...]"
+21,"ons of parsing: relation extraction, question answering.
+Challenges in multilingual & domain-specific NER.
+Pre-trained NER models (spaCy, Hugging Face).
+Hands-On Activity:
+Apply POS tagging & dependency parsing using spaCy.
+Train a custom NER model with spaCy on domain data.
+Visualize dependency trees and extracted entities.
+Session 4: Tokenization & Text Encoding
+Goal: Learn tokenization strategies and modern text embedding methods.
+Topics:
+Word-level tokenization (NLTK, spaCy).
+Subword tokeniz",1000,125,768,"[0.0338, 1.0630, -2.6068, -2.0509, 0.7457...]"
+22,"ord2Vec embeddings on a custom text corpus.
+Use BERT embeddings for semantic similarity tasks.
+Session 5: Sentiment Analysis Essentials
+Goal: Build foundational sentiment Sessionification models using ML.
+Topics:
+Sentiment analysis overview and applications.
+Lexicon-based approaches.
+Traditional ML Sessionifiers: Naive Bayes, SVM, Logistic Regression.
+Feature engineering for sentiment tasks.
+Dataset considerations (imbalanced Sessiones, sarcasm).
+Evaluation metrics (precision, recall, F1).
+Domai",1000,121,768,"[0.1406, 0.3611, -3.1161, -2.0851, 0.3235...]"
+23,"stic Regression for sentiment.
+Analyze misSessionifications to identify improvements.
+Session 6: Advanced Sentiment Analysis
+Goal: Leverage deep learning and transformers for robust sentiment models.
+Topics:
+RNNs (LSTM, GRU) for sentiment Sessionification. 
+Attention mechanisms for contextual sentiment.
+Transfer learning with BERT for sentiment tasks.
+Fine-tuning transformers for domain-specific sentiment.
+Multi-Session sentiment Sessionification.
+Aspect-based sentiment analysis.
+Cross-lingual s",1000,115,768,"[-0.1063, 0.1968, -3.2254, -2.0399, 0.8762...]"
+24,"stical vs neural language models.
+RNN-based language models.
+Sequence-to-sequence models.
+Attention & Transformer architecture.
+Pre-training vs fine-tuning paradigm.
+Large Pre-trained Models (BERT, GPT, RoBERTa).
+Scaling laws of LLMs.
+Challenges: hallucinations, bias, resource intensity.
+Hands-On Activity:
+Train a character-level RNN for text generation.
+Implement a Transformer from scratch (mini version).
+Fine-tune GPT-2 for text generation.
+©2026 Learnsyte Learning Private Limited (Skillfyme).",1000,119,768,"[-0.5250, 0.7139, -2.8810, -0.9856, 0.9468...]"
+25,"U score evaluation.
+Seq2Seq with LSTMs for translation.
+Transformer-based MT (Google’s Transformer, MarianMT).
+Multilingual translation challenges.
+Low-resource language translation techniques.
+Hands-On Activity:
+Train a Seq2Seq LSTM model for English→French translation.
+Fine-tune MarianMT on custom bilingual corpus.
+Evaluate translations with BLEU score.
+Session 9: Speech & Multimodal NLP
+Goal: Extend NLP techniques to speech and multimodal understanding.
+Topics:
+Speech-to-text pipeline basics ",1000,122,768,"[-0.1254, 0.4414, -2.9879, -1.3261, 0.7172...]"
+26,"speech recognition.
+Use CLIP for text-to-image similarity.
+Build an image captioning model with CNN + RNN/Transformer.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Natural Language Processing (NLP)
+Page - 16
+Technology Innovation Hub
+Vishlesan I-Hub Foundation
+
+
+Session 1: Introduction to Generative AI
+Goal: Build a conceptual foundation of Generative AI, its history, evolution, and modern applications.
+Topics:
+Generative vs Discriminative models.
+Historical evoluti",1000,125,768,"[-0.3227, 0.4930, -2.6608, -0.9532, 1.2928...]"
+27,"ormation, copyright.
+Hands-On Activity:
+Generate synthetic images using a pre-trained GAN model.
+Explore text generation using GPT-2.
+Compare discriminative vs generative model outputs.
+Session 2: Autoencoders & GANs
+Goal: Understand core generative model architectures for unsupervised learning and synthetic data
+creation.
+Topics:
+Autoencoder architecture: encoder, decoder, bottleneck.
+Variational Autoencoders (VAEs) & latent space sampling.
+Applications of autoencoders: denoising, anomaly detec",1000,126,768,"[-0.7116, 0.3781, -2.8652, -1.2988, 1.0207...]"
+28,"
+Use StyleGAN to generate realistic human faces.
+Session 3: Transformers & Attention Mechanism
+Goal: Learn the architecture that powers modern LLMs and multimodal models.
+Topics:
+Limitations of RNNs & CNNs for sequence tasks.
+Self-attention mechanism: queries, keys, values.
+Scaled dot-product attention.
+Multi-Head Attention & positional encoding.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Generative AI Essentials & Prompt Engineering
+Page - 17
+Technology Innovatio",1000,127,768,"[-1.2113, 0.7314, -2.9772, -1.7662, 0.7744...]"
+29,"y.
+Session 4: Small Language Models (SLMs)
+Goal: Explore lightweight LMs optimized for efficiency, edge computing, and domain adaptation.
+Topics:
+Definition of Small Language Models (SLMs).
+Distillation techniques (Knowledge Distillation, TinyBERT, DistilGPT).
+Quantization & pruning for model compression.
+Trade-offs: accuracy vs efficiency.
+SLMs for edge devices & enterprise applications.
+Fine-tuning small LMs for domain tasks.
+Comparison: SLMs vs LLMs.
+Open-source SLMs (Alpaca, Phi-2, Mistral).",1000,127,768,"[-0.1625, 0.2630, -2.9102, -2.3889, 0.3120...]"
+30,"hot prompting.
+Chain-of-thought prompting.
+Instruction tuning & role prompting.
+Handling ambiguity in prompts.
+Prompt evaluation & iteration.
+Failures in prompting & mitigation strategies.
+Hands-On Activity:
+Compare zero-shot vs few-shot results on summarization.
+Use chain-of-thought prompting for reasoning tasks.
+Build a structured prompt library for enterprise tasks.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Generative AI Essentials & Prompt Engineering
+Page - ",1000,121,768,"[0.0761, 0.8623, -2.7644, -1.2018, 1.5728...]"
+31,"ting (PAP).
+Auto-prompting & reinforcement learning for prompts.
+Prompt optimization with LLM feedback loops.
+Guardrails & prompt injection attacks.
+Advanced frameworks: LangChain, Guidance, DSPy.
+Hands-On Activity:
+Implement RAG with a vector DB for knowledge-grounded prompting.
+Experiment with self-consistency prompts on reasoning tasks.
+Build a small LangChain pipeline with multi-step prompt chaining.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+Generative AI Ess",1000,129,768,"[-0.1123, 1.0726, -2.6608, -1.7297, 1.0188...]"
+32,"ional encoding, multi-head attention.
+Scaling laws: model size vs data size vs compute.
+Pretraining objectives: Causal LM, Masked LM, Seq2Seq.
+Capabilities & limitations: emergent abilities, hallucination, bias.
+Hands-On Activity:
+Load pre-trained Hugging Face model (GPT-2 or BERT) and generate text.
+Visualize transformer attention heads.
+Session 2: Open Source LLMs & Model Variants
+Goal: Explore open-source LLM ecosystems, their strengths, and use-cases.
+Topics:
+Survey of popular open-source mo",1000,131,768,"[-0.3582, 1.4011, -2.6430, -1.3907, 0.7778...]"
+33,"nts.
+Session 3: Vector Databases
+Goal: Learn how embeddings enable semantic search and memory for LLMs.
+Topics:
+Text embeddings: Sentence-BERT, OpenAI Embeddings, InstructorXL.
+Vector similarity search: cosine, dot product, Euclidean distance.
+Vector databases overview: FAISS, Pinecone, Weaviate, Milvus, Chroma.
+Indexing strategies: IVF, HNSW, PQ.
+Scaling vector DBs in production.
+Hands-On Activity:
+Generate embeddings with Hugging Face or OpenAI.
+Store and query documents using FAISS or Chroma.",1000,130,768,"[-0.0582, 1.0113, -3.0963, -2.1127, -0.0896...]"
+34,"tion
+
+
+Topics:
+RAG architecture: retriever + reader pipeline.
+Chunking strategies & embedding storage.
+Query rewriting & reranking.
+Hybrid retrieval (sparse + dense).
+Advanced techniques: memory-augmented RAG, hierarchical
+RAG.
+Hands-On Activity:
+Implement a RAG pipeline with LangChain + FAISS/Chroma.
+Build a document Q&A bot using LLaMA + retrieval.
+Session 5: LLM Frameworks & Development
+Goal: Master modern LLM development frameworks.
+Topics:
+LangChain: chains, agents, memory, tools.
+LlamaInde",1000,128,768,"[-0.0325, 0.4024, -2.9188, -2.2878, 0.5914...]"
+35,"sion 6: LLM Application Development
+Goal: Design and build scalable LLM-powered applications.
+Topics:
+Prompt engineering patterns: zero-shot, few-shot, chain-of-
+thought, tree-of-thought.
+Tool usage and multi-agent systems.
+Conversation memory: short-term vs long-term context.
+Context window optimization (sliding windows, summarization).
+API orchestration & async pipelines.
+Hands-On Activity:
+Build a customer-support chatbot with LangChain.
+Add conversation memory + multi-turn reasoning.
+Session",1000,120,768,"[0.5299, -0.1222, -2.7011, -1.1720, 0.6500...]"
+36,"ment with RLHF.
+Dataset curation for fine-tuning: cleaning, augmentation,
+synthetic data generation.
+Cost/performance trade-offs in fine-tuning.
+Hands-On Activity:
+Fine-tune a BERT/LLama-2 model on a custom dataset with LoRA.
+Evaluate domain adaptation improvements.
+Session 8: Generative AI Application Deployment
+Goal: Learn how to deploy LLMs and apps in production.
+Topics:
+Deployment strategies: REST API, gRPC, serverless, edge deployment.
+GPU scheduling on Kubernetes (NVIDIA GPU Operator, Tri",1000,134,768,"[0.4395, 0.5949, -2.8420, -1.1066, 1.0010...]"
+37,"iques
+Goal: Optimize LLM inference cost, speed, and accuracy.
+Topics:
+Prompt caching strategies (semantic vs exact match).
+KV cache & attention reuse for long conversations.
+Multi-LLM routing: selecting the right model based on task/latency/cost.
+Mixture-of-Experts (MoE) models.
+API-level optimizations for throughput.
+Hands-On Activity:
+Implement semantic caching with FAISS + OpenAI embeddings.
+Build a router that switches between GPT-3.5 (cheap) and GPT-4 (accurate).
+Session 10: Evaluation, Met",1000,127,768,"[-0.0316, 0.7104, -2.6543, -1.6412, 1.4036...]"
+38," Foundation
+
+
+Metrics: BLEU, ROUGE, METEOR, BERTScore, perplexity, win rate.
+Human evaluation & feedback loops.
+Responsible AI: bias mitigation, toxicity detection, fairness audits.
+Governance & compliance: data privacy, GDPR, model auditing.
+Hands-On Activity:
+Evaluate outputs with BLEU/ROUGE vs human scoring.
+Apply AI fairness library (e.g., Fairlearn) on model outputs.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All rights reserved.
+LLM-powered Application Development
+Page - 23
+Tech",1000,130,768,"[0.4562, 0.2526, -2.6630, -0.9061, 1.6027...]"
+39,"d agents.
+Role of autonomy and self-directed decision-making.
+Integration with external tools, APIs, and environments.
+Memory in agents: ephemeral vs persistent context.
+Typical enterprise applications (assistants, copilots, automation).
+Risks and challenges: hallucination, control, scalability.
+Hands-On Activity:
+Build a minimal Python agent that queries a knowledge base and
+performs an action.
+Session 2: Architectures & Design Patterns
+Goal: Explore scalable design patterns for building and de",1000,122,768,"[-0.5744, 0.5749, -2.9146, -0.9747, 1.5276...]"
+40,"lithic agent design.
+Enterprise-grade deployment considerations (latency, cost,
+compliance).
+Hands-On Activity:
+Implement a ReAct agent with retry + error handling.
+Session 3: Working with LangChain & LCEL
+Goal: Learn to design agents with LangChain’s LangChain Expression Language (LCEL).
+Topics:
+LangChain core components: tools, chains, agents, memory.
+Introduction to LCEL for declarative agent workflows.
+Composable pipelines with nodes and flow control.
+Tool integration: APIs, DB connectors, e",1000,135,768,"[-0.2971, 0.5502, -2.4667, -1.9723, 1.3275...]"
+41," for scalable LCEL systems.
+Hands-On Activity:
+Build a LangChain LCEL agent that queries APIs and stores results in memory.
+Session 4: Building AI Agents with LangGraph
+Goal: Use LangGraph for graph-based autonomous agents.
+Topics:
+Why graph-based orchestration for agents.
+LangGraph architecture: nodes, edges, transitions.
+Handling cycles in agent workflows.
+Branching logic based on dynamic conditions.
+Adding external API nodes for enhanced actions.
+Fault tolerance & recovery mechanisms in graph",1000,133,768,"[0.1260, 0.9489, -2.8664, -1.7842, 0.5519...]"
+42,"res.
+Multi-step retrieval with adaptive query reformulation.
+Chunking strategies for dynamic queries.
+Hybrid retrieval (dense + sparse + metadata).
+Evaluating retrieval quality in real-time.
+Adding tool-driven reasoning before/after retrieval.
+Memory-augmented RAG for context persistence.
+Optimizing cost/latency in RAG-enabled agents.
+Hands-On Activity:
+Build an Agentic RAG pipeline using LangChain + FAISS/Chroma.
+Session 6: Developing AI Agents with Phidata
+Goal: Explore Phidata, a Python-first",1000,124,768,"[0.1120, 0.9195, -3.2058, -1.7969, 1.5030...]"
+43,"database integration within agents.
+Orchestrating multi-step workflows with Phidata.
+Multi-modal capabilities: text + structured data.
+Deploying Phidata agents in production environments.
+Comparison with LangChain/LangGraph-based approaches.
+Hands-On Activity:
+Build a Phidata agent integrated with a SQL database.
+Session 7: Multi-Agent Systems with LangGraph & CrewAI
+Goal: Build collaborative & specialized agent teams.
+Topics:
+Multi-agent collaboration principles.
+Leader–worker vs peer-to-peer o",1000,119,768,"[-0.4383, 1.0849, -3.3502, -0.6323, 0.8114...]"
+44,"ulti-agent system with LangGraph + CrewAI roles.
+Session 8: Advanced Agent Development with Autogen
+Goal: Harness Microsoft Autogen for advanced multi-agent collaboration.
+Topics:
+Autogen framework overview.
+Agents as modular programs with specialized roles.
+Defining communication rules between agents.
+Human-in-the-loop integration in Autogen.
+Tool-enabled agents for enterprise tasks.
+Multi-agent conversation orchestration.
+Scaling workflows with Autogen at enterprise scale.
+Observability & debu",1000,125,768,"[-0.4087, 0.7297, -3.0288, -0.6545, 1.1623...]"
+45,"ing, debugging, and governance for agents in production.
+Topics:
+Why observability matters in non-deterministic agents.
+Key metrics: tool success rate, latency, reasoning depth.
+Logging & traceability of agent actions.
+Visualization of reasoning chains & workflows.
+Integrating LangSmith for observability.
+AgentOps concepts for lifecycle governance.
+Preventing runaway agents (cost caps, safety nets).
+Monitoring compliance & responsible usage.
+Hands-On Activity:
+Monitor and trace an agent using La",1000,130,768,"[0.5044, 0.7280, -3.2729, -1.1599, 1.3339...]"
+46,"ta pipelines.
+Scaling retrieval latency vs accuracy trade-offs.
+Fault tolerance & replication in vector DBs.
+Integration with agent workflows at scale
+Hands-On Activity:
+Build a RAG system using Milvus/Pinecone integrated with
+LangChain agents.
+Session 11: Advanced RAG Patterns & Evaluation
+Goal: Explore cutting-edge retrieval & evaluation strategies.
+Topics:
+Hierarchical RAG for multi-level summarization.
+Agent-guided query rewriting.
+Context compression for limited token windows.
+Evaluating RA",1000,126,768,"[0.0612, 0.3848, -3.3192, -2.0196, 0.8643...]"
+47,", HELM, RAGAS).
+Deploying feedback loops for continuous RAG improvement.
+Hands-On Activity:
+Benchmark multiple RAG patterns and measure evaluation metrics.
+Session 12: Continuous Integration for Agentic Systems
+Goal: Automate testing, deployment, and lifecycle management of AI agents.
+Topics:
+CI/CD pipelines for AI agents.
+Unit testing loops & tool integrations.
+Continuous data validation with DVC/LakeFS.
+Canary deployments for agents in production.
+Versioning models & agent configurations.
+Auto",1000,130,768,"[0.1651, 0.2887, -3.2251, -1.2646, 1.1123...]"
+48,"t Requirements:
+Select an enterprise workflow (customer support, finance copilot, knowledge worker).
+Build multi-agent collaboration (LangGraph + CrewAI/Autogen).
+Integrate RAG with vector DB.
+Add observability (LangSmith/AgentOps).
+Deploy with CI/CD on cloud (AWS/GCP/Azure).
+Implement governance: safety nets, monitoring dashboards.
+Optimize cost-performance with caching & routing.
+Deliver end-to-end working solution with documentation.
+©2026 Learnsyte Learning Private Limited (Skillfyme). All r",1000,136,768,"[-0.5262, 0.3108, -2.9976, -0.0760, 1.2844...]"
+49,"7, 5th Main Rd, Opposite AU Small Finance Bank,
+7th Sector, HSR Layout, Bengaluru, Karnataka — 560102
+Mon–Sat · 9:00 AM – 7:00 PM IST
+Registered Office:
+Learnsyte Learning Private Limited (Skillfyme)
+Join Our Growing
+Tech Community!
+Get in Touch!
+support@skillfyme.in
+
+",269,41,768,"[-0.3145, 0.8968, -3.3958, 0.2548, 1.5796...]"

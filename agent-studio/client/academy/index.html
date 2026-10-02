@@ -24,35 +24,31 @@
 <body>
 
   <!-- ========================================================================
-       Top Navigation Bar
+       Top Navigation Bar (Compact & Streamlined)
        ======================================================================== -->
   <header class="academy-header">
-    <div class="header-container">
+    <div class="header-container" style="height: 60px;">
       <div class="brand-wrapper">
-        <div class="brand-logo-icon">⚡</div>
+        <div class="brand-logo-icon" style="width: 38px; height: 38px; font-size: 1.2rem;">⚡</div>
         <div class="brand-info">
-          <h1>OmniTech Academy <span class="badge">PRO</span></h1>
-          <p>Production Engineering & Agentic AI Masterclass Hub</p>
+          <h1 style="font-size: 1.05rem; margin: 0;">OmniTech Academy <span class="badge">PRO</span></h1>
+          <p style="font-size: 0.72rem; margin: 0; color: var(--text-muted);">Unified Engineering & Agentic AI Hub</p>
         </div>
       </div>
 
       <!-- Live Search Bar -->
-      <div class="header-search">
+      <div class="header-search" style="max-width: 480px;">
         <span class="header-search-icon">🔍</span>
-        <input type="text" id="global-search" placeholder="Search DevOps, GenAI, LangGraph, Kafka, HLD, SQL, Python...">
+        <input type="text" id="global-search" placeholder="Search curriculum, LangGraph, MCP, vector chunks, SQL...">
       </div>
 
       <!-- Action Buttons -->
       <div class="header-actions">
-        <button class="btn-header" id="btnHeaderDbStudio" onclick="switchTab('dbstudio'); document.querySelectorAll('.bento-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'dbstudio'));">
-          <span>🗄️</span>
-          <span>DB Studio</span>
-        </button>
-        <button class="btn-header" id="toggleThemeBtn">
+        <button class="btn-header" id="toggleThemeBtn" title="Theme & Color Studio">
           <span>🎨</span>
-          <span>Theme & Colors</span>
+          <span>Theme</span>
         </button>
-        <a href="/" class="btn-header btn-header-primary">
+        <a href="/" class="btn-header btn-header-primary" title="Switch to Agent Studio">
           <span>🛠️</span>
           <span>Agent Studio</span>
         </a>
@@ -61,47 +57,20 @@
   </header>
 
   <!-- ========================================================================
-       Hero Section
+       Bento Navigation Tabs (Single Unified Dashboard)
        ======================================================================== -->
-  <section class="academy-hero">
-    <div class="hero-content">
-      <div class="hero-pill">
-        <span>✨ 2026 Production Curriculum</span>
-        <span>•</span>
-        <span>Zero-Key Local AI Ready</span>
-      </div>
-      <h2>Master Modern Engineering & Agentic Intelligence</h2>
-      <p>
-        Hands-on career roadmaps, intensive masterclasses, interactive code simulators, and an AI-powered textbook vector library for DevOps, MLOps, GenAI, FDE, System Design, and Core Systems.
-      </p>
-
-      <div class="hero-stats-row">
-        <div class="hero-stat-item">
-          <strong>10+</strong> Career Roadmaps
-        </div>
-        <div class="hero-stat-item">
-          <strong>8</strong> Live Masterclasses
-        </div>
-        <div class="hero-stat-item">
-          <strong>3</strong> In-Browser Simulators
-        </div>
-        <div class="hero-stat-item">
-          <strong>6</strong> Architecture Blueprints
-        </div>
-        <div class="hero-stat-item">
-          <strong>5</strong> RAG-Indexed Textbooks
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       Bento Navigation Tabs (Inspired by Crio.do)
-       ======================================================================== -->
-  <nav class="bento-nav-container">
+  <nav class="bento-nav-container" style="margin-top: 0.75rem; margin-bottom: 0.75rem;">
     <div class="bento-nav-grid">
+      <!-- 0. RAG Pipeline (PRIORITY 1 - DEFAULT ACTIVE) -->
+      <button class="bento-tab-btn active" data-tab="ragpipeline">
+        <span class="bento-tab-badge" style="background: linear-gradient(135deg, #0d9488, #0284c7); color: #fff; border-color: #0d9488;">⭐ Priority 1</span>
+        <div class="bento-tab-icon">⚡</div>
+        <div class="bento-tab-title">RAG Pipeline</div>
+        <div class="bento-tab-subtitle">Ingest, Chunk & Query</div>
+      </button>
+
       <!-- 1. Roadmaps -->
-      <button class="bento-tab-btn active" data-tab="roadmaps">
+      <button class="bento-tab-btn" data-tab="roadmaps">
         <span class="bento-tab-badge">Core</span>
         <div class="bento-tab-icon">🗺️</div>
         <div class="bento-tab-title">Roadmaps</div>
@@ -178,8 +147,218 @@
        ======================================================================== -->
   <main class="academy-main">
 
+    <!-- 0. RAG Pipeline Panel (PRIORITY 1 - DEFAULT ACTIVE) -->
+    <section id="panel-ragpipeline" class="tab-panel active">
+      <div class="rag-dashboard-wrapper" style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Live System Telemetry Strip -->
+        <div style="background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
+                <span style="font-size: 1.5rem;">⚡</span>
+                <h3 style="font-size: 1.35rem; font-weight: 750; margin: 0; color: var(--text-primary);">Production RAG Ingestion Pipeline & Telemetry</h3>
+                <span style="background: #f0fdf4; color: #065f46; border: 1px solid #0d9488; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 9999px;">● ONLINE</span>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Local high-performance vector ingestion pipeline backed by SQLite, nomic-embed-text (768d), and multi-strategy chunkers.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn-header btn-header-primary" onclick="loadRagPipelineStats()" style="padding: 0.5rem 1rem; font-size: 0.82rem; font-weight: 700; border-radius: var(--radius-md); display: inline-flex; align-items: center; gap: 0.4rem;">
+                <span>🔄</span><span>Refresh Telemetry</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live KPIs Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Total Books / Documents</div>
+              <div id="mainRagTotalBooks" style="font-size: 1.75rem; font-weight: 800; color: #0d9488; margin-top: 0.25rem;">Loading...</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Total Vector Chunks</div>
+              <div id="mainRagTotalChunks" style="font-size: 1.75rem; font-weight: 800; color: #0284c7; margin-top: 0.25rem;">Loading...</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Embedding Model</div>
+              <div style="font-size: 1.15rem; font-weight: 750; color: var(--text-primary); margin-top: 0.4rem;">nomic-embed-text</div>
+              <div style="font-size: 0.75rem; color: #16a34a; font-weight: 600;">768 dimensions (Ollama)</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Domain Vector Catalogs</div>
+              <div style="font-size: 1.15rem; font-weight: 750; color: var(--text-primary); margin-top: 0.4rem;">11 Role DBs</div>
+              <div style="font-size: 0.75rem; color: #0d9488; font-weight: 600;">SQLite WAL storage</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column Core Actions: Ingestion & Live Query -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 1.5rem;">
+          
+          <!-- Column 1: Live Interactive Semantic Search -->
+          <div style="background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: 0 4px 16px rgba(0,0,0,0.03); display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1.3rem;">🎯</span>
+              <h4 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--text-primary);">Semantic Multi-Role Vector Search</h4>
+            </div>
+            <p style="font-size: 0.83rem; color: var(--text-secondary); margin: 0 0 1rem 0;">Query across 11 specialized knowledge databases using local 768-dim embeddings.</p>
+
+            <!-- Role Chips Selector -->
+            <div style="margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary);">Target Knowledge Domains:</label>
+                <button type="button" id="btnToggleAllRoles" style="background: none; border: none; font-size: 0.75rem; color: #0d9488; font-weight: 700; cursor: pointer; text-decoration: underline;">Select All</button>
+              </div>
+              <div id="mainRagRoleChips" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                <!-- Filled dynamically by academy.js -->
+              </div>
+            </div>
+
+            <!-- Search Input Box -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+              <input type="text" id="mainRagQueryInput" placeholder="e.g. What components run on Kubernetes control plane and worker nodes?" style="flex: 1; padding: 0.75rem 1rem; border: 1.5px solid var(--card-border); border-radius: var(--radius-md); font-size: 0.9rem; background: var(--bg-tertiary); color: var(--text-primary); outline: none;">
+              <button id="btnMainRagSearch" class="btn-header-primary" style="padding: 0.75rem 1.25rem; font-weight: 700; font-size: 0.88rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.4rem; cursor: pointer; white-space: nowrap;">
+                <span>🔍</span><span>Search</span>
+              </button>
+            </div>
+
+            <!-- Query Results Container -->
+            <div id="mainRagSearchResults" style="flex: 1; min-height: 200px; max-height: 400px; overflow-y: auto; border: 1px dashed var(--card-border); border-radius: var(--radius-md); padding: 1rem; background: #fafafa;">
+              <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0;">
+                <span>💡 Type a question above or pick roles to perform semantic vector retrieval across textbooks.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Automated Ingestion & Zero-Rework Pipeline -->
+          <div style="background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: 0 4px 16px rgba(0,0,0,0.03); display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.3rem;">⚡</span>
+                <h4 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--text-primary);">Automated RAG Ingestion Pipeline</h4>
+              </div>
+              <span style="font-size: 0.72rem; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 4px; font-weight: 700;">Zero Rework • SHA256 Idempotent</span>
+            </div>
+            <p style="font-size: 0.83rem; color: var(--text-secondary); margin: 0 0 1rem 0;">PyMuPDF extraction, Unicode cleaning, de-hyphenation, recursive semantic chunking, breadcrumb injection, and batch Ollama embedding.</p>
+
+            <!-- Input Source Tabs -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+              <button type="button" id="tabSourceLibrary" class="filter-chip active" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">📚 Books Library (44 Found)</button>
+              <button type="button" id="tabSourceCustom" class="filter-chip" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">✍️ Direct Text / Manual</button>
+            </div>
+
+            <!-- Library Selector Mode -->
+            <div id="wrapperSourceLibrary" style="margin-bottom: 0.75rem;">
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Select Book from Library:</label>
+              <select id="mainRagBookSelect" style="width: 100%; padding: 0.6rem; border: 1.5px solid var(--card-border); border-radius: var(--radius-md); font-size: 0.85rem; background: var(--bg-tertiary); color: var(--text-primary);">
+                <option value="">Loading detected books from /books...</option>
+              </select>
+            </div>
+
+            <!-- Custom Text Mode (Hidden by default) -->
+            <div id="wrapperSourceCustom" style="display: none; margin-bottom: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-primary);">Document Filename & Text:</label>
+                <input type="text" id="mainRagFilename" value="operational_runbook.txt" placeholder="Filename" style="width: 190px; padding: 0.25rem 0.5rem; font-size: 0.78rem; border: 1px solid var(--card-border); border-radius: 4px;">
+              </div>
+              <textarea id="mainRagTextContent" rows="3" placeholder="Paste architectural specifications, textbook excerpts, or code..." style="width: 100%; box-sizing: border-box; padding: 0.6rem; border: 1.5px solid var(--card-border); border-radius: var(--radius-md); font-family: var(--font-mono, monospace); font-size: 0.82rem; background: var(--bg-tertiary); color: var(--text-primary); resize: vertical;"></textarea>
+            </div>
+
+            <!-- Pipeline Parameters Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <div>
+                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Target Domain Role:</label>
+                <select id="mainRagIngestRole" style="width: 100%; padding: 0.55rem; border: 1.5px solid var(--card-border); border-radius: var(--radius-md); font-size: 0.82rem; background: var(--bg-tertiary); color: var(--text-primary);">
+                  <option value="auto">🤖 Auto-Detect Domain</option>
+                  <option value="kubernetes">☸️ Kubernetes</option>
+                  <option value="devops">⚙️ DevOps</option>
+                  <option value="genai">🤖 GenAI</option>
+                  <option value="agentic_ai">🧠 Agentic AI</option>
+                  <option value="mle">🧪 Machine Learning (MLE)</option>
+                  <option value="mlops">🔄 MLOps</option>
+                  <option value="data_science">📊 Data Science</option>
+                  <option value="aws_cloud">☁️ AWS Cloud</option>
+                  <option value="linux">🐧 Linux</option>
+                  <option value="python">🐍 Python</option>
+                  <option value="general">📚 General Engineering</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Chunk Size & Overlap:</label>
+                <select id="mainRagChunkParams" style="width: 100%; padding: 0.55rem; border: 1.5px solid var(--card-border); border-radius: var(--radius-md); font-size: 0.82rem; background: var(--bg-tertiary); color: var(--text-primary);">
+                  <option value="1000:150" selected>Balanced (1000 chars / 150 overlap)</option>
+                  <option value="700:100">Granular (700 chars / 100 overlap)</option>
+                  <option value="1500:250">Broad Context (1500 chars / 250 overlap)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Deduplication Checkbox -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.45rem 0.75rem; margin-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.45rem;">
+                <input type="checkbox" id="mainRagDeduplicate" checked style="accent-color: #0d9488; cursor: pointer;">
+                <label for="mainRagDeduplicate" style="font-size: 0.78rem; font-weight: 700; color: #1e293b; cursor: pointer;">
+                  ⚡ Smart Deduplication (Skip if unchanged • 0 rework)
+                </label>
+              </div>
+              <span style="font-size: 0.7rem; color: #64748b;">SHA256 Content-Matched</span>
+            </div>
+
+            <!-- Ingest Action Buttons -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <button id="btnMainRagAutoIngest" type="button" class="btn-header-primary" style="flex: 2; padding: 0.65rem 0.5rem; font-size: 0.84rem; font-weight: 750; display: flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer;">
+                <span>🚀</span><span>Run Automated Ingestion Pipeline</span>
+              </button>
+              <button id="btnMainRagSyncLibrary" type="button" class="btn-header" style="flex: 1; padding: 0.65rem 0.5rem; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.35rem; cursor: pointer; border-color: #0d9488; color: #0d9488;">
+                <span>⚡</span><span>Sync All Unindexed</span>
+              </button>
+            </div>
+
+            <!-- Live 8-Stage Pipeline Progress & Inspection Box -->
+            <div id="mainRagPipelineProgress" style="flex: 1; min-height: 120px; max-height: 190px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 0.75rem; background: #fafafa; font-size: 0.78rem; color: var(--text-secondary);">
+              <div style="text-align: center; padding: 1.5rem 0; color: var(--text-muted);">
+                <span>Select a book above and click <strong>"Run Automated Ingestion Pipeline"</strong> to execute all 8 stages.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 11 Role Vector Databases Status Table -->
+        <div style="background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <h4 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--text-primary);">🗄️ 11 Role Vector Catalogs Status</h4>
+              <p style="margin: 0.2rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Live catalog statistics from SQLite databases in <code>books/vectors/{role}/rag_catalog.db</code></p>
+            </div>
+            <button id="btnRefreshRagStats" style="background: #f0fdf4; border: 1px solid #0d9488; color: #065f46; font-size: 0.8rem; font-weight: 700; padding: 0.4rem 0.85rem; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <span>🔄</span><span>Refresh Stats</span>
+            </button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <thead>
+                <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; background: #f8fafc;">
+                  <th style="padding: 0.75rem 1rem; color: var(--text-primary);">Domain Role</th>
+                  <th style="padding: 0.75rem 1rem; color: var(--text-primary);">Database Path</th>
+                  <th style="padding: 0.75rem 1rem; color: var(--text-primary);">Total Books</th>
+                  <th style="padding: 0.75rem 1rem; color: var(--text-primary);">Vector Chunks</th>
+                  <th style="padding: 0.75rem 1rem; color: var(--text-primary);">Database Size</th>
+                  <th style="padding: 0.75rem 1rem; color: var(--text-primary);">Status</th>
+                </tr>
+              </thead>
+              <tbody id="mainRagDatabasesTableBody">
+                <tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Loading live database statistics...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- 1. Roadmaps Panel -->
-    <section id="panel-roadmaps" class="tab-panel active">
+    <section id="panel-roadmaps" class="tab-panel">
       <div class="roadmaps-grid" id="roadmaps-grid">
         <!-- Rendered dynamically by academy.js -->
       </div>
@@ -289,14 +468,10 @@
           </p>
         </div>
         <div class="db-header-actions">
-          <button class="btn-header" onclick="loadDbTelemetry(); loadDbSchema(); loadTableData(); loadDbFiles();">
+          <button class="btn-header btn-header-primary" onclick="loadDbTelemetry(); loadDbSchema(); loadTableData(); loadDbFiles();">
             <span>🔄</span>
             <span>Refresh Telemetry</span>
           </button>
-          <a href="db-dashboard.html" target="_blank" class="btn-header btn-header-primary">
-            <span>↗️</span>
-            <span>Full-Screen Studio</span>
-          </a>
         </div>
       </div>
 

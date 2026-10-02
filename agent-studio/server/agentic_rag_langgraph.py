@@ -132,6 +132,11 @@ except ImportError:
     print("[WARNING] Could not import rag_engine_enhanced")
     RoleBasedDatabaseManager = None
 
+try:
+    import web_search
+except ImportError:
+    web_search = None
+
 
 # ==============================================================================
 # Configuration & State Management
@@ -979,6 +984,22 @@ class AgenticRAGGraph:
             if relevance > 0.3:
                 graded.append(doc)
         
+        # Fallback to web search if local context is insufficient
+        if not graded and web_search is not None:
+            state["agent_trace"].append("websearch_fallback")
+            web_results = web_search.search_web(state["query"], max_results=3).get("results", [])
+            for i, res in enumerate(web_results):
+                doc = RetrievedDocument(
+                    chunk_id=f"web_{i}",
+                    book_id="web",
+                    book_title=res.get("domain", "Web Search"),
+                    chapter_title=res.get("title", "Result"),
+                    page_number=1,
+                    content=res.get("snippet", ""),
+                    relevance_score=0.9
+                )
+                graded.append(doc)
+                
         state["graded_docs"] = graded
         
         return state
