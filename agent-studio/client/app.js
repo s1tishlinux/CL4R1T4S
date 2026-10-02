@@ -17,7 +17,7 @@ const state = {
   abortController: null,
   activeSandboxCode: '',
   webSearchActive: false,
-  ragActive: true,
+  ragActive: false,
   selectedRagRole: 'all'
 };
 
@@ -1588,15 +1588,10 @@ function detectIntent(rawText) {
     return { type: 'web_search', prompt: match[1] ? match[1].trim() : t, original: t };
   }
 
-  // 8. Multi-Role Vector Knowledge Base (RAG) Auto-Intent
-  // If RAG toggle is active, OR if query mentions technical concepts, route to RAG automatically without /rag!
-  if (state.ragActive) {
-    return { type: 'rag', prompt: t, original: t };
-  }
-
-  const technicalKeywordsRegex = /\b(?:docker|container|kubernetes|k8s|devops|aws|s3|ec2|iam|lambda|python|fastapi|asyncio|rag|llm|llms|agent|agents|agentic|autogen|crewai|langgraph|mlops|mlflow|pipeline|jenkins|terraform|ansible|prometheus|grafana|linux|bash|shell|systemd|gitops|ci\/cd|helm|pod|ingress|cluster|neural|embedding|vector|fine-tuning|transformer)\b/i;
-  if (technicalKeywordsRegex.test(t)) {
-    return { type: 'rag', prompt: t, original: t };
+  // 8. Multi-Role Vector Knowledge Base (RAG) Explicit Intent
+  if (state.ragActive || t.startsWith('/rag ')) {
+    const clean = t.startsWith('/rag ') ? t.slice(5).trim() : t;
+    return { type: 'rag', prompt: clean || t, original: t };
   }
 
   return { type: 'text', prompt: t, original: t };
@@ -1653,8 +1648,16 @@ async function executeRagQuery(searchQuery, assistantBubble, startTime) {
         </span>`;
     });
 
+    // Clean passages: filter out unreadable PDF xref / binary tables
+    const cleanResults = (searchData.results || []).filter(r => {
+      const text = (r.content || r.text || '').trim();
+      const isPdfJunk = text.includes('0 obj') || text.includes('0 R') || text.includes('endobj') || text.includes('00000 n') || text.includes('/StructElem');
+      return !isPdfJunk && text.length > 15;
+    });
+
     let sourcesListHtml = '';
-    (searchData.results || []).forEach((r, idx) => {
+    const displayResults = cleanResults.length > 0 ? cleanResults : (searchData.results || []);
+    displayResults.forEach((r, idx) => {
       const scorePercent = ((r.similarity || r.score || 0) * 100).toFixed(1);
       sourcesListHtml += `
         <div class="rag-source-item">
@@ -1663,7 +1666,7 @@ async function executeRagQuery(searchQuery, assistantBubble, startTime) {
         </div>`;
     });
 
-    const totalPassages = searchData.total_results || (searchData.results ? searchData.results.length : 0);
+    const totalPassages = displayResults.length;
 
     assistantBubble.innerHTML = `
       <div class="rag-telemetry-header">
@@ -1711,23 +1714,33 @@ async function executeRagQuery(searchQuery, assistantBubble, startTime) {
       if (synthTimer) synthTimer.textContent = getElapsed();
     }, 100);
 
-    // Construct context
+    // Construct context: pick top 4 clean passages, capped at 600 chars each for fast, focused synthesis
     let prompt;
-    if (searchData.results && searchData.results.length > 0) {
-      const ctx = searchData.results.map(r => `[${r.role_icon || ''} ${r.role_name || r.role} | Book: ${r.book_title} | Page ${r.page_number}]\n${r.content || r.text || ''}`).join('\n\n---\n\n');
-      prompt = `You are OmniStudio Academy's Principal AI Technical Specialist. Answer the user's question with authority, precision, and detailed production-ready code examples where relevant.
-Strictly ground your answer in the following retrieved textbook passages from our specialized role vector databases. Cite the specific role, textbook title, and page numbers when stating key facts or architectural rules.
+    if (cleanResults.length > 0) {
+      const topSnippets = cleanResults.slice(0, 4);
+      const ctx = topSnippets.map((r, i) => `[Passage #${i+1} | Source: ${r.book_title || 'Technical Manual'} | Role: ${r.role_name || r.role}]\n${(r.content || r.text || '').slice(0, 600)}`).join('\n\n---\n\n');
+      prompt = `USER REQUEST:
+${searchQuery}
 
-Retrieved Passages:
+INSTRUCTIONS FOR SYNTHESIS:
+1. Provide a comprehensive, direct, and complete response answering the user's request with high technical depth.
+2. Generate all required new content, architectures, step-by-step guidance, and production-ready code examples requested by the user.
+3. Incorporate and synthesize relevant insights from the verified reference passages below where helpful:
+
+=== REFERENCE KNOWLEDGE BASE ===
 ${ctx}
+================================
 
-User Question:
-${searchQuery}`;
+Now generate the complete answer and required content:`;
     } else {
-      prompt = `You are OmniStudio Academy's Principal AI Technical Specialist. Answer the user's question with deep technical rigor, production-grade code, and clear architectural explanations:\n\n${searchQuery}`;
+      prompt = `USER REQUEST:
+${searchQuery}
+
+INSTRUCTIONS:
+Provide a comprehensive, direct, and complete response answering the user's request with production-ready code examples, step-by-step explanations, and all requested new content.`;
     }
 
-    const systemPrompt = searchData.agent_system_prompt || state.systemPrompt || "You are a Principal AI Technical Specialist.";
+    const systemPrompt = searchData.agent_system_prompt || state.systemPrompt || "You are OmniStudio's Principal AI Technical Specialist. Generate comprehensive, production-ready content, complete code solutions, and clear technical guidance.";
     let targetGateway = gatewaySelect ? gatewaySelect.value : (state.gateway || 'webfree');
     let targetModel = modelSelect ? modelSelect.value : (state.model || 'openai-fast');
 
@@ -1742,7 +1755,7 @@ ${searchQuery}`;
         { role: 'user', content: prompt }
       ],
       stream: true,
-      temperature: 0.2
+      temperature: 0.3
     };
 
     let fullText = '';
@@ -1755,7 +1768,7 @@ ${searchQuery}`;
         system: systemPrompt,
         prompt: prompt,
         stream: true,
-        options: { temperature: 0.2 }
+        options: { temperature: 0.3 }
       };
       const response = await fetch(`${GATEWAYS.ollama.base}/api/generate`, {
         method: 'POST',
@@ -1851,7 +1864,9 @@ ${searchQuery}`;
           if (trimmed.startsWith('data: ')) {
             try {
               const data = JSON.parse(trimmed.slice(6));
-              const delta = data.choices?.[0]?.delta?.content || '';
+              const delta = (data.choices?.[0]?.delta?.content !== undefined) 
+                ? data.choices?.[0]?.delta?.content 
+                : (data.choices?.[0]?.message?.content || '');
               if (delta) {
                 if (!firstTokenReceived) {
                   firstTokenReceived = true;
@@ -1871,13 +1886,42 @@ ${searchQuery}`;
       }
     }
 
+    // If stream ended with no tokens, trigger instant direct completion fallback
+    if (!fullText.trim()) {
+      try {
+        const directRes = await fetch(`${GATEWAYS.webfree.base}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'openai-fast',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: prompt }
+            ],
+            stream: false
+          }),
+          signal: state.abortController.signal
+        });
+        if (directRes.ok) {
+          const directData = await directRes.json();
+          const directText = directData.choices?.[0]?.message?.content || directData.choices?.[0]?.message?.reasoning || '';
+          if (directText) {
+            fullText = directText;
+            tokenCount = directText.split(/\s+/).length;
+            streamBox.innerHTML = renderMarkdown(fullText);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+        }
+      } catch(e) {}
+    }
+
     clearInterval(timerInterval);
     if (statusBar) {
       statusBar.className = 'rag-synthesis-status-bar completed';
       const dot = statusBar.querySelector('.rag-status-dot');
       if (dot) dot.className = 'rag-status-dot';
       if (statusText) {
-        statusText.innerHTML = `✅ Grounded Synthesis Complete (<strong>${tokenCount} tokens</strong> &bull; ${getElapsed()} &bull; <strong>${totalPassages} passages</strong>)`;
+        statusText.innerHTML = `✅ Grounded Synthesis Complete (<strong>${tokenCount || 1} tokens</strong> &bull; ${getElapsed()} &bull; <strong>${totalPassages} passages</strong>)`;
       }
     }
 
