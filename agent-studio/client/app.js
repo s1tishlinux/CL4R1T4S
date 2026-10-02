@@ -12,6 +12,7 @@ const state = {
   temperature: 0.2,
   contextSize: 32768,
   systemPrompt: '',
+  chatHistory: [], // Multi-turn rolling conversation memory [{ role, content }]
   attachments: [], // { type: 'image'|'video'|'audio', dataUrl, name, base64 }
   isGenerating: false,
   abortController: null,
@@ -304,6 +305,7 @@ function setupEventListeners() {
 
   // Clear Chat
   clearChatBtn.addEventListener('click', () => {
+    state.chatHistory = [];
     chatMessages.innerHTML = `
       <div class="welcome-hero">
         <div class="hero-badge">⚡ Omni Agent Studio Live</div>
@@ -1740,7 +1742,7 @@ INSTRUCTIONS:
 Provide a comprehensive, direct, and complete response answering the user's request with production-ready code examples, step-by-step explanations, and all requested new content.`;
     }
 
-    const systemPrompt = searchData.agent_system_prompt || state.systemPrompt || "You are OmniStudio's Principal AI Technical Specialist. Generate comprehensive, production-ready content, complete code solutions, and clear technical guidance.";
+    const systemPrompt = searchData.agent_system_prompt || state.systemPrompt || "You are OmniStudio's Principal AI Technical Specialist. Generate comprehensive, production-ready content, complete code solutions, and clear technical guidance. Maintain multi-turn context across questions. When asked to continue, resume seamlessly from where you left off.";
     let targetGateway = gatewaySelect ? gatewaySelect.value : (state.gateway || 'webfree');
     let targetModel = modelSelect ? modelSelect.value : (state.model || 'openai-fast');
 
@@ -1748,11 +1750,24 @@ Provide a comprehensive, direct, and complete response answering the user's requ
       targetModel = 'openai-fast';
     }
 
+    const isContinuation = /^(continue|go on|proceed|next|keep going|more|continue generating|continue response)\b/i.test(searchQuery.trim());
+    let promptContent = prompt;
+    if (isContinuation && state.chatHistory && state.chatHistory.length > 0) {
+      promptContent = 'Please seamlessly continue generating from the exact point of cutoff in your previous response without repeating earlier text. Ensure any unclosed code blocks, diagrams, or explanations are fully completed.';
+    }
+
+    // Include recent conversation history turns
+    const historyMessages = (state.chatHistory || []).slice(-6).map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
     const generatePayload = {
       model: targetModel,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
+        ...historyMessages,
+        { role: 'user', content: promptContent }
       ],
       stream: true,
       temperature: 0.3
@@ -1766,7 +1781,7 @@ Provide a comprehensive, direct, and complete response answering the user's requ
       const ollamaPayload = {
         model: targetModel || 'bolt-local',
         system: systemPrompt,
-        prompt: prompt,
+        prompt: promptContent,
         stream: true,
         options: { temperature: 0.3 }
       };
@@ -1896,7 +1911,8 @@ Provide a comprehensive, direct, and complete response answering the user's requ
             model: 'openai-fast',
             messages: [
               { role: 'system', content: systemPrompt },
-              { role: 'user', content: prompt }
+              ...historyMessages,
+              { role: 'user', content: promptContent }
             ],
             stream: false
           }),
@@ -1922,6 +1938,16 @@ Provide a comprehensive, direct, and complete response answering the user's requ
       if (dot) dot.className = 'rag-status-dot';
       if (statusText) {
         statusText.innerHTML = `✅ Grounded Synthesis Complete (<strong>${tokenCount || 1} tokens</strong> &bull; ${getElapsed()} &bull; <strong>${totalPassages} passages</strong>)`;
+      }
+    }
+
+    // Record turn in chat history memory
+    if (fullText) {
+      if (!state.chatHistory) state.chatHistory = [];
+      state.chatHistory.push({ role: 'user', content: searchQuery });
+      state.chatHistory.push({ role: 'assistant', content: fullText });
+      if (state.chatHistory.length > 16) {
+        state.chatHistory = state.chatHistory.slice(-16);
       }
     }
 
@@ -2809,15 +2835,29 @@ async function handleSend() {
       } else if (intent.type === 'diagram') {
         effectiveSystemPrompt = 'You are an expert system designer. Explain the architecture clearly and provide an interactive diagram using Mermaid syntax inside a ```mermaid code block (e.g. graph TD or sequenceDiagram).';
       } else {
-        effectiveSystemPrompt = 'You are OmniStudio, a helpful, knowledgeable, and professional AI assistant. Respond clearly, concisely, and directly. Use well-structured markdown formatting when appropriate. Never include your internal reasoning or planning in your response — only provide the final, polished answer.';
+        effectiveSystemPrompt = `You are OmniStudio, a Principal AI Technical Specialist.
+- Direct & Structured: Provide comprehensive, accurate, and high-impact answers with complete production-ready code examples.
+- Smart Pacing: If an architecture or code solution is large, deliver the immediate core implementation first, provide a summary, and offer interactive next steps (e.g. "💡 **Next Steps:** Would you like me to proceed with [Next Module]?").
+- Continuous Memory: Maintain continuous multi-turn context across the conversation. When asked to continue, proceed seamlessly from where you left off.`;
       }
     }
 
+    const isContinuation = /^(continue|go on|proceed|next|keep going|more|continue generating|continue response)\b/i.test(text.trim());
+
     if (targetGateway === 'ollama') {
+      // Build rolling context prompt for Ollama
+      let ollamaPrompt = text;
+      if (isContinuation && state.chatHistory && state.chatHistory.length > 0) {
+        ollamaPrompt = 'Please seamlessly continue generating from the exact cutoff point in your previous response without repeating earlier text.';
+      } else if (state.chatHistory && state.chatHistory.length > 0) {
+        const histSnippet = state.chatHistory.slice(-4).map(h => `${h.role === 'user' ? 'User' : 'Assistant'}: ${h.content}`).join('\n\n');
+        ollamaPrompt = `CONVERSATION HISTORY:\n${histSnippet}\n\nUser: ${text}`;
+      }
+
       // Ollama Native API with Images support
       const payload = {
         model: targetModel,
-        prompt: text,
+        prompt: ollamaPrompt,
         stream: true,
         options: {
           temperature: state.temperature,
@@ -2881,6 +2921,14 @@ async function handleSend() {
         messages.push({ role: 'system', content: effectiveSystemPrompt });
       }
 
+      // Include recent multi-turn history (up to last 8 turns)
+      if (state.chatHistory && state.chatHistory.length > 0) {
+        const recentTurns = state.chatHistory.slice(-8);
+        recentTurns.forEach(turn => {
+          messages.push({ role: turn.role, content: turn.content });
+        });
+      }
+
       const imageAttachments = sentAttachments.filter(a => a.type === 'image');
       if (imageAttachments.length > 0) {
         const contentParts = [{ type: 'text', text }];
@@ -2892,7 +2940,14 @@ async function handleSend() {
         });
         messages.push({ role: 'user', content: contentParts });
       } else {
-        messages.push({ role: 'user', content: text });
+        if (isContinuation && state.chatHistory && state.chatHistory.length > 0) {
+          messages.push({ 
+            role: 'user', 
+            content: 'Please seamlessly continue generating from the exact point of cutoff in your previous response without repeating earlier text. Complete all code blocks, explanations, and specifications.' 
+          });
+        } else {
+          messages.push({ role: 'user', content: text });
+        }
       }
 
       const payload = {
@@ -2940,7 +2995,9 @@ async function handleSend() {
             if (dataStr === '[DONE]') break;
             try {
               const data = JSON.parse(dataStr);
-              const delta = data.choices?.[0]?.delta?.content || data.choices?.[0]?.message?.content || '';
+              const delta = (data.choices?.[0]?.delta?.content !== undefined) 
+                ? data.choices?.[0]?.delta?.content 
+                : (data.choices?.[0]?.message?.content || '');
               if (!firstTokenReceived && delta) {
                 firstTokenReceived = true;
                 const latency = Math.round(performance.now() - startTime);
@@ -2961,6 +3018,17 @@ async function handleSend() {
 
     // Finished response: post-process code blocks, diagrams, and auto-mount
     finalizeAssistantMessage(assistantBubble, fullResponse, autoMountApp);
+
+    // Record turn in chat history memory
+    if (fullResponse) {
+      if (!state.chatHistory) state.chatHistory = [];
+      state.chatHistory.push({ role: 'user', content: text });
+      state.chatHistory.push({ role: 'assistant', content: fullResponse });
+      if (state.chatHistory.length > 16) {
+        state.chatHistory = state.chatHistory.slice(-16);
+      }
+    }
+
     if (window.speakVoiceResponse) {
       window.speakVoiceResponse(fullResponse);
     }
@@ -3065,6 +3133,12 @@ function renderMarkdown(raw) {
   if (!raw) return '';
 
   let html = raw;
+
+  // Auto-close unclosed code blocks during streaming or token cutoff
+  const codeBlockCount = (html.match(/```/g) || []).length;
+  if (codeBlockCount % 2 !== 0) {
+    html += '\n```';
+  }
 
   // Mermaid Diagram Code Blocks
   html = html.replace(/```mermaid\n([\s\S]*?)```/gi, (match, code) => {
@@ -3235,6 +3309,9 @@ function attachOmniActionBar(bubble, fullResponse) {
   const hasCode = text.includes('```') || bubble.querySelector('pre code');
 
   bar.innerHTML = `
+    <button class="omni-bus-btn continue-bus-btn" onclick="window.omniTriggerContinue()" title="Continue generation seamlessly from cutoff point">
+      <span>▶️</span> Continue
+    </button>
     <button class="omni-bus-btn" onclick="window.omniDistillToMemory(this)" title="Distill key concepts into on-device edge vector memory (<2ms recall)">
       <span>⚡</span> Distill to Memory
     </button>
@@ -3256,6 +3333,13 @@ function attachOmniActionBar(bubble, fullResponse) {
     </button>
   `;
 }
+
+window.omniTriggerContinue = function() {
+  if (state.isGenerating) return;
+  if (!promptInput) return;
+  promptInput.value = 'Please continue generating seamlessly from where you left off.';
+  handleSend();
+};
 
 window.omniDistillToMemory = async function(btn) {
   const row = btn.closest('.message-row');

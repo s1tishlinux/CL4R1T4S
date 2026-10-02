@@ -4493,6 +4493,18 @@ p code {
   color: #ffffff;
 }
 
+.omni-bus-btn.continue-bus-btn {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+.omni-bus-btn.continue-bus-btn:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #10b981;
+  color: #ffffff;
+}
+
 .mem-bridge-btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
