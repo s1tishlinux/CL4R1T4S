@@ -1770,7 +1770,8 @@ Provide a comprehensive, direct, and complete response answering the user's requ
         { role: 'user', content: promptContent }
       ],
       stream: true,
-      temperature: 0.3
+      temperature: 0.3,
+      max_tokens: 4096
     };
 
     let fullText = '';
@@ -1783,7 +1784,7 @@ Provide a comprehensive, direct, and complete response answering the user's requ
         system: systemPrompt,
         prompt: promptContent,
         stream: true,
-        options: { temperature: 0.3 }
+        options: { temperature: 0.3, num_predict: 4096 }
       };
       const response = await fetch(`${GATEWAYS.ollama.base}/api/generate`, {
         method: 'POST',
@@ -2123,7 +2124,8 @@ Instructions:
         model: targetModel,
         messages,
         temperature: state.temperature,
-        stream: true
+        stream: true,
+        max_tokens: 4096
       };
 
       const isWebFree = targetGateway === 'webfree';
