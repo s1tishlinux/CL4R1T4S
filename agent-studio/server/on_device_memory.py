@@ -278,7 +278,8 @@ class OnDeviceMemory:
                     print(f"[OnDeviceMemory] Qdrant search fallback: {e}")
                     hits = []
 
-            # Fallback or hybrid SQLite cosine scan
+            # Fallback or hybrid SQLite cosine scan if Qdrant didn't return hits
+            if not hits:
                 with sqlite3.connect(SQLITE_DB) as conn:
                     rows = conn.execute("SELECT id, label, transcript, category, where_loc, vector_json, created_at FROM memory_points WHERE kind = 'taught'").fetchall()
                     scored = []
